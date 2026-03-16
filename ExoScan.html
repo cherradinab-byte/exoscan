@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ExoScan">
+<title>ExoScan</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F5F2EE;--surface:#FFF;--surface2:#F0EDE8;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
+  --text:#1A1714;--muted:#6B6560;--hint:#A09A94;
+  --accent:#5B3FBF;--accent-l:#EEEBFB;--accent-d:#3D2990;
+  --green:#2D6A4F;--green-l:#EAF4EE;
+  --red:#B03030;--red-l:#FDECEA;
+  --amber:#8B5E1A;--amber-l:#FDF3E3;
+  --r:14px;--rs:8px;
+  --sh:0 2px 12px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);font-size:16px;line-height:1.5}
+#wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
+
+/* HEADER */
+.hdr{padding:24px 0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:20px}
+.hdr h1{font-family:'Lora',serif;font-size:24px;font-weight:600;letter-spacing:-.3px}
+.hdr .tag{font-size:13px;color:var(--muted);margin-left:10px;font-weight:300}
+.key-btn{font-size:13px;color:var(--hint);background:none;border:none;cursor:pointer;padding:5px 9px;border-radius:6px;font-family:inherit}
+.key-btn:hover{background:var(--surface2)}
+
+/* NAV TABS */
+.nav{display:flex;background:var(--surface);border-radius:var(--r);padding:5px;border:1px solid var(--border);margin-bottom:20px;gap:2px}
+.nav-tab{flex:1;text-align:center;padding:8px 4px;font-size:13px;color:var(--hint);border-radius:10px;cursor:pointer;user-select:none;transition:all .2s;border:none;background:none;font-family:inherit}
+.nav-tab.active{background:var(--accent);color:white;font-weight:500;box-shadow:0 2px 8px rgba(91,63,191,.3)}
+.nav-tab.done{color:var(--green);font-weight:500}
+.nav-tab.clickable:not(.active){cursor:pointer}
+.nav-tab.clickable:not(.active):hover{background:var(--surface2);color:var(--text)}
+.snum{display:inline-block;width:18px;height:18px;line-height:18px;border-radius:50%;font-size:11px;margin-right:4px;background:rgba(0,0,0,0.06);text-align:center}
+.nav-tab.active .snum{background:rgba(255,255,255,.25)}
+.nav-tab.done .snum{background:var(--green-l);color:var(--green)}
+
+/* CARD */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:22px;margin-bottom:14px;box-shadow:var(--sh);animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:14px}
+
+/* SETUP OVERLAY */
+#setup-overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.setup-box{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:28px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.setup-box h2{font-family:'Lora',serif;font-size:21px;font-weight:600;margin-bottom:8px}
+.setup-intro{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+.setup-steps{border-radius:var(--rs);padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:2.1;border:1px solid var(--border);background:var(--surface2)}
+.sl{color:var(--accent);text-decoration:none;font-weight:500}
+.sl:hover{text-decoration:underline}
+.spill{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-l);color:var(--accent);font-size:12px;font-weight:600;margin-right:6px}
+
+/* UPLOAD */
+#upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+#upload-zone:hover,#upload-zone:active{background:var(--accent-l);border-color:var(--accent)}
+.uico{width:52px;height:52px;background:var(--accent-l);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px}
+#upload-zone h2{font-size:16px;font-weight:500;margin-bottom:5px}
+#upload-zone p{font-size:13px;color:var(--muted)}
+#file-input{display:none}
+#img-prev{width:100%;max-height:180px;object-fit:contain;border-radius:var(--rs);background:var(--surface2);display:none;margin-bottom:14px}
+
+/* LOADING */
+#loading{display:none;text-align:center;padding:20px 0}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-sub{font-size:12px;color:var(--hint);margin-top:5px}
+
+/* ERRORS */
+.err{background:var(--red-l);border:1px solid rgba(176,48,48,.2);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--red);line-height:1.5;display:none;margin-top:10px}
+
+/* TYPE BADGE */
+.tbadge{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:4px 11px;border-radius:20px;background:var(--accent-l);color:var(--accent-d);font-weight:500;border:1px solid rgba(91,63,191,.15);margin-bottom:14px}
+
+/* FORM */
+.flabel{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:7px;display:block}
+textarea,input[type=text],input[type=number],input[type=password]{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;width:100%;outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none}
+textarea:focus,input:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(91,63,191,.1)}
+textarea{resize:vertical;min-height:85px;line-height:1.6}
+
+/* NUMBERS */
+.numgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;margin-top:8px}
+.nitem{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 13px;transition:border-color .15s}
+.nitem:focus-within{border-color:var(--accent)}
+.nlbl{font-size:11px;color:var(--hint);display:block;margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.nitem input{background:transparent;border:none;padding:0;font-size:20px;font-weight:500;color:var(--text);width:100%;box-shadow:none}
+.nitem input:focus{box-shadow:none;background:transparent;border:none}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--rs);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .15s;-webkit-appearance:none;text-decoration:none}
+.btn:active{transform:scale(.97)}
+.btn:hover{background:var(--surface2)}
+.btn-p{background:var(--accent);color:white;border-color:var(--accent-d);box-shadow:0 2px 8px rgba(91,63,191,.25)}
+.btn-p:hover{background:var(--accent-d)}
+.btn-g{background:var(--green);color:white;border-color:#1A4D38;box-shadow:0 2px 8px rgba(45,106,79,.25)}
+.btn-g:hover{background:#1A4D38}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--muted);font-weight:400}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:7px 13px;font-size:13px}
+.btn-full{width:100%}
+.arow{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:center}
+.sp{flex:1}
+
+/* HISTORY */
+.hist-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:var(--accent-l);margin:0 -10px;padding:12px 10px;border-radius:var(--rs)}
+.hist-thumb{width:48px;height:48px;border-radius:var(--rs);object-fit:cover;background:var(--surface2);flex-shrink:0;border:1px solid var(--border)}
+.hist-thumb-ph{width:48px;height:48px;border-radius:var(--rs);background:var(--accent-l);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.hist-info{flex:1;min-width:0}
+.hist-consigne{font-size:14px;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px}
+.hist-meta{font-size:12px;color:var(--hint)}
+.hist-del{background:none;border:none;color:var(--hint);cursor:pointer;padding:3px 7px;font-size:18px;border-radius:5px;flex-shrink:0}
+.hist-del:hover{color:var(--red);background:var(--red-l)}
+
+/* FICHE / BASKET */
+.fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.fitem:last-child{border-bottom:none}
+.fnum{width:28px;height:28px;background:var(--accent-l);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.fcontent{flex:1;min-width:0}
+.fconsigne{font-size:14px;color:var(--text);line-height:1.4;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ftag{font-size:12px;color:var(--hint)}
+.fdel{background:none;border:none;color:var(--hint);cursor:pointer;padding:3px 7px;font-size:18px;border-radius:5px;flex-shrink:0}
+.fdel:hover{color:var(--red);background:var(--red-l)}
+
+/* EXPORT OPTIONS */
+.xopt{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--surface2);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:9px;cursor:pointer;transition:all .15s}
+.xopt:hover{border-color:var(--accent);background:var(--accent-l)}
+.xopt input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);flex-shrink:0;padding:0;border:none;background:none;box-shadow:none;cursor:pointer}
+.xopt-txt strong{font-size:14px;font-weight:500;display:block}
+.xopt-txt span{font-size:13px;color:var(--muted)}
+
+/* DOWNLOAD LINKS */
+.dl-link{display:block;padding:14px 18px;background:var(--green);color:white;border-radius:var(--rs);text-decoration:none;font-weight:500;font-size:15px;text-align:center;margin-bottom:10px;cursor:pointer}
+.dl-link:hover{background:#1A4D38}
+
+/* NOTE */
+.note{background:var(--amber-l);border:1px solid rgba(139,94,26,.2);border-radius:var(--rs);padding:11px 13px;font-size:13px;color:var(--amber);margin-top:13px;line-height:1.6}
+
+/* SUCCESS */
+.sblock{text-align:center;padding:24px 16px}
+.scheck{width:50px;height:50px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:20px;color:var(--hint);font-size:14px}
+
+@media(min-width:600px){#wrap{padding:0 28px 80px}.hdr{padding:32px 0 20px}.hdr h1{font-size:28px}}
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <h2>Bienvenue dans ExoScan</h2>
+    <p class="setup-intro">Analyse de photos d'exercices via <strong>OpenRouter</strong> — modèles gratuits, aucune carte bancaire.</p>
+    <div class="setup-steps">
+      <div><span class="spill">1</span>Aller sur <a class="sl" href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
+      <div><span class="spill">2</span>Créer un compte (email suffit)</div>
+      <div><span class="spill">3</span>Menu <strong>Keys</strong> → <strong>Create Key</strong></div>
+      <div><span class="spill">4</span>Copier la clé <code style="font-size:12px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px">sk-or-v1-…</code></div>
+    </div>
+    <div style="background:#EAF4EE;border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--green);margin-bottom:16px">
+      ✓ Gratuit · Sans carte bancaire · Mistral, Llama, Gemini disponibles
+    </div>
+    <label class="flabel">Clé API OpenRouter</label>
+    <input type="password" id="key-input" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" style="margin-bottom:11px;font-family:monospace;font-size:13px">
+    <div id="key-err" class="err" style="margin-bottom:11px"></div>
+    <button class="btn btn-p btn-full" onclick="saveKey()">Enregistrer et commencer →</button>
+    <p style="font-size:12px;color:var(--hint);margin-top:10px;text-align:center">Clé stockée sur cet appareil uniquement (localStorage).</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div class="hdr">
+    <div><span style="font-family:'Lora',serif;font-size:24px;font-weight:600">ExoScan</span><span class="tag">Photo → Word</span></div>
+    <button class="key-btn" onclick="showSetup()">⚙ Clé API</button>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-tab active" id="t0" onclick="goTab(0)"><span class="snum">1</span>Scan</button>
+    <button class="nav-tab" id="t1" onclick="goTab(1)"><span class="snum">2</span>Édition</button>
+    <button class="nav-tab" id="t2" onclick="goTab(2)"><span class="snum">3</span>Export</button>
+    <button class="nav-tab" id="t3" onclick="goTab(3)"><span class="snum">4</span>Historique</button>
+  </div>
+
+  <!-- PAGE 0 : SCAN -->
+  <div id="page0">
+    <div class="card">
+      <div class="card-title">Nouvelle photo</div>
+      <div id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div class="uico">📷</div>
+        <h2>Photo ou screenshot</h2>
+        <p>Manuel scolaire · Site web · FR ou EN</p>
+      </div>
+      <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
+      <img id="img-prev" alt="">
+      <div id="loading">
+        <div class="spinner"></div>
+        <div style="font-size:14px;color:var(--muted)" id="ltxt">Analyse en cours…</div>
+        <div class="loading-sub" id="lmodel"></div>
+      </div>
+      <div id="scan-err" class="err"></div>
+    </div>
+
+    <!-- Fiche en cours (mini) -->
+    <div class="card" id="basket-mini" style="display:none">
+      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s)</div>
+      <div id="basket-mini-list"></div>
+      <div class="arow">
+        <button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button>
+        <div class="sp"></div>
+        <button class="btn btn-p btn-sm" onclick="goTab(2)">Exporter la fiche →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 1 : ÉDITION -->
+  <div id="page1" style="display:none">
+    <div class="card">
+      <div class="card-title">Exercice analysé</div>
+      <div id="tbadge" class="tbadge">✏️ Exercice</div>
+      <label class="flabel">Consigne</label>
+      <textarea id="cons-edit" placeholder="La consigne de l'exercice…"></textarea>
+      <div style="margin-top:16px">
+        <label class="flabel">Valeurs numériques</label>
+        <div class="numgrid" id="numgrid"></div>
+      </div>
+      <div class="arow">
+        <button class="btn btn-ghost btn-sm" onclick="randomNums()">🔀 Nouveaux chiffres</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" onclick="addToFiche()">Ajouter à la fiche →</button>
+      </div>
+    </div>
+    <div class="arow" style="margin-top:0">
+      <button class="btn btn-ghost btn-sm" onclick="goTab(0)">← Retour scan</button>
+    </div>
+  </div>
+
+  <!-- PAGE 2 : EXPORT -->
+  <div id="page2" style="display:none">
+    <div class="card" id="fiche-card">
+      <div class="card-title">Exercices de la fiche · <span id="fcount">0</span></div>
+      <div id="fiche-list"></div>
+      <div class="arow">
+        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter</button>
+      </div>
+    </div>
+    <div class="card" id="export-opts-card">
+      <div class="card-title">Options Word</div>
+      <label class="flabel">Titre de la fiche</label>
+      <input type="text" id="doc-title" placeholder="Ex : Exercices — Multiplication — 3e année" style="margin-bottom:16px">
+      <label class="xopt">
+        <input type="checkbox" id="opt-hdr" checked>
+        <div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div>
+      </label>
+      <label class="xopt">
+        <input type="checkbox" id="opt-lines" checked>
+        <div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés sous chaque exercice</span></div>
+      </label>
+      <label class="xopt">
+        <input type="checkbox" id="opt-corr">
+        <div class="xopt-txt"><strong>Version corrigé</strong><span>2e fichier avec les réponses</span></div>
+      </label>
+      <div id="dl-zone" style="margin-top:18px">
+        <button class="btn btn-g btn-full" id="gen-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>
+      </div>
+      <div class="note" id="dl-note" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 3 : HISTORIQUE -->
+  <div id="page3" style="display:none">
+    <div class="card">
+      <div class="card-title">Exercices analysés <span style="float:right"><button class="btn btn-ghost btn-sm" onclick="clearHistory()" style="margin-top:-4px">Tout effacer</button></span></div>
+      <div id="hist-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ CONSTANTS ═══════════ */
+const KEYSTORE   = 'exoscan_or_key';
+const HISTSTORE  = 'exoscan_history';
+const MODELS = [
+  {id:'mistralai/mistral-small-3.1-24b-instruct:free', label:'Mistral Small 3.1'},
+  {id:'meta-llama/llama-3.2-11b-vision-instruct:free',  label:'Llama 3.2 Vision'},
+  {id:'google/gemini-2.0-flash-exp:free',               label:'Gemini 2.0 Flash'},
+];
+
+/* ═══════════ STATE ═══════════ */
+let basket   = [];   // exercices dans la fiche courante
+let curExo   = null; // exercice en cours d'édition
+let curNums  = [];
+let curImg   = null; // data URL de l'image en cours
+let history  = [];   // [] of {id, date, emoji, type, consigne, numbers, correction, imgSrc}
+
+/* ═══════════ INIT ═══════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  history = JSON.parse(localStorage.getItem(HISTSTORE) || '[]');
+  if (localStorage.getItem(KEYSTORE)) {
+    document.getElementById('setup-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    refreshBasketMini();
+  }
+  document.getElementById('key-input').addEventListener('keydown', e => { if(e.key==='Enter') saveKey(); });
+});
+
+/* ═══════════ KEY ═══════════ */
+function saveKey() {
+  const v = document.getElementById('key-input').value.trim();
+  if (!v) { showErr('key-err','Saisissez votre clé.'); return; }
+  if (!v.startsWith('sk-or-')) { showErr('key-err','La clé doit commencer par "sk-or-v1-…". Vérifiez sur openrouter.ai → Keys.'); return; }
+  hide('key-err');
+  localStorage.setItem(KEYSTORE, v);
+  document.getElementById('setup-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  refreshBasketMini();
+}
+function showSetup() {
+  document.getElementById('key-input').value = localStorage.getItem(KEYSTORE)||'';
+  hide('key-err');
+  document.getElementById('setup-overlay').style.display = 'flex';
+}
+
+/* ═══════════ NAVIGATION ═══════════ */
+let currentTab = 0;
+function goTab(n) {
+  // Autorise la navigation seulement si les conditions sont remplies
+  if (n === 1 && !curExo) return; // pas d'exo en édition
+  currentTab = n;
+  ['page0','page1','page2','page3'].forEach((id,i) => {
+    document.getElementById(id).style.display = i===n ? 'block' : 'none';
+  });
+  ['t0','t1','t2','t3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    const enabled = i===0 || (i===1 && curExo) || i===2 || i===3;
+    el.className = 'nav-tab' + (i===n ? ' active' : '') + (i < n ? ' done' : '') + (enabled && i!==n ? ' clickable' : '');
+  });
+  if (n === 2) renderFiche();
+  if (n === 3) renderHistory();
+  window.scrollTo(0,0);
+}
+
+/* ═══════════ FILE UPLOAD ═══════════ */
+function handleFile(e) {
+  const file = e.target.files[0]; if (!file) return;
+  hide('scan-err');
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    curImg = ev.target.result;
+    document.getElementById('img-prev').src = curImg;
+    show('img-prev'); hide('upload-zone');
+    show('loading');
+    await runAnalysis(curImg.split(',')[1], file.type||'image/jpeg');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══════════ AI ANALYSIS ═══════════ */
+const PROMPT = `Tu es un assistant pour enseignantes de mathématiques primaire (enfants 7-10 ans).
+Analyse cet exercice. Réponds UNIQUEMENT en JSON valide sans backticks :
+{
+  "type": "Calcul | Géométrie | Problème textuel | Tableau | Autre",
+  "emoji": "un seul emoji",
+  "consigne": "consigne en français naturel (traduite si anglais, adaptée 8 ans)",
+  "numbers": [{"label": "nom court", "value": 12}],
+  "correction": "réponse si visible sinon chaine vide"
+}
+Règles : traduire EN→FR, adapter unités (miles→km, lbs→kg), numbers = chiffres modifiables max 8.`;
+
+async function runAnalysis(b64, mime) {
+  const ltxt   = document.getElementById('ltxt');
+  const lmodel = document.getElementById('lmodel');
+  const msgs   = ['Lecture de l\'image…','Détection des données…','Traduction si besoin…','Finalisation…'];
+  let mi = 0;
+  const tick = setInterval(()=>{ ltxt.textContent = msgs[mi=(mi+1)%msgs.length]; }, 1600);
+  let lastErr = '';
+
+  for (const m of MODELS) {
+    try {
+      lmodel.textContent = 'Modèle : ' + m.label;
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem(KEYSTORE),
+          'HTTP-Referer': 'https://exoscan.local',
+          'X-Title': 'ExoScan'
+        },
+        body: JSON.stringify({
+          model: m.id, max_tokens: 800,
+          messages:[{role:'user',content:[
+            {type:'image_url', image_url:{url:`data:${mime};base64,${b64}`}},
+            {type:'text', text: PROMPT}
+          ]}]
+        })
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(()=>({}));
+        if (r.status===401) { lastErr='Clé API invalide. Vérifiez dans ⚙ Clé API.'; break; }
+        if (r.status===402) { lastErr='Crédits insuffisants sur OpenRouter.'; break; }
+        lastErr = e?.error?.message || 'HTTP '+r.status;
+        continue;
+      }
+      const data = await r.json();
+      const txt  = data?.choices?.[0]?.message?.content || '';
+      if (!txt) { lastErr='Réponse vide.'; continue; }
+      let parsed;
+      try { parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()); }
+      catch { parsed = {type:'Exercice',emoji:'✏️',consigne:txt.substring(0,300),numbers:[],correction:''}; }
+      clearInterval(tick);
+      hide('loading'); lmodel.textContent='';
+      onAnalysisDone(parsed);
+      return;
+    } catch(ex) { lastErr = ex.message; }
+  }
+  clearInterval(tick);
+  hide('loading'); lmodel.textContent='';
+  showErr('scan-err', '⚠ ' + lastErr + ' — Vérifiez votre connexion ou votre clé API.');
+  show('upload-zone'); hide('img-prev');
+  document.getElementById('file-input').value='';
+}
+
+function onAnalysisDone(data) {
+  curExo  = data;
+  curNums = (data.numbers||[]).map(n=>({...n}));
+  // Rempli l'éditeur
+  document.getElementById('tbadge').textContent = (data.emoji||'✏️')+' '+(data.type||'Exercice');
+  document.getElementById('cons-edit').value = data.consigne||'';
+  renderNums();
+  // Sauvegarde dans l'historique
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    emoji: data.emoji||'✏️',
+    type: data.type||'Exercice',
+    consigne: data.consigne||'',
+    numbers: curNums.map(n=>({...n})),
+    correction: data.correction||'',
+    imgSrc: curImg
+  };
+  history.unshift(entry);
+  if (history.length > 50) history = history.slice(0,50);
+  localStorage.setItem(HISTSTORE, JSON.stringify(history));
+  // Navigation auto vers édition
+  goTab(1);
+}
+
+/* ═══════════ EDITOR ═══════════ */
+function renderNums() {
+  const g = document.getElementById('numgrid');
+  if (!curNums.length) {
+    g.innerHTML='<p style="font-size:13px;color:var(--hint);padding:4px 0">Aucune valeur numérique — modifiez la consigne directement.</p>';
+    return;
+  }
+  g.innerHTML = curNums.map((n,i)=>`
+    <div class="nitem">
+      <span class="nlbl">${esc(n.label)}</span>
+      <input type="number" value="${n.value}" oninput="curNums[${i}].value=parseFloat(this.value)||0">
+    </div>`).join('');
+}
+
+function randomNums() {
+  curNums = curNums.map(n => {
+    const v = parseFloat(n.value);
+    if (isNaN(v)||v===0) return n;
+    const mag = Math.max(1, Math.pow(10, Math.floor(Math.log10(Math.abs(v)))));
+    return {...n, value: Math.floor(Math.random()*9*mag)+mag};
+  });
+  renderNums();
+}
+
+function addToFiche() {
+  const c = document.getElementById('cons-edit').value.trim();
+  if (!c) { document.getElementById('cons-edit').focus(); return; }
+  basket.push({
+    type: (curExo?.emoji||'✏️')+' '+(curExo?.type||'Exercice'),
+    consigne: c,
+    numbers: [...curNums],
+    correction: curExo?.correction||''
+  });
+  curExo = null; // reset editor
+  refreshBasketMini();
+  goTab(0);
+  // reset upload zone
+  hide('img-prev'); show('upload-zone');
+  document.getElementById('file-input').value='';
+}
+
+/* ═══════════ BASKET MINI (page scan) ═══════════ */
+function refreshBasketMini() {
+  const mini = document.getElementById('basket-mini');
+  if (!basket.length) { mini.style.display='none'; return; }
+  mini.style.display='block';
+  document.getElementById('bcount').textContent = basket.length;
+  document.getElementById('basket-mini-list').innerHTML = basket.map((e,i)=>`
+    <div class="fitem">
+      <div class="fnum">${i+1}</div>
+      <div class="fcontent">
+        <div class="fconsigne">${esc(e.consigne)}</div>
+        <div class="ftag">${esc(e.type)}</div>
+      </div>
+      <button class="fdel" onclick="removeFromBasket(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeFromBasket(i) {
+  basket.splice(i,1);
+  refreshBasketMini();
+  if (currentTab===2) renderFiche();
+}
+
+function clearBasket() {
+  if (!basket.length) return;
+  if (confirm('Vider la fiche ? Les exercices seront supprimés.')) {
+    basket=[]; refreshBasketMini(); renderFiche();
+  }
+}
+
+/* ═══════════ EXPORT PAGE ═══════════ */
+function renderFiche() {
+  document.getElementById('fcount').textContent = basket.length;
+  const list = document.getElementById('fiche-list');
+  if (!basket.length) {
+    list.innerHTML='<div class="empty">Aucun exercice — scannez une photo d\'abord.</div>';
+    return;
+  }
+  list.innerHTML = basket.map((e,i)=>`
+    <div class="fitem">
+      <div class="fnum">${i+1}</div>
+      <div class="fcontent">
+        <div class="fconsigne">${esc(e.consigne)}</div>
+        <div class="ftag">${esc(e.type)}</div>
+      </div>
+      <button class="fdel" onclick="removeFromBasket(${i});renderFiche()">×</button>
+    </div>`).join('');
+}
+
+async function generateWord() {
+  if (!basket.length) { alert('Ajoutez au moins un exercice avant de générer.'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Génération en cours…';
+
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType} = docx;
+  const title    = document.getElementById('doc-title').value.trim() || 'Fiche d\'exercices';
+  const withHdr  = document.getElementById('opt-hdr').checked;
+  const withLine = document.getElementById('opt-lines').checked;
+  const withCorr = document.getElementById('opt-corr').checked;
+  const MIME     = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  const safe     = title.replace(/[^a-zA-Z0-9àâéèêëîïôùûüæœç\s-]/g,'').trim().replace(/\s+/g,'_') || 'fiche';
+
+  function buildDoc(corrMode) {
+    const ch = [];
+    if (withHdr) ch.push(new Paragraph({
+      children:[
+        new TextRun({text:'Nom : ___________________________   ',size:24}),
+        new TextRun({text:'Date : ______________   ',size:24}),
+        new TextRun({text:'Classe : _______',size:24})
+      ], spacing:{after:200}
+    }));
+    ch.push(new Paragraph({
+      text: title + (corrMode?' — CORRIGÉ':''),
+      heading: HeadingLevel.HEADING_1,
+      alignment: AlignmentType.CENTER,
+      spacing:{before:80,after:300}
+    }));
+    basket.forEach((exo,idx) => {
+      ch.push(new Paragraph({
+        children:[
+          new TextRun({text:`Exercice ${idx+1}`,bold:true,size:28,color:'5B3FBF'}),
+          new TextRun({text:`   ${exo.type}`,size:22,color:'999999'})
+        ], spacing:{before:260,after:100}
+      }));
+      ch.push(new Paragraph({
+        children:[new TextRun({text:exo.consigne,size:26})],
+        spacing:{after:140}
+      }));
+      if (corrMode && exo.correction) {
+        ch.push(new Paragraph({
+          children:[new TextRun({text:'→ '+exo.correction,size:24,color:'2D6A4F',italics:true})],
+          spacing:{after:200}
+        }));
+      } else if (withLine) {
+        for(let i=0;i<3;i++) ch.push(new Paragraph({
+          children:[new TextRun({text:'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _',color:'CCCCCC',size:24})],
+          spacing:{after:100}
+        }));
+      }
+      ch.push(new Paragraph({text:'',spacing:{after:60}}));
+    });
+    return new Document({sections:[{children:ch}]});
+  }
+
+  try {
+    // Packer.toBase64String est la méthode native du build browser de docx.js
+    const b64main = await Packer.toBase64String(buildDoc(false));
+    let b64corr = null;
+    if (withCorr) b64corr = await Packer.toBase64String(buildDoc(true));
+
+    btn.disabled = false;
+    btn.textContent = '⬇ Générer et télécharger le .docx';
+
+    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    const note = document.getElementById('dl-note');
+
+    // Tente Web Share sur mobile d'abord
+    if (isMobile && navigator.share && navigator.canShare) {
+      try {
+        function b64toFile(b64, name) {
+          const bytes = atob(b64), arr = new Uint8Array(bytes.length);
+          for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+          return new File([arr], name, {type:MIME});
+        }
+        const sfiles = [b64toFile(b64main, safe+'.docx')];
+        if (b64corr) sfiles.push(b64toFile(b64corr, safe+'_corrige.docx'));
+        if (navigator.canShare({files:sfiles})) {
+          await navigator.share({files:sfiles, title});
+          showExportSuccess(basket.length, withCorr);
+          return;
+        }
+      } catch(e) { if(e.name==='AbortError') return; }
+    }
+
+    // Affiche les liens data: URL téléchargeables (marche partout)
+    const dlZone = document.getElementById('dl-zone');
+    let links = `<a class="dl-link" href="data:${MIME};base64,${b64main}" download="${safe}.docx">⬇ ${safe}.docx</a>`;
+    if (b64corr) links += `<a class="dl-link" href="data:${MIME};base64,${b64corr}" download="${safe}_corrige.docx" style="margin-top:8px">⬇ ${safe}_corrige.docx</a>`;
+
+    dlZone.innerHTML = links + `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter un exercice</button>
+        <button class="btn btn-p btn-sm" onclick="resetFiche()">Nouvelle fiche</button>
+      </div>`;
+
+    note.style.display='block';
+    note.innerHTML = isMobile
+      ? '<strong>iPad :</strong> Appuyez sur le bouton → icône <strong>□↑</strong> → <strong>Enregistrer dans Fichiers</strong>'
+      : '<strong>PC :</strong> Cliquez sur le bouton vert — le fichier se télécharge dans votre dossier Téléchargements.';
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '⬇ Générer et télécharger le .docx';
+    alert('Erreur : ' + err.message);
+  }
+}
+
+function showExportSuccess(count, withCorr) {
+  document.getElementById('dl-zone').innerHTML=`
+    <div class="sblock">
+      <div class="scheck">✓</div>
+      <h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Fichier partagé !</h3>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:16px">${count} exercice${count>1?'s':''}${withCorr?' + corrigé':''}</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter</button>
+        <button class="btn btn-p btn-sm" onclick="resetFiche()">Nouvelle fiche</button>
+      </div>
+    </div>`;
+}
+
+function resetFiche() {
+  basket=[];
+  refreshBasketMini();
+  document.getElementById('dl-zone').innerHTML='<button class="btn btn-g btn-full" id="gen-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>';
+  document.getElementById('dl-note').style.display='none';
+  document.getElementById('doc-title').value='';
+  goTab(0);
+}
+
+/* ═══════════ HISTORIQUE ═══════════ */
+function renderHistory() {
+  const list = document.getElementById('hist-list');
+  if (!history.length) {
+    list.innerHTML='<div class="empty">Aucun exercice analysé pour l\'instant.</div>';
+    return;
+  }
+  list.innerHTML = history.map(h=>`
+    <div class="hist-item" onclick="loadFromHistory(${h.id})">
+      ${h.imgSrc
+        ? `<img class="hist-thumb" src="${h.imgSrc}" alt="">`
+        : `<div class="hist-thumb-ph">${h.emoji}</div>`}
+      <div class="hist-info">
+        <div class="hist-consigne">${esc(h.consigne)}</div>
+        <div class="hist-meta">${h.emoji} ${h.type} · ${h.date}</div>
+      </div>
+      <button class="hist-del" onclick="event.stopPropagation();deleteHistory(${h.id})">×</button>
+    </div>`).join('');
+}
+
+function loadFromHistory(id) {
+  const h = history.find(x=>x.id===id); if(!h) return;
+  curExo  = {type:h.type, emoji:h.emoji, consigne:h.consigne, numbers:h.numbers, correction:h.correction};
+  curNums = h.numbers.map(n=>({...n}));
+  curImg  = h.imgSrc;
+  document.getElementById('tbadge').textContent = h.emoji+' '+h.type;
+  document.getElementById('cons-edit').value = h.consigne;
+  renderNums();
+  goTab(1);
+}
+
+function deleteHistory(id) {
+  history = history.filter(x=>x.id!==id);
+  localStorage.setItem(HISTSTORE, JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!history.length) return;
+  if (confirm('Effacer tout l\'historique ?')) {
+    history=[];
+    localStorage.setItem(HISTSTORE, JSON.stringify(history));
+    renderHistory();
+  }
+}
+
+/* ═══════════ UTILS ═══════════ */
+function show(id){ const e=document.getElementById(id); if(e) e.style.display='block'; }
+function hide(id){ const e=document.getElementById(id); if(e) e.style.display='none'; }
+function showErr(id,msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
