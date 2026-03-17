@@ -406,12 +406,34 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
   <!-- AI LOADING BAR -->
   <div id="ai-bar">
-    <div style="display:flex;justify-content:space-between">
+    <div style="display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA locale…</span>
-      <span style="font-size:12px;color:var(--mu)" id="ai-pct">0%</span>
+      <span style="font-size:12px;color:var(--mu);font-weight:600" id="ai-pct">0%</span>
     </div>
-    <div class="ai-track"><div class="ai-fill" id="ai-fill"></div></div>
-    <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">Téléchargement du modèle SmolVLM (~400MB une seule fois)…</p>
+    <div class="ai-track" style="margin-top:8px"><div class="ai-fill" id="ai-fill"></div></div>
+    <p style="font-size:12px;color:var(--mu);margin-top:6px;line-height:1.5" id="ai-msg">Préparation…</p>
+  </div>
+
+  <!-- AI OFFLINE LOADING SCREEN (shown in place of content when loading local model) -->
+  <div id="ai-loading-screen" style="display:none">
+    <div class="card" style="text-align:center;padding:32px 24px">
+      <div style="width:56px;height:56px;background:var(--acl);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px">🔒</div>
+      <h2 style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:8px" id="ai-ls-title">Chargement de l'IA locale</h2>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:16px;line-height:1.6" id="ai-ls-sub">Téléchargement en cours — connexion internet requise pour ce premier chargement uniquement.</p>
+      <div style="background:var(--sur2);border-radius:8px;height:10px;overflow:hidden;margin-bottom:8px">
+        <div id="ai-ls-fill" style="height:100%;background:var(--ac);border-radius:8px;transition:width .4s;width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:12px;color:var(--mu)" id="ai-ls-file"></span>
+        <span style="font-size:13px;font-weight:600;color:var(--ac)" id="ai-ls-pct">0%</span>
+      </div>
+      <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--gn);text-align:left;line-height:1.7">
+        ✓ Ce téléchargement se fait <strong>une seule fois</strong> (~400MB)<br>
+        ✓ Après ça, tout fonctionne <strong>100% hors-ligne</strong><br>
+        ✓ Restez connecté pendant ce premier chargement
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="skipLocalAI()">Passer en mode API →</button>
+    </div>
   </div>
 
   <!-- PAGE 0 : SCAN -->
@@ -1057,99 +1079,132 @@ function showSetup() {
 async function initAI(force=false) {
   updateAIPill('loading','⏳ Init…');
   const provider = localStorage.getItem(PROVSTORE)||'openrouter';
-  const labels   = {openrouter:'🌐 OpenRouter',anthropic:'🤖 Claude',openai:'✨ GPT-4o',offline:'🔒 Local'};
-
-  // 1. Init Tesseract OCR (léger, ~10MB)
+  const labels = {openrouter:'🌐 OpenRouter',anthropic:'🤖 Claude',openai:'✨ GPT-4o',offline:'🔒 Local'};
   initOCR();
-
-  // 2. Test API (sauf offline)
-  if(provider !== 'offline'){
-    const apiOk = await testApiSilent();
-    if (apiOk) {
-      updateAIPill('api', labels[provider]||'🌐 API');
-      setAIModeInfo(`Mode ${labels[provider]||provider} actif. IA locale disponible en fallback hors-ligne.`);
-    }
+  if (provider === 'offline') {
+    await initLocalAI(force);
+    return;
   }
-
-  // 3. Init IA locale (toujours, pour fallback)
-  initLocalAI(force);
+  const apiOk = await testApiSilent();
+  if (apiOk) {
+    updateAIPill('api', labels[provider]||'🌐 API');
+    setAIModeInfo('Mode '+(labels[provider]||provider)+' actif. IA locale disponible en fallback hors-ligne.');
+  } else {
+    updateAIPill('loading','⚠ API hors ligne…');
+    setAIModeInfo('API inaccessible. Chargement IA locale en fallback…');
+  }
+  initLocalAI(force); // non-blocking pour mode API
 }
 
-async function initOCR() {
-  try {
-    const { createWorker } = await import('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js');
-    ocrEngine = await createWorker(['fra','eng'], 1, {
-      logger: m => { if(m.status==='recognizing text') console.log('OCR:',Math.round(m.progress*100)+'%'); }
-    });
-    ocrReady = true;
-    console.log('OCR Tesseract prêt');
-  } catch(e) { console.log('OCR non disponible:', e.message); }
+function skipLocalAI() {
+  const ls = document.getElementById('ai-loading-screen');
+  if (ls) ls.style.display = 'none';
+  const wrap = document.getElementById('wrap');
+  if (wrap) wrap.style.display = 'block';
+  localStorage.setItem(PROVSTORE, 'openrouter');
+  show('overlay');
+  selectMode('openrouter');
 }
 
 async function initLocalAI(force=false) {
-  const bar = document.getElementById('ai-bar');
+  const isOffline = (localStorage.getItem(PROVSTORE) === 'offline');
+  const ls   = document.getElementById('ai-loading-screen');
+  const wrap = document.getElementById('wrap');
+  const bar  = document.getElementById('ai-bar');
+
+  if (isOffline && ls)   { ls.style.display = 'block'; }
+  if (isOffline && wrap) { wrap.style.display = 'none'; }
+
+  const setLS = (title, sub) => {
+    const t = document.getElementById('ai-ls-title');
+    const s = document.getElementById('ai-ls-sub');
+    if (t && title) t.textContent = title;
+    if (s && sub)   s.innerHTML   = sub;
+  };
+
+  const onProgress = (p) => {
+    const pct  = p.progress ? Math.round(p.progress) : 0;
+    const file = (p.file||'').split('/').pop();
+    if (bar) bar.style.display = 'block';
+    const els = {
+      'ai-fill':   el => el.style.width = pct+'%',
+      'ai-pct':    el => el.textContent = pct+'%',
+      'ai-msg':    el => el.textContent = file ? 'Chargement '+file+'…' : 'Préparation…',
+      'ai-ls-fill':el => el.style.width = pct+'%',
+      'ai-ls-pct': el => el.textContent = pct+'%',
+      'ai-ls-file':el => el.textContent = file,
+    };
+    Object.entries(els).forEach(([id,fn]) => { const e=document.getElementById(id); if(e) fn(e); });
+  };
+
   try {
+    // Detect WebGPU availability first
+    let device = 'wasm';
+    try {
+      if (navigator.gpu) {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (adapter) device = 'webgpu';
+      }
+    } catch(e) { device = 'wasm'; }
+
+    if (device === 'wasm' && isOffline) {
+      setLS(null, 'WebGPU non disponible sur ce navigateur — mode WASM (~30-40s par analyse). Pour de meilleures performances, utilisez Chrome ou Brave.');
+    }
+
+    updateAIPill('loading', device==='webgpu' ? '⏳ WebGPU…' : '⏳ WASM…');
+
     const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
     env.allowLocalModels = false;
 
-    const onProgress = (p) => {
-      bar.style.display = 'block';
-      if (p.progress) {
-        const pct = Math.round(p.progress);
-        document.getElementById('ai-fill').style.width = pct+'%';
-        document.getElementById('ai-pct').textContent = pct+'%';
-        document.getElementById('ai-msg').textContent = `Chargement ${p.file||''}…`;
-      }
-    };
+    setLS('Chargement SmolVLM (vision)…', null);
+    if (document.getElementById('ai-bar-label'))
+      document.getElementById('ai-bar-label').textContent = 'Chargement SmolVLM…';
 
-    document.getElementById('ai-bar-label').textContent = 'Chargement SmolVLM (vision)…';
-    // SmolVLM — modèle vision-langage compact, fonctionne sur WebGPU (Chrome/Brave/Firefox) et WASM
-    localVLM = await pipeline(
-      'image-text-to-text',
-      'HuggingFaceTB/SmolVLM-256M-Instruct',
-      { dtype: {embed_tokens:'fp16', vision_encoder:'fp16', decoder_model_merged:'q4'},
-        device: 'webgpu',
-        progress_callback: onProgress }
-    );
+    localVLM = await pipeline('image-text-to-text', 'HuggingFaceTB/SmolVLM-256M-Instruct', {
+      dtype: device==='webgpu'
+        ? {embed_tokens:'fp16', vision_encoder:'fp16', decoder_model_merged:'q4'}
+        : 'q4',
+      device,
+      progress_callback: onProgress
+    });
     vlmReady = true;
-    bar.style.display = 'none';
+    if (bar) bar.style.display = 'none';
 
-    // Phi-3 Mini pour génération texte
-    document.getElementById('ai-bar-label').textContent = 'Chargement Phi-3 Mini (texte)…';
-    bar.style.display = 'block';
-    document.getElementById('ai-fill').style.width = '0%';
-    localLLM = await pipeline('text-generation','Xenova/Phi-3-mini-4k-instruct',
-      { dtype:'q4', device:'webgpu', progress_callback: onProgress });
+    setLS('Chargement Phi-3 Mini (texte)…', null);
+    if (document.getElementById('ai-fill')) document.getElementById('ai-fill').style.width = '0%';
+    if (document.getElementById('ai-ls-fill')) document.getElementById('ai-ls-fill').style.width = '0%';
+    if (document.getElementById('ai-bar-label'))
+      document.getElementById('ai-bar-label').textContent = 'Chargement Phi-3 Mini…';
+
+    localLLM = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct', {
+      dtype: 'q4', device, progress_callback: onProgress
+    });
     llmReady = true;
-    bar.style.display = 'none';
 
-    updateAIPill('local','🟢 IA locale');
-    setAIModeInfo('Mode IA locale actif (SmolVLM + Phi-3). Fonctionne entièrement hors-ligne.');
+    // Done!
+    if (bar)  bar.style.display = 'none';
+    if (ls)   ls.style.display  = 'none';
+    if (wrap) wrap.style.display = 'block';
+
+    const label = device==='webgpu' ? '🟢 IA locale WebGPU' : '🟡 IA locale WASM';
+    updateAIPill('local', label);
+    setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne entièrement hors-ligne.');
+
   } catch(e) {
-    bar.style.display = 'none';
-    // Fallback WASM si WebGPU non disponible
-    if (e.message && e.message.includes('webgpu')) {
-      try {
-        const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
-        env.allowLocalModels = false;
-        document.getElementById('ai-bar').style.display='block';
-        document.getElementById('ai-bar-label').textContent='SmolVLM (WASM, ~30s par analyse)…';
-        localVLM = await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',
-          { dtype:'q4', device:'wasm',
-            progress_callback: p=>{ if(p.progress){document.getElementById('ai-fill').style.width=Math.round(p.progress)+'%';} } });
-        vlmReady = true;
-        document.getElementById('ai-bar').style.display='none';
-        updateAIPill('local','🟡 IA WASM');
-        setAIModeInfo('IA locale en mode WASM (WebGPU non disponible sur ce navigateur). Analyse ~20-40s. Recommandé : Chrome ou Brave.');
-      } catch(e2) {
-        updateAIPill('api','🌐 API seule');
-        setAIModeInfo('IA locale non disponible. Mode API uniquement. Vérifiez votre navigateur (Chrome/Brave recommandé).');
-      }
-    } else {
-      if (!vlmReady) { updateAIPill('api','🌐 API'); setAIModeInfo('IA locale non chargée. Mode API actif.'); }
+    if (bar)  bar.style.display  = 'none';
+    if (wrap) wrap.style.display = 'block'; // Always restore wrap
+    if (ls && isOffline) {
+      ls.style.display = 'block';
+      setLS('Chargement échoué', '<strong style="color:var(--rd)">Erreur : '+e.message+'</strong><br><br>Vérifiez votre connexion internet — le premier téléchargement (~400MB) nécessite du réseau. Après ça, tout fonctionne hors-ligne.');
     }
+    if (!vlmReady) {
+      updateAIPill('api','⚠ IA locale KO');
+      setAIModeInfo('Erreur IA locale : '+e.message);
+    }
+    console.error('initLocalAI:', e);
   }
 }
+
 
 function updateAIPill(cls, txt) {
   const p = document.getElementById('ai-status');
