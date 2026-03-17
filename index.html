@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%235B3FBF'/%3E%3Ctext x='256' y='340' font-size='300' text-anchor='middle' fill='white'%3E\ud83d\udcf7%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%235B3FBF'/%3E%3Ctext x='256' y='340' font-size='300' text-anchor='middle' fill='white'%3E%3C/text%3E%3C/svg%3E">
 <title>ExoScan</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
@@ -228,10 +228,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sync-dot.pulse{animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-
-<!-- SETUP OVERLAY -->
 <div id="overlay" style="display:none">
   <div class="setup-box">
     <div style="text-align:center;margin-bottom:20px">
@@ -289,6 +288,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <p style="font-size:11px;color:var(--mu);margin-top:10px;text-align:center">Vos clés restent sur votre appareil uniquement</p>
   </div>
 </div>
+
 <div id="app" style="display:none">
 
 <!-- AI OFFLINE LOADING SCREEN -->
@@ -322,19 +322,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <span class="hdr-tag">Maths primaire</span>
     </div>
     <div class="hdr-right">
-      <span class="ai-pill" id="ai-status" title="Mode IA actif">\u2699 Init\u2026</span>
-      <button class="key-btn" onclick="showSetup()">\u2699</button>
+      <span class="ai-pill" id="ai-status" title="Mode IA actif">⚙ Init…</span>
+      <button class="key-btn" onclick="showSetup()">⚙</button>
     </div>
   </div>
 
   <!-- AI LOADING BAR -->
   <div id="ai-bar">
     <div style="display:flex;justify-content:space-between">
-      <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA locale\u2026</span>
+      <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA locale…</span>
       <span style="font-size:12px;color:var(--mu)" id="ai-pct">0%</span>
     </div>
     <div class="ai-track"><div class="ai-fill" id="ai-fill"></div></div>
-    <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">T\u00e9l\u00e9chargement du mod\u00e8le SmolVLM (~400MB une seule fois)\u2026</p>
+    <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">Téléchargement du modèle SmolVLM (~400MB une seule fois)…</p>
   </div>
 
   <!-- PAGE 0 : SCAN -->
@@ -342,104 +342,107 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="card">
       <div class="card-title">Scanner un exercice</div>
       <div id="upzone" onclick="document.getElementById('finput').click()">
-        <div class="uico">\ud83d\udcf7</div>
+        <div class="uico"></div>
         <h2>Photo ou screenshot</h2>
-        <p>Manuel \u00b7 Site web \u00b7 FR ou EN</p>
+        <p>Manuel · Site web · FR ou EN</p>
       </div>
       <input type="file" id="finput" accept="image/*" onchange="handleFile(event)">
       <img id="iprev" alt="">
       <div class="ldg" id="scan-ldg">
         <div class="spinner"></div>
-        <div style="font-size:14px;color:var(--mu)" id="scan-ltxt">Analyse\u2026</div>
+        <div style="font-size:14px;color:var(--mu)" id="scan-ltxt">Analyse…</div>
         <div class="ldg-sub" id="scan-lmod"></div>
       </div>
       <div class="err" id="scan-err"></div>
     </div>
     <!-- Inline editor (shown after scan) -->
     <div id="inline-ed" style="display:none" class="card">
-      <div class="card-title">Exercice analys\u00e9 \u2014 modifiable</div>
-      <div id="ed-badge" class="tbadge">\u270f\ufe0f Exercice</div>
+      <div class="card-title">Exercice analysé — modifiable</div>
+      <div id="ed-badge" class="tbadge">✏️ Exercice</div>
       <label class="flbl">Consigne</label>
       <textarea id="ed-cons"></textarea>
-      <div style="margin-top:12px"><label class="flbl">Valeurs num\u00e9riques</label><div class="ngrid" id="ed-nums"></div></div>
+      <div style="margin-top:12px"><label class="flbl">Valeurs numériques</label><div class="ngrid" id="ed-nums"></div></div>
       <div class="arow">
-        <button class="btn btn-ghost btn-sm" onclick="randomNums()">\ud83d\udd00 Nouveaux chiffres</button>
+        <button class="btn btn-ghost btn-sm" onclick="randomNums()"> Nouveaux chiffres</button>
         <div class="sp"></div>
-        <button class="btn btn-p" onclick="addToFiche()">Ajouter \u00e0 la fiche \u2192</button>
+        <button class="btn btn-p" onclick="addToFiche()">Ajouter à la fiche →</button>
       </div>
     </div>
     <!-- Basket mini -->
     <div id="bmini" style="display:none" class="card">
-      <div class="card-title">Fiche en cours \u00b7 <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter \u2192</button></span></div>
+      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter →</button></span></div>
       <div id="bmini-list"></div>
       <div class="arow"><button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button></div>
     </div>
   </div>
 
-  <!-- PAGE 1 : CR\u00c9ER -->
-  <div id="p1" style="display:none">
+  <!-- PAGE 1 : CRÉER -->
+  <div 
+id="p1" style="display:none">
     <div class="card">
-      <div class="card-title">G\u00e9n\u00e9rer un exercice</div>
+      <div class="card-title">Générer un exercice</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div><label class="flbl">Type</label>
           <select id="gen-type">
             <option>Calcul mental</option><option>Addition / Soustraction</option>
             <option>Multiplication / Division</option><option>Fractions</option>
-            <option>G\u00e9om\u00e9trie</option><option>Mesures</option>
-            <option>Probl\u00e8me textuel</option><option>Num\u00e9ration</option>
+            <option>Géométrie</option><option>Mesures</option>
+            <option>Problème textuel</option><option>Numération</option>
           </select></div>
         <div><label class="flbl">Niveau</label>
           <select id="gen-level">
-            <option value="1re primaire (6-7 ans)">1re \u2014 6 ans</option>
-            <option value="2e primaire (7-8 ans)">2e \u2014 7 ans</option>
-            <option value="3e primaire (8-9 ans)" selected>3e \u2014 8 ans</option>
-            <option value="4e primaire (9-10 ans)">4e \u2014 9 ans</option>
-            <option value="5e primaire (10-11 ans)">5e \u2014 10 ans</option>
-            <option value="6e primaire (11-12 ans)">6e \u2014 11 ans</option>
+            <option value="1re primaire (6-7 ans)">1re — 6 ans</option>
+            <option value="2e primaire (7-8 ans)">2e — 7 ans</option>
+            <option value="3e primaire (8-9 ans)" selected>3e — 8 ans</option>
+            <option value="4e primaire (9-10 ans)">4e — 9 ans</option>
+            <option value="5e primaire (10-11 ans)">5e — 10 ans</option>
+            <option value="6e primaire (11-12 ans)">6e — 11 ans</option>
           </select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div><label class="flbl">Questions</label>
           <select id="gen-count"><option value="3">3</option><option value="5" selected>5</option><option value="8">8</option><option value="10">10</option></select></div>
-        <div><label class="flbl">Difficult\u00e9</label>
+        <div><label class="flbl">Difficulté</label>
           <select id="gen-diff"><option value="facile">Facile</option><option value="normal" selected>Normal</option><option value="difficile">Difficile</option></select></div>
       </div>
-      <label class="flbl">Th\u00e8me / contexte (optionnel)</label>
-      <input type="text" id="gen-ctx" placeholder="Ex: animaux, sport, saisons\u2026" style="margin-bottom:12px">
-      <button class="btn btn-p btn-full" id="gen-btn" onclick="generateExo()">\u2728 G\u00e9n\u00e9rer l'exercice</button>
-      <div class="ldg" id="gen-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)" id="gen-src">G\u00e9n\u00e9ration\u2026</div></div>
+      <label class="flbl">Thème / contexte (optionnel)</label>
+      <input type="text" id="gen-ctx" placeholder="Ex: animaux, sport, saisons…" style="margin-bottom:12px">
+      <button class="btn btn-p btn-full" id="gen-btn" onclick="generateExo()">✨ Générer l'exercice</button>
+      <div class="ldg" id="gen-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)" id="gen-src">Génération…</div></div>
       <div class="err" id="gen-err"></div>
     </div>
     <div id="gen-result" style="display:none" class="card">
-      <div class="card-title">Exercice g\u00e9n\u00e9r\u00e9</div>
-      <div id="gen-badge" class="tbadge">\u2728</div>
+      <div class="card-title">Exercice généré</div>
+      <div id="gen-badge" class="tbadge">✨</div>
       <label class="flbl">Consigne</label>
       <textarea id="gen-cons"></textarea>
       <div style="margin-top:12px"><label class="flbl">Valeurs</label><div class="ngrid" id="gen-nums"></div></div>
       <div class="arow">
-        <button class="btn btn-ghost btn-sm" onclick="generateExo()">\ud83d\udd04 R\u00e9g\u00e9n\u00e9rer</button>
+        <button class="btn btn-ghost btn-sm" onclick="generateExo()"> Régénérer</button>
         <div class="sp"></div>
-        <button class="btn btn-p" onclick="addGenToFiche()">Ajouter \u00e0 la fiche \u2192</button>
+        <button class="btn btn-p" onclick="addGenToFiche()">Ajouter à la fiche →</button>
       </div>
     </div>
   </div>
 
-  <!-- PAGE 2 : BIBLIOTH\u00c8QUE -->
-  <div id="p2" style="display:none">
+  <!-- PAGE 2 : BIBLIOTHÈQUE -->
+  <div 
+id="p2" style="display:none">
     <div class="card">
-      <div class="card-title">Biblioth\u00e8que <span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
-      <div class="search-wrap"><span class="search-ico">\ud83d\udd0d</span><input type="text" id="lib-search" placeholder="Rechercher\u2026" oninput="renderLib()"></div>
+      <div class="card-title">Bibliothèque <span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
+      <div class="search-wrap"><span class="search-ico"></span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
       <div class="chips" id="lib-chips"></div>
       <div id="lib-list"></div>
     </div>
   </div>
 
   <!-- PAGE 3 : EXPORT -->
-  <div id="p3" style="display:none">
+  <div 
+id="p3" style="display:none">
     <div class="card">
-      <div class="card-title">Fiche \u00b7 <span id="fcount">0</span> exercice(s)</div>
+      <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
       <div id="fiche-list"></div>
-      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button><button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Cr\u00e9er</button></div>
+      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button><button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button></div>
     </div>
     <!-- Variantes -->
     <div class="card" id="var-card" style="display:none">
@@ -447,7 +450,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
         <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
         <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
-        <button class="btn btn-p btn-sm" onclick="generateVariants()">G\u00e9n\u00e9rer</button>
+        <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
       </div>
       <div id="var-result"></div>
     </div>
@@ -455,125 +458,140 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="card">
       <div class="card-title">Options Word</div>
       <label class="flbl">Titre</label>
-      <input type="text" id="doc-title" placeholder="Exercices \u2014 Multiplication \u2014 3e ann\u00e9e" style="margin-bottom:12px">
-      <label class="xopt"><input type="checkbox" id="opt-hdr" checked><div class="xopt-txt"><strong>En-t\u00eate \u00e9l\u00e8ve</strong><span>Nom \u00b7 Date \u00b7 Classe</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de r\u00e9ponse</strong><span>Pointill\u00e9s</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-bareme"><div class="xopt-txt"><strong>Bar\u00e8me</strong><span>Points par exercice</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrig\u00e9</strong><span>2e fichier avec r\u00e9ponses</span></div></label>
+      <input type="text" id="doc-title" placeholder="Exercices — Multiplication — 3e année" style="margin-bottom:12px">
+      <label class="xopt"><input type="checkbox" id="opt-hdr" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-bareme"><div class="xopt-txt"><strong>Barème</strong><span>Points par exercice</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>2e fichier avec réponses</span></div></label>
       <div id="dl-zone" style="margin-top:14px">
-        <button class="btn btn-g btn-full" id="gen-word-btn" onclick="generateWord()">\u2b07 G\u00e9n\u00e9rer et t\u00e9l\u00e9charger le .docx</button>
+        <button class="btn btn-g btn-full" id="gen-word-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>
       </div>
       <div class="note" id="dl-note" style="display:none"></div>
     </div>
   </div>
 
   <!-- PAGE 4 : CORRECTION -->
-  <div id="p4" style="display:none">
+  <div 
+id="p4" style="display:none">
     <div class="card">
-      <div class="card-title">Corriger une copie d'\u00e9l\u00e8ve</div>
-      <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Photographiez le corrig\u00e9 attendu et la copie de l'\u00e9l\u00e8ve. L'IA compare et identifie les erreurs.</p>
+      <div class="card-title">Corriger une copie d'élève</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Photographiez le corrigé attendu et la copie de l'élève. L'IA compare et identifie les erreurs.</p>
       <div class="corr-split">
         <div class="corr-panel" id="corr-ref-panel" onclick="document.getElementById('corr-ref-input').click()">
-          <div class="corr-panel-label">\ud83d\udccb Corrig\u00e9</div>
+          <div class="corr-panel-label"> Corrigé</div>
           <p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>
           <input type="file" id="corr-ref-input" accept="image/*" style="display:none" onchange="loadCorrImg(event,'ref')">
         </div>
         <div class="corr-panel" id="corr-copy-panel" onclick="document.getElementById('corr-copy-input').click()">
-          <div class="corr-panel-label">\ud83d\udcdd Copie \u00e9l\u00e8ve</div>
+          <div class="corr-panel-label"> Copie élève</div>
           <p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>
           <input type="file" id="corr-copy-input" accept="image/*" style="display:none" onchange="loadCorrImg(event,'copy')">
         </div>
       </div>
       <div class="arow" style="margin-top:12px">
-        <button class="btn btn-ghost btn-sm" onclick="resetCorr()">R\u00e9initialiser</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetCorr()">Réinitialiser</button>
         <div class="sp"></div>
-        <button class="btn btn-p" id="corr-btn" onclick="runCorrection()" disabled>\ud83d\udd0d Analyser la copie</button>
+        <button class="btn btn-p" id="corr-btn" onclick="runCorrection()" disabled> Analyser la copie</button>
       </div>
-      <div class="ldg" id="corr-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">Comparaison en cours\u2026</div></div>
+      <div class="ldg" id="corr-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">Comparaison en cours…</div></div>
       <div class="err" id="corr-err"></div>
     </div>
     <div id="corr-result" style="display:none" class="card">
-      <div class="card-title" id="corr-result-title">R\u00e9sultat</div>
+      <div class="card-title" id="corr-result-title">Résultat</div>
       <div id="corr-items"></div>
       <div class="arow"><button class="btn btn-ghost btn-sm" onclick="resetCorr()">Nouvelle correction</button></div>
     </div>
   </div>
 
   <!-- PAGE 5 : PLANNING -->
-  <div id="p5" style="display:none">
+  <div 
+id="p5" style="display:none">
     <div class="card">
-      <div class="card-title">Planifier une s\u00e9quence</div>
+      <div class="card-title">Planifier une séquence</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div><label class="flbl">Th\u00e8me</label><input type="text" id="plan-topic" placeholder="Ex: Les fractions"></div>
+        <div><label class="flbl">Thème</label><input type="text" id="plan-topic" placeholder="Ex: Les fractions"></div>
         <div><label class="flbl">Niveau</label>
           <select id="plan-level"><option>1re primaire</option><option>2e primaire</option><option selected>3e primaire</option><option>4e primaire</option><option>5e primaire</option><option>6e primaire</option></select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div><label class="flbl">Dur\u00e9e</label>
+        <div><label class="flbl">Durée</label>
           <select id="plan-dur"><option>1 semaine</option><option selected>2 semaines</option><option>3 semaines</option></select></div>
         <div><label class="flbl">Objectif</label><input type="text" id="plan-obj" placeholder="Comprendre et calculer"></div>
       </div>
-      <button class="btn btn-p btn-full" id="plan-btn" onclick="generatePlan()">\ud83d\udcc5 G\u00e9n\u00e9rer le planning</button>
-      <div class="ldg" id="plan-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">G\u00e9n\u00e9ration\u2026</div></div>
+      <button class="btn btn-p btn-full" id="plan-btn" onclick="generatePlan()"> Générer le planning</button>
+      <div class="ldg" id="plan-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">Génération…</div></div>
       <div class="err" id="plan-err"></div>
     </div>
     <div id="plan-result" style="display:none" class="card">
-      <div class="card-title">S\u00e9quence <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">\u2b07 Word</button></span></div>
+      <div class="card-title">Séquence <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">⬇ Word</button></span></div>
       <div id="plan-list"></div>
     </div>
   </div>
 
   <!-- PAGE 6 : DICO -->
-  <div id="p6" style="display:none">
-    <div class="card">
-      <div class="card-title">Dictionnaire math\u00e9matique</div>
-      <div class="search-wrap"><span class="search-ico">\ud83d\udd0d</span><input type="text" id="dico-search" placeholder="Chercher un terme\u2026" oninput="renderDico()"></div>
-      <div class="chips" id="dico-chips"></div>
-      <div id="dico-detail"></div>
-      <div class="dico-grid" id="dico-grid"></div>
+  <div 
+<div id="p6" style="display:none">
+  <div class="card">
+    <div class="card-title">Géométrie <span id="geo-add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label class="flbl">Forme</label>
+        <select class="inp" id="geo-type" onchange="renderGeoPreview()">
+          <option value="rectangle">Rectangle</option>
+          <option value="carre">Carré</option>
+          <option value="triangle">Triangle</option>
+          <option value="cercle">Cercle</option>
+          <option value="pentagone">Pentagone</option>
+        </select></div>
+      <div><label class="flbl">Couleur</label>
+        <input type="color" class="inp" id="geo-color" value="#5B3FBF" onchange="renderGeoPreview()" style="height:38px;padding:2px 4px"></div>
+      <div><label class="flbl">Largeur (cm)</label>
+        <input type="number" class="inp" id="geo-w" value="6" min="1" max="20" step="0.5" oninput="renderGeoPreview()"></div>
+      <div><label class="flbl">Hauteur (cm)</label>
+        <input type="number" class="inp" id="geo-h" value="4" min="1" max="20" step="0.5" oninput="renderGeoPreview()"></div>
     </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-fill" onchange="renderGeoPreview()"> Remplissage</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-dims" checked onchange="renderGeoPreview()"> Dimensions</label>
+    </div>
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:12px;min-height:120px;display:flex;align-items:center;justify-content:center">
+      <svg id="geo-svg" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:200px"></svg>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="addGeoToFiche()">+ Ajouter à la fiche</button>
   </div>
-
-  <!-- PAGE 7 : R\u00c9GLAGES + SYNC -->
-  <div id="p7" style="display:none">
-    <div class="card">
-      <div class="card-title">Synchronisation entre appareils</div>
-      <div class="sync-row"><div class="sync-dot" id="sync-dot"></div><span id="sync-status" style="flex:1;font-size:13px">Non configur\u00e9</span></div>
-      <p style="font-size:13px;color:var(--mu);margin-bottom:12px;line-height:1.6">La sync utilise un <strong>GitHub Gist</strong> (fichier priv\u00e9 sur votre compte GitHub). Votre biblioth\u00e8que est sauvegard\u00e9e automatiquement et accessible sur tous vos appareils.</p>
-      <label class="flbl">Token GitHub (Personal Access Token)</label>
-      <input type="password" id="gh-token" placeholder="ghp_\u2026" style="margin-bottom:8px;font-family:monospace;font-size:13px">
-      <p style="font-size:12px;color:var(--hi);margin-bottom:12px">Cr\u00e9er sur <a class="sl" href="https://github.com/settings/tokens/new?scopes=gist" target="_blank">github.com/settings/tokens</a> \u2192 scope <strong>gist</strong> uniquement.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-p btn-sm" onclick="syncSave()">\u2b06 Sauvegarder</button>
-        <button class="btn btn-ghost btn-sm" onclick="syncLoad()">\u2b07 Restaurer</button>
-        <button class="btn btn-ghost btn-sm" onclick="saveGhToken()">\ud83d\udcbe Enregistrer token</button>
-      </div>
-      <div class="err" id="sync-err" style="margin-top:10px"></div>
-      <div class="info-box" id="sync-ok" style="display:none"></div>
+</div>
+<div id="p7" style="display:none">
+  <div class="card">
+    <div class="card-title">Banque de problèmes <span id="bank-add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
+    <input class="inp" type="search" id="bank-search" placeholder="Rechercher un problème…" oninput="renderBank()" style="margin-bottom:10px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      <span style="font-size:12px;color:var(--mu);font-weight:600;width:100%">Contexte :</span>
+      <span class="chip active" onclick="bankSetFilter('ctx','Tout',this)">Tout</span>
+      <span class="chip" onclick="bankSetFilter('ctx','marché',this)">Marché</span>
+      <span class="chip" onclick="bankSetFilter('ctx','vélo',this)">Vélo</span>
+      <span class="chip" onclick="bankSetFilter('ctx','friterie',this)">Friterie</span>
+      <span class="chip" onclick="bankSetFilter('ctx','sport',this)">Sport</span>
+      <span class="chip" onclick="bankSetFilter('ctx','météo',this)">Météo</span>
+      <span class="chip" onclick="bankSetFilter('ctx','anniversaire',this)">Anniversaire</span>
+      <span class="chip" onclick="bankSetFilter('ctx','école',this)">École</span>
+      <span class="chip" onclick="bankSetFilter('ctx','nature',this)">Nature</span>
+      <span class="chip" onclick="bankSetFilter('ctx','maison',this)">Maison</span>
+      <span class="chip" onclick="bankSetFilter('ctx','kermesse',this)">Kermesse</span>
     </div>
-    <div class="card">
-      <div class="card-title">Mode IA</div>
-      <div class="info-box" id="ai-mode-info">Chargement\u2026</div>
-      <div class="arow" style="margin-top:12px">
-        <button class="btn btn-ghost btn-sm" onclick="initLocalAI(true)">\ud83d\udd04 Recharger IA locale</button>
-        <button class="btn btn-ghost btn-sm" onclick="testApi()">\ud83e\uddea Tester l'API</button>
-      </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="chip active" onclick="bankSetFilter('niveau',0,this)">Tous niveaux</span>
+      <span class="chip" onclick="bankSetFilter('niveau',1,this)">N1 ⭐</span>
+      <span class="chip" onclick="bankSetFilter('niveau',2,this)">N2 ⭐⭐</span>
+      <span class="chip" onclick="bankSetFilter('niveau',3,this)">N3 ⭐⭐⭐</span>
+      <span class="chip active" onclick="bankSetFilter('op','Tout',this)">Toutes opérations</span>
+      <span class="chip" onclick="bankSetFilter('op','addition',this)">+</span>
+      <span class="chip" onclick="bankSetFilter('op','soustraction',this)">−</span>
+      <span class="chip" onclick="bankSetFilter('op','multiplication',this)">×</span>
+      <span class="chip" onclick="bankSetFilter('op','division',this)">÷</span>
     </div>
-    <div class="card">
-      <div class="card-title">\u00c0 propos</div>
-      <p style="font-size:13px;color:var(--mu);line-height:1.7">
-        <strong>ExoScan Pro</strong> \u2014 Assistant math\u00e9matiques pour enseignantes du primaire<br>
-        IA locale : SmolVLM (HuggingFace) via Transformers.js<br>
-        OCR : Tesseract.js<br>
-        Export : docx.js<br>
-        H\u00e9bergement : GitHub Pages (gratuit)
-      </p>
-    </div>
+    <div id="bank-list"></div>
   </div>
-
-
-  <!-- PAGE 8: TABLES DE MULTIPLICATION -->
-  <div id="p8" style="display:none">
+</div>
+id="p8" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:12px">✖️ Tables de multiplication</h3>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -611,7 +629,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 9: DICTIONNAIRE -->
-  <div id="p9" style="display:none">
+  <div 
+id="p9" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:12px">📖 Dictionnaire mathématique</h3>
       <input class="inp" type="search" placeholder="Rechercher un terme…" oninput="renderDico(this.value)" style="margin-bottom:10px">
@@ -621,7 +640,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 10: REGLAGES -->
-  <div id="p10" style="display:none">
+  <div 
+id="p10" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:14px">⚙️ Réglages</h3>
 
@@ -661,25 +681,29 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       </div>
     </div>
   </div>
+
+
 </div><!-- /wrap -->
 
 <!-- BOTTOM NAV -->
 <div class="bnav">
   <button class="bnav-btn active" id="bn0" onclick="goTab(0)"><span class="ico">📷</span>Scan</button>
   <button class="bnav-btn" id="bn1" onclick="goTab(1)"><span class="ico">✨</span>Créer</button>
-  <button class="bnav-btn" id="bn2" onclick="goTab(2)"><span class="ico">🗂️</span>Biblio</button>
+  <button class="bnav-btn" id="bn2" onclick="goTab(2)"><span class="ico">🗂</span>Biblio</button>
   <button class="bnav-btn" id="bn3" onclick="goTab(3)"><span class="ico">📄</span>Export</button>
   <button class="bnav-btn" id="bn4" onclick="goTab(4)"><span class="ico">✅</span>Corr.</button>
   <button class="bnav-btn" id="bn5" onclick="goTab(5)"><span class="ico">📅</span>Plan</button>
   <button class="bnav-btn" id="bn6" onclick="goTab(6)"><span class="ico">📐</span>Géom.</button>
   <button class="bnav-btn" id="bn7" onclick="goTab(7)"><span class="ico">🛒</span>Banque</button>
-  <button class="bnav-btn" id="bn8" onclick="goTab(8)"><span class="ico">✖️</span>Tables</button>
+  <button class="bnav-btn" id="bn8" onclick="goTab(8)"><span class="ico">✖</span>Tables</button>
   <button class="bnav-btn" id="bn9" onclick="goTab(9)"><span class="ico">📖</span>Dico</button>
-  <button class="bnav-btn" id="bn10" onclick="goTab(10)"><span class="ico">⚙️</span>Régl.</button>
+  <button class="bnav-btn" id="bn10" onclick="goTab(10)"><span class="ico">⚙</span>Régl.</button>
 </div>
+
 </div><!-- /app -->
 
 <script>
+
 /* ══════════════════════════════════════════════
    CONSTANTS & GLOBALS
 ══════════════════════════════════════════════ */
@@ -872,7 +896,7 @@ async function initLocalAI(force=false) {
     upd('ai-bar-label', e => e.textContent = 'Phi-3 Mini…');
     localLLM = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct', {
       dtype: 'q4',
-      device,
+      device: 'wasm', // WebGPU instable pour text-generation, WASM plus fiable
       progress_callback: onProgress
     });
     llmReady = true;
@@ -1093,12 +1117,20 @@ async function analyzeImage(b64, mime) {
         {role:'system',content:'Analyse un exercice de maths primaire. Réponds en JSON uniquement.'},
         {role:'user',content:'Texte : '+ocrText+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[{"label":"...","value":0}],"correction":"...","chapitre":"..."}'}
       ], {max_new_tokens:400, temperature:0.2});
-      result = parseJSON(out[0].generated_text.at(-1).content);
+      const rawGen = out[0]?.generated_text;
+      const rawTxt = Array.isArray(rawGen) ? rawGen.at(-1)?.content : rawGen;
+      result = parseJSON(rawTxt||'');
     }
 
     if (ldg) ldg.style.display = 'none';
 
-    if (!result) throw new Error('Aucune méthode d\'analyse disponible. En mode hors-ligne, l\'IA locale doit d\'abord se charger (~400MB).');
+    if (!result) {
+      const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+      if (provider === 'offline') {
+        throw new Error('Analyse impossible. En mode hors-ligne : OCR doit extraire du texte de la photo, puis Phi-3 l\'analyse. Assurez-vous que la photo contient du texte lisible et que l\'IA locale est chargée (⚙️ Réglages).');
+      }
+      throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
+    }
     showInlineEditor(result);
   } catch(e) {
     if (ldg) ldg.style.display = 'none';
@@ -1230,7 +1262,8 @@ Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices num�
         txt = await callAIText(prompt);
       } else if (llmReady && localLLM) {
         const out = await localLLM([{role:'user',content:prompt}], {max_new_tokens:600, temperature:0.7});
-        txt = out[0].generated_text.at(-1).content;
+        const genOut = out[0]?.generated_text;
+        txt = Array.isArray(genOut) ? genOut.at(-1)?.content : genOut;
       }
     } else {
       txt = await callAIText(prompt);
@@ -2175,6 +2208,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const ghToken = localStorage.getItem(GHSTORE);
   if (ghToken) { const el = document.getElementById('gh-token'); if(el) el.value = ghToken; }
 });
+
+
+
+function bankSetFilter(key, val, el) {
+  bankFilter[key] = val;
+  const parent = el.parentElement;
+  parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderBank();
+}
 
 </script>
 </body>
