@@ -725,6 +725,15 @@ function parseJSON(txt){
   }
 }
 function b64ToBlob(b64,mime){ const b=atob(b64),a=new Uint8Array(b.length); for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i); return new Blob([a],{type:mime}); }
+function pdfSafe(str) {
+  // Remove emojis and non-latin characters (jsPDF helvetica = latin only)
+  return (str||'')
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
+    .replace(/[\u2600-\u27BF]/gu, '')
+    .replace(/[^\x00-\xFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /* ══════════════════════════════════════════════
    SETUP / OVERLAY
@@ -857,22 +866,17 @@ async function initLocalAI(force=false) {
     const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
     env.allowLocalModels = false;
 
-    setLS('Chargement SmolVLM (vision)…', null);
-    upd('ai-bar-label', e => e.textContent = 'SmolVLM vision…');
-    localVLM = await pipeline('image-text-to-text', 'HuggingFaceTB/SmolVLM-256M-Instruct', {
-      dtype: device==='webgpu' ? {embed_tokens:'fp16',vision_encoder:'fp16',decoder_model_merged:'q4'} : 'q4',
-      device, progress_callback: onProgress
-    });
-    vlmReady = true;
-    if (bar) bar.style.display = 'none';
-
-    onProgress({progress:0, file:''});
-    setLS('Chargement Phi-3 Mini (texte)…', null);
-    upd('ai-bar-label', e => e.textContent = 'Phi-3 Mini texte…');
+    // SmolVLM n'est pas supporté dans transformers.js 3.x (pipeline image-text-to-text absent)
+    // Mode offline: OCR (Tesseract, déjà chargé) + Phi-3 Mini pour analyser le texte extrait
+    setLS('Chargement Phi-3 Mini (~230MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>Le texte des photos sera extrait par OCR, puis analysé par Phi-3.');
+    upd('ai-bar-label', e => e.textContent = 'Phi-3 Mini…');
     localLLM = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct', {
-      dtype:'q4', device, progress_callback: onProgress
+      dtype: 'q4',
+      device,
+      progress_callback: onProgress
     });
     llmReady = true;
+    vlmReady = false;
 
     if (bar) bar.style.display = 'none';
     if (ls)  ls.style.display  = 'none';
@@ -1527,7 +1531,7 @@ async function generatePDF() {
   let y = 15;
 
   doc.setFont('helvetica','bold'); doc.setFontSize(16);
-  doc.text(title, 105, y, {align:'center'}); y += 8;
+  doc.text(pdfSafe(title), 105, y, {align:'center'}); y += 8;
   if (withHead) {
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
     doc.text('Nom : ____________________________   Date : __________   Classe : ______', 15, y); y += 6;
@@ -1536,22 +1540,82 @@ async function generatePDF() {
   }
   doc.setDrawColor(91,63,191); doc.line(15, y, 195, y); y += 6;
 
-  basket.forEach((exo, idx) => {
-    if (y > 265) { doc.addPage(); y = 15; }
+  // SVG -> PNG helper for geometry figures
+  const svgToPng = (svgStr, pxW, pxH) => new Promise(resolve => {
+    try {
+      const blob = new Blob([svgStr], {type:'image/svg+xml'});
+      const url  = URL.createObjectURL(blob);
+      const img  = new Image();
+      img.onload = () => {
+        const cv = document.createElement('canvas');
+        cv.width = pxW; cv.height = pxH;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,pxW,pxH);
+        ctx.drawImage(img, 0, 0, pxW, pxH);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    } catch(e) { resolve(null); }
+  });
+
+  for (let idx = 0; idx < basket.length; idx++) {
+    const exo = basket[idx];
+    if (y > 245) { doc.addPage(); y = 15; }
+
+    // Numero exercice (sans emoji — jsPDF ne supporte pas Unicode etendu)
     doc.setFont('helvetica','bold'); doc.setFontSize(12);
     doc.setTextColor(91,63,191);
-    doc.text('Exercice '+(idx+1)+(withBar?' ('+pts+'pt'+(pts>1?'s':'')+')':''), 15, y); y += 7;
+    const numLabel = 'Exercice '+(idx+1)+(withBar?' ('+pts+'pt'+(pts>1?'s':'')+')':'');
+    doc.text(numLabel, 15, y); y += 7;
+
+    // Consigne — strip emojis
     doc.setFont('helvetica','normal'); doc.setFontSize(11);
     doc.setTextColor(0,0,0);
-    const lines = doc.splitTextToSize(exo.consigne, 180);
+    const consigneTxt = exo.svgData
+      ? pdfSafe(exo.type || 'Figure geometrique')
+      : pdfSafe(exo.consigne);
+    const lines = doc.splitTextToSize(consigneTxt, 180);
     doc.text(lines, 15, y); y += lines.length * 6 + 3;
-    if (corrMode && exo.correction) {
-      doc.setTextColor(45,106,79); doc.text('→ '+exo.correction, 15, y); doc.setTextColor(0,0,0); y += 7;
-    } else if (withLn) {
-      for(let i=0;i<3;i++) { doc.setTextColor(180,180,180); doc.text('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _', 15, y); doc.setTextColor(0,0,0); y += 6; }
+
+    // Figure SVG (geometrie)
+    if (exo.svgData) {
+      try {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(exo.svgData, 'image/svg+xml');
+        const svgEl  = svgDoc.documentElement;
+        const vbRaw  = svgEl.getAttribute('viewBox') || '0 0 200 150';
+        const [,, vw, vh] = vbRaw.split(' ').map(Number);
+        const mmMax = 80, ratio = Math.min(mmMax/vw, 60/vh);
+        const mmW = Math.round(vw * ratio);
+        const mmH = Math.round(vh * ratio);
+        const pxW = mmW * 4; // 4px/mm approx
+        const pxH = mmH * 4;
+        if (y + mmH > 270) { doc.addPage(); y = 15; }
+        const png = await svgToPng(exo.svgData, pxW, pxH);
+        if (png) { doc.addImage(png, 'PNG', 15, y, mmW, mmH); y += mmH + 5; }
+      } catch(svgErr) { console.warn('SVG render:', svgErr); }
     }
-    y += 4;
-  });
+
+    // Correction ou lignes
+    if (corrMode && exo.correction) {
+      doc.setFont('helvetica','italic'); doc.setFontSize(10);
+      doc.setTextColor(45,106,79);
+      doc.text('Reponse: '+pdfSafe(exo.correction), 15, y);
+      doc.setTextColor(0,0,0); doc.setFont('helvetica','normal'); doc.setFontSize(11);
+      y += 7;
+    } else if (withLn && !exo.svgData) {
+      doc.setTextColor(180,180,180);
+      for(let i=0;i<3;i++) {
+        doc.text('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _', 15, y);
+        y += 6;
+      }
+      doc.setTextColor(0,0,0);
+    }
+    y += 5;
+  }
   doc.save('fiche-maths.pdf');
 }
 
