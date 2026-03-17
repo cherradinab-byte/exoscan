@@ -1712,9 +1712,7 @@ async function generateWord(){
       // CONSIGNE — détecte problème par étapes
       const isEtapes = exo.consigne && exo.consigne.includes('Je cherche');
       if(isEtapes){
-        const parts = exo.consigne.split(/
-
-+/);
+        const parts = exo.consigne.split(/\n\n+/);
         const lis      = parts[0]||'';
         const cherche  = (parts[1]||'').replace('Je cherche :','').trim();
         const calcule  = (parts[2]||'').replace('Je calcule :','').trim();
@@ -2877,7 +2875,12 @@ function parseJSON(txt){
   catch{return{type:'Exercice',emoji:'✏️',consigne:txt.substring(0,300),numbers:[],correction:'',chapitre:'Autre'};}
 }
 function b64ToBlob(b64,mime){const s=atob(b64),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:mime});}
-function show(id){const e=document.getElementById(id);if(e)e.style.display='block';}
+function show(id){
+  const e=document.getElementById(id);
+  if(!e) return;
+  // Overlay needs display:flex, everything else display:block
+  e.style.display = id==='overlay' ? 'flex' : 'block';
+}
 function hide(id){const e=document.getElementById(id);if(e)e.style.display='none';}
 function showErr(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.style.display='block';}}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
