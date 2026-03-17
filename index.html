@@ -233,6 +233,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <body>
 <div id="overlay" style="display:none">
   <div class="setup-box">
+    <div id="overlay-close-btn" style="display:none;text-align:right;margin-bottom:-8px;margin-top:-4px">
+      <button class="btn btn-ghost btn-sm" onclick="closeSetup()" style="font-size:18px;padding:0 6px;line-height:1.4">×</button>
+    </div>
     <div style="text-align:center;margin-bottom:20px">
       <div style="width:52px;height:52px;background:var(--acl);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">📷</div>
       <h2 style="font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:4px">ExoScan Pro</h2>
@@ -377,8 +380,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 1 : CRÉER -->
-  <div 
-id="p1" style="display:none">
+  <div id="p1" style="display:none">
     <div class="card">
       <div class="card-title">Générer un exercice</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -426,53 +428,60 @@ id="p1" style="display:none">
   </div>
 
   <!-- PAGE 2 : BIBLIOTHÈQUE -->
-  <div 
-id="p2" style="display:none">
+  <div id="p2" style="display:none">
     <div class="card">
-      <div class="card-title">Bibliothèque <span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
-      <div class="search-wrap"><span class="search-ico"></span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
+      <div class="card-title">Bibliothèque <span id="lib-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mu);font-size:12px"></span><span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
+      <div class="search-wrap"><span class="search-ico">🔍</span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
       <div class="chips" id="lib-chips"></div>
       <div id="lib-list"></div>
     </div>
   </div>
 
   <!-- PAGE 3 : EXPORT -->
-  <div 
-id="p3" style="display:none">
-    <div class="card">
-      <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
-      <div id="fiche-list"></div>
-      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button><button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button></div>
+  <div id="p3" style="display:none">
+  <div class="card">
+    <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
+    <div id="fiche-preview" style="min-height:40px"></div>
+    <div class="arow" style="margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rd)" onclick="clearBasket()">Vider</button>
     </div>
-    <!-- Variantes -->
-    <div class="card" id="var-card" style="display:none">
-      <div class="card-title">Variantes anti-copie</div>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-        <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
-        <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
-        <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
-      </div>
-      <div id="var-result"></div>
+  </div>
+  <div class="card" id="levels-card" style="display:none">
+    <div class="card-title">Fiches 3 niveaux</div>
+    <div id="levels-ldg" class="ldg" style="display:none"><div class="spin"></div><span>Génération…</span></div>
+    <div id="levels-body"></div>
+    <div id="levels-export-row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportLevelsWord()">⬇ Word 3 niveaux</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportLevelsPDF()">⬇ PDF 3 niveaux</button>
     </div>
-    <!-- Export options -->
-    <div class="card">
-      <div class="card-title">Options Word</div>
-      <label class="flbl">Titre</label>
-      <input type="text" id="doc-title" placeholder="Exercices — Multiplication — 3e année" style="margin-bottom:12px">
-      <label class="xopt"><input type="checkbox" id="opt-hdr" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-bareme"><div class="xopt-txt"><strong>Barème</strong><span>Points par exercice</span></div></label>
-      <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>2e fichier avec réponses</span></div></label>
-      <div id="dl-zone" style="margin-top:14px">
-        <button class="btn btn-g btn-full" id="gen-word-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>
-      </div>
-      <div class="note" id="dl-note" style="display:none"></div>
+  </div>
+  <div class="card" id="var-card" style="display:none">
+    <div class="card-title">Variantes anti-copie</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
+      <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
+      <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
+    </div>
+    <div id="var-result"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Options d'export</div>
+    <label class="flbl">Titre de la fiche</label>
+    <input type="text" id="fiche-title" class="inp" placeholder="Fiche de mathématiques" style="margin-bottom:12px">
+    <label class="xopt"><input type="checkbox" id="opt-header" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-bar"><div class="xopt-txt"><strong>Barème /20</strong><span>Points par exercice</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>Avec les réponses</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-belge"><div class="xopt-txt"><strong>Style manuel belge</strong><span>Mise en page Maths et Moustique</span></div></label>
+    <div id="export-btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-g btn-sm" onclick="generateWord()">⬇ Word (.docx)</button>
+      <button class="btn btn-ghost btn-sm" onclick="generatePDF()">⬇ PDF</button>
     </div>
   </div>
 
-  <!-- PAGE 4 : CORRECTION -->
-  <div 
-id="p4" style="display:none">
+<div id="p4" style="display:none">
     <div class="card">
       <div class="card-title">Corriger une copie d'élève</div>
       <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Photographiez le corrigé attendu et la copie de l'élève. L'IA compare et identifie les erreurs.</p>
@@ -504,8 +513,7 @@ id="p4" style="display:none">
   </div>
 
   <!-- PAGE 5 : PLANNING -->
-  <div 
-id="p5" style="display:none">
+  <div id="p5" style="display:none">
     <div class="card">
       <div class="card-title">Planifier une séquence</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -591,7 +599,7 @@ id="p5" style="display:none">
     <div id="bank-list"></div>
   </div>
 </div>
-id="p8" style="display:none">
+<div id="p8" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:12px">✖️ Tables de multiplication</h3>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -629,19 +637,17 @@ id="p8" style="display:none">
   </div>
 
   <!-- PAGE 9: DICTIONNAIRE -->
-  <div 
-id="p9" style="display:none">
+  <div id="p9" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:12px">📖 Dictionnaire mathématique</h3>
-      <input class="inp" type="search" placeholder="Rechercher un terme…" oninput="renderDico(this.value)" style="margin-bottom:10px">
+      <input class="inp" type="search" id="dico-search" placeholder="Rechercher un terme…" oninput="renderDico(this.value)" style="margin-bottom:10px">
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="dico-cats"></div>
       <div id="dico-list"></div>
     </div>
   </div>
 
   <!-- PAGE 10: REGLAGES -->
-  <div 
-id="p10" style="display:none">
+  <div id="p10" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:14px">⚙️ Réglages</h3>
 
@@ -806,7 +812,14 @@ function showSetup() {
   const key = localStorage.getItem(KEYSTORE);
   if (el && key) el.value = key;
   hide('key-err');
+  // Show close button only if already configured (can cancel)
+  const closeBtn = document.getElementById('overlay-close-btn');
+  if (closeBtn) closeBtn.style.display = (key || provider === 'offline') ? 'block' : 'none';
   document.getElementById('overlay').style.display = 'flex';
+}
+
+function closeSetup() {
+  document.getElementById('overlay').style.display = 'none';
 }
 
 /* ══════════════════════════════════════════════
@@ -820,7 +833,7 @@ function goTab(n) {
     if (bn) bn.className     = 'bnav-btn' + (i === n ? ' active' : '');
   }
   if (n === 2) renderLib();
-  if (n === 3) { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; }
+  if (n === 3) { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; const lc = document.getElementById('levels-card'); }
   if (n === 7) renderBank();
   if (n === 8) initTables();
   if (n === 9) renderDico();
@@ -1127,7 +1140,8 @@ async function analyzeImage(b64, mime) {
     if (!result) {
       const provider = localStorage.getItem(PROVSTORE)||'openrouter';
       if (provider === 'offline') {
-        throw new Error('Analyse impossible. En mode hors-ligne : OCR doit extraire du texte de la photo, puis Phi-3 l\'analyse. Assurez-vous que la photo contient du texte lisible et que l\'IA locale est chargée (⚙️ Réglages).');
+        const ocrNote = ocrText ? 'OCR a extrait : "'+ocrText.slice(0,100)+'…"' : 'Aucun texte extrait par OCR.';
+        throw new Error('Mode hors-ligne : '+ocrNote+' Phi-3 ne peut analyser que du texte — les images visuelles (dés, figures) ne sont pas supportées sans API. Vérifiez que Phi-3 est chargé dans ⚙️ Réglages.');
       }
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
@@ -1231,6 +1245,7 @@ function addToFiche() {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
+  renderFiche();
   const msg = document.getElementById('add-ok');
   if (msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000); }
 }
@@ -1291,6 +1306,7 @@ function addGenToFiche() {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
+  renderFiche();
   const msg = document.getElementById('gen-add-ok');
   if (msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000); }
 }
@@ -1502,10 +1518,18 @@ function clearBasket() { basket = []; refreshBmini(); }
 
 function renderFiche() {
   const el = document.getElementById('fiche-preview');
+  const fc = document.getElementById('fcount');
+  if (fc) fc.textContent = basket.length;
   if (!el) return;
   el.innerHTML = basket.length === 0
     ? '<p style="text-align:center;color:var(--mu);padding:20px">Fiche vide — ajoutez des exercices depuis Scan ou Créer</p>'
-    : basket.map((e,i) => `<div style="margin-bottom:14px"><strong style="color:var(--ac)">${i+1}. ${esc(e.emoji||'')} ${esc(e.type)}</strong><p style="font-size:13px;margin-top:4px;line-height:1.6">${esc(e.consigne)}</p></div>`).join('');
+    : basket.map((e,i) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd)">
+        <div style="flex:1">
+          <strong style="color:var(--ac);font-size:13px">${i+1}. ${esc(e.type)}</strong>
+          <p style="font-size:12px;margin-top:3px;line-height:1.5;color:var(--tx)">${esc(e.consigne.slice(0,120))}${e.consigne.length>120?'…':''}</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="color:var(--rd);flex-shrink:0" onclick="basket.splice(${i},1);renderFiche();refreshBmini()">✕</button>
+      </div>`).join('');
 }
 
 function resetExport() {
@@ -1934,6 +1958,7 @@ function addBankToFiche(idx) {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
+  renderFiche();
   const msg = document.getElementById('bank-add-ok');
   if (msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000); }
 }
@@ -2109,7 +2134,7 @@ function renderDico(search) {
     ).join('');
   }
 
-  const q = (search !== undefined ? search : document.getElementById('p9 input[type=search]')?.value || '').toLowerCase();
+  const q = (search !== undefined ? search : (document.getElementById('dico-search')?.value || '')).toLowerCase();
   let items = DICO_DATA;
   if (dicoFilter !== 'Tout') items = items.filter(d => d.cat === dicoFilter);
   if (q) items = items.filter(d => d.terme.toLowerCase().includes(q) || d.def.toLowerCase().includes(q));
@@ -2221,4 +2246,54 @@ function bankSetFilter(key, val, el) {
 
 </script>
 </body>
-</html>
+</html<div id="p3" style="display:none">
+  <div class="card">
+    <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
+    <div id="fiche-preview"></div>
+    <div class="arow" style="margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--rd)" onclick="clearBasket()">Vider</button>
+    </div>
+  </div>
+
+  <!-- 3 niveaux -->
+  <div class="card" id="levels-card" style="display:none">
+    <div class="card-title">Fiches 3 niveaux</div>
+    <div id="levels-ldg" class="ldg" style="display:none"><div class="spin"></div><span>Génération…</span></div>
+    <div id="levels-body"></div>
+    <div id="levels-export-row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportLevelsWord()">⬇ Word 3 niveaux</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportLevelsPDF()">⬇ PDF 3 niveaux</button>
+    </div>
+  </div>
+
+  <!-- Variantes -->
+  <div class="card" id="var-card" style="display:none">
+    <div class="card-title">Variantes anti-copie</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
+      <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
+      <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
+    </div>
+    <div id="var-result"></div>
+  </div>
+
+  <!-- Export options -->
+  <div class="card">
+    <div class="card-title">Options d'export</div>
+    <label class="flbl">Titre de la fiche</label>
+    <input type="text" id="fiche-title" class="inp" placeholder="Fiche de mathématiques" style="margin-bottom:12px">
+    <label class="xopt"><input type="checkbox" id="opt-header" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés sous chaque exercice</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-bar"><div class="xopt-txt"><strong>Barème</strong><span>Points par exercice /20</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>Avec les réponses</span></div></label>
+    <label class="xopt"><input type="checkbox" id="opt-belge"><div class="xopt-txt"><strong>Style manuel belge</strong><span>Mise en page Maths et Moustique</span></div></label>
+    <div id="export-btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-g btn-sm" onclick="generateWord()">⬇ Télécharger Word (.docx)</button>
+      <button class="btn btn-ghost btn-sm" id="gen-pdf-btn" onclick="generatePDF()">⬇ Télécharger PDF</button>
+    </div>
+  </div>
+</div>
+
+>
