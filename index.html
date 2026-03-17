@@ -56,9 +56,22 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 .card-title{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--hi);margin-bottom:12px}
 .card-title .right{float:right;text-transform:none;font-weight:400;font-size:12px;letter-spacing:0}
 
+/* MODE SELECTOR */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mode-card{border:2px solid var(--bd);border-radius:var(--rs);padding:12px 10px;cursor:pointer;transition:all .15s;text-align:center;background:var(--sur2)}
+.mode-card:hover{border-color:var(--ac);background:var(--acl)}
+.mode-card.active{border-color:var(--ac);background:var(--acl)}
+.mode-ico{font-size:22px;margin-bottom:4px}
+.mode-name{font-size:13px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.mode-desc{font-size:11px;color:var(--mu)}
+.provider-detail{animation:fu .2s ease}
+.provider-detail input{margin-top:0}
+#overlay{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.setup-box{max-height:92vh;overflow-y:auto}
+
 /* OVERLAY */
-#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.setup-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:26px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.setup-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12);margin:auto}
 .setup-box h2{font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:8px}
 .sl{color:var(--ac);text-decoration:none;font-weight:500}.sl:hover{text-decoration:underline}
 .sp2{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:11px;font-weight:600;margin-right:5px}
@@ -299,18 +312,79 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div id="overlay">
   <div class="setup-box">
     <h2>Bienvenue dans ExoScan</h2>
-    <p style="font-size:14px;color:var(--mu);line-height:1.6;margin-bottom:14px">Analyse de photos via <strong>OpenRouter</strong> (gratuit). En hors-ligne, l'IA locale prend le relais automatiquement.</p>
-    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:2;border:1px solid var(--bd)">
-      <div><span class="sp2">1</span>Aller sur <a class="sl" href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
-      <div><span class="sp2">2</span>Créer un compte (email suffit)</div>
-      <div><span class="sp2">3</span><strong>Keys</strong> → <strong>Create Key</strong> → copier</div>
+    <p style="font-size:14px;color:var(--mu);line-height:1.6;margin-bottom:16px">Choisissez votre mode de fonctionnement. Vous pouvez changer ou ajouter une clé à tout moment dans ⚙️ Réglages.</p>
+
+    <!-- Mode selector -->
+    <div class="mode-grid" id="mode-grid">
+      <div class="mode-card active" id="mode-openrouter" onclick="selectMode('openrouter')">
+        <div class="mode-ico">🌐</div>
+        <div class="mode-name">OpenRouter</div>
+        <div class="mode-desc">Gratuit · Mistral, Llama, Gemini</div>
+      </div>
+      <div class="mode-card" id="mode-anthropic" onclick="selectMode('anthropic')">
+        <div class="mode-ico">🤖</div>
+        <div class="mode-name">Claude (Anthropic)</div>
+        <div class="mode-desc">Meilleure qualité · Payant</div>
+      </div>
+      <div class="mode-card" id="mode-openai" onclick="selectMode('openai')">
+        <div class="mode-ico">✨</div>
+        <div class="mode-name">ChatGPT (OpenAI)</div>
+        <div class="mode-desc">GPT-4o · Payant</div>
+      </div>
+      <div class="mode-card" id="mode-offline" onclick="selectMode('offline')">
+        <div class="mode-ico">🔒</div>
+        <div class="mode-name">Hors-ligne</div>
+        <div class="mode-desc">IA locale · Sans internet</div>
+      </div>
     </div>
-    <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--gn);margin-bottom:14px">✓ Gratuit · Sans carte · Fonctionne hors-ligne avec Chrome/Brave/Firefox</div>
-    <label class="flbl">Clé API OpenRouter</label>
-    <input type="password" id="key-input" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" style="margin-bottom:10px;font-family:monospace;font-size:13px">
-    <div id="key-err" class="err" style="margin-bottom:10px"></div>
-    <button class="btn btn-p btn-full" onclick="saveKey()">Enregistrer et commencer →</button>
-    <p style="font-size:11px;color:var(--hi);margin-top:9px;text-align:center">Clé stockée uniquement sur cet appareil (localStorage).</p>
+
+    <!-- Provider details (shown per mode) -->
+    <div id="provider-openrouter" class="provider-detail">
+      <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--gn);margin-bottom:12px">✓ Gratuit · Sans carte bancaire · Mistral Small 3.1 / Llama / Gemini</div>
+      <div style="background:var(--sur2);border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:2;border:1px solid var(--bd)">
+        <div><span class="sp2">1</span>Aller sur <a class="sl" href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
+        <div><span class="sp2">2</span>Créer un compte (email suffit)</div>
+        <div><span class="sp2">3</span><strong>Keys</strong> → <strong>Create Key</strong> → copier la clé</div>
+      </div>
+      <label class="flbl">Clé API OpenRouter</label>
+      <input type="password" id="key-openrouter" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" style="font-family:monospace;font-size:13px">
+    </div>
+
+    <div id="provider-anthropic" class="provider-detail" style="display:none">
+      <div style="background:var(--acl);border:1px solid rgba(91,63,191,.2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--acd);margin-bottom:12px">Meilleure qualité d'analyse · ~0.01-0.03€ par scan</div>
+      <div style="background:var(--sur2);border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:2;border:1px solid var(--bd)">
+        <div><span class="sp2">1</span>Aller sur <a class="sl" href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+        <div><span class="sp2">2</span>Créer un compte et ajouter un moyen de paiement</div>
+        <div><span class="sp2">3</span><strong>API Keys</strong> → <strong>Create Key</strong> → copier</div>
+      </div>
+      <label class="flbl">Clé API Anthropic (Claude)</label>
+      <input type="password" id="key-anthropic" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" style="font-family:monospace;font-size:13px">
+    </div>
+
+    <div id="provider-openai" class="provider-detail" style="display:none">
+      <div style="background:var(--acl);border:1px solid rgba(91,63,191,.2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--acd);margin-bottom:12px">GPT-4o Vision · ~0.01-0.03€ par scan</div>
+      <div style="background:var(--sur2);border-radius:var(--rs);padding:11px 14px;margin-bottom:12px;font-size:13px;line-height:2;border:1px solid var(--bd)">
+        <div><span class="sp2">1</span>Aller sur <a class="sl" href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></div>
+        <div><span class="sp2">2</span>Créer un compte et ajouter un crédit</div>
+        <div><span class="sp2">3</span><strong>Create new secret key</strong> → copier</div>
+      </div>
+      <label class="flbl">Clé API OpenAI</label>
+      <input type="password" id="key-openai" placeholder="sk-proj-…" autocomplete="off" spellcheck="false" style="font-family:monospace;font-size:13px">
+    </div>
+
+    <div id="provider-offline" class="provider-detail" style="display:none">
+      <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--gn);margin-bottom:12px;line-height:1.7">
+        <strong>Mode 100% local</strong> — aucune clé requise.<br>
+        L'IA (SmolVLM + Phi-3) se télécharge une seule fois (~400MB) puis fonctionne sans internet.<br>
+        <span style="font-size:12px;opacity:.85">Recommandé : Chrome ou Brave pour les meilleures performances.</span>
+      </div>
+    </div>
+
+    <div id="key-err" class="err" style="margin:10px 0 0"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-p" style="flex:1" onclick="saveKey()">Enregistrer et commencer →</button>
+    </div>
+    <p style="font-size:11px;color:var(--hi);margin-top:9px;text-align:center">Clé stockée uniquement sur cet appareil. Modifiable à tout moment dans ⚙️.</p>
   </div>
 </div>
 
@@ -852,12 +926,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 /* ══════════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════════ */
-const KEYSTORE  = 'exoscan_or_key';
-const LIBSTORE  = 'exoscan_lib_v2';
-const GISTSTORE = 'exoscan_gist_id';
-const GHSTORE   = 'exoscan_gh_token';
-const MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-const OR_MODELS = [
+const KEYSTORE   = 'exoscan_or_key';
+const PROVSTORE  = 'exoscan_provider';  // 'openrouter'|'anthropic'|'openai'|'offline'
+const LIBSTORE   = 'exoscan_lib_v2';
+const GISTSTORE  = 'exoscan_gist_id';
+const GHSTORE    = 'exoscan_gh_token';
+const MIME_DOCX  = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const OR_MODELS  = [
   {id:'mistralai/mistral-small-3.1-24b-instruct:free', label:'Mistral Small 3.1'},
   {id:'meta-llama/llama-3.2-11b-vision-instruct:free',  label:'Llama 3.2 Vision'},
   {id:'google/gemini-2.0-flash-exp:free',               label:'Gemini 2.0 Flash'},
@@ -871,43 +946,108 @@ let basket   = [];
 let library  = JSON.parse(localStorage.getItem(LIBSTORE)||'[]');
 let curExo   = null, curNums = [], curImg = null;
 let genExo   = null, genNums = [];
-let localVLM = null;   // SmolVLM pipeline (vision)
-let localLLM = null;   // Phi-3 pipeline (text)
-let ocrEngine= null;   // Tesseract worker
+let localVLM = null, localLLM = null, ocrEngine = null;
 let vlmReady = false, llmReady = false, ocrReady = false;
 let libFilter= 'Tout';
 let planData = [];
 let corrRef  = null, corrCopy = null;
 let dicoFilter='Tout', dicoOpen=null;
+let activeMode = localStorage.getItem(PROVSTORE)||'openrouter';
 
 /* ══════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem(KEYSTORE)) {
+  const key      = localStorage.getItem(KEYSTORE);
+  const provider = localStorage.getItem(PROVSTORE);
+  // Show app if we have a key OR if offline mode was chosen
+  if (key || provider === 'offline') {
     hide('overlay'); show('app');
     initAI();
+  } else {
+    // Always initialize mode display correctly on first load
+    selectMode(provider || 'openrouter');
   }
-  document.getElementById('key-input').addEventListener('keydown', e => { if(e.key==='Enter') saveKey(); });
+  // Enter key support for any key input
+  ['key-openrouter','key-anthropic','key-openai'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', e => { if(e.key==='Enter') saveKey(); });
+  });
   const ghToken = localStorage.getItem(GHSTORE);
-  if (ghToken) document.getElementById('gh-token').value = ghToken;
+  if (ghToken && document.getElementById('gh-token')) document.getElementById('gh-token').value = ghToken;
 });
 
 /* ══════════════════════════════════════════════
-   KEY
+   MODE SELECTOR
+══════════════════════════════════════════════ */
+function selectMode(mode) {
+  activeMode = mode;
+  // Update card styles
+  ['openrouter','anthropic','openai','offline'].forEach(m => {
+    document.getElementById('mode-'+m)?.classList.toggle('active', m===mode);
+  });
+  // Show/hide provider detail panels
+  ['openrouter','anthropic','openai','offline'].forEach(m => {
+    const el = document.getElementById('provider-'+m);
+    if(el) el.style.display = m===mode ? 'block' : 'none';
+  });
+  hide('key-err');
+}
+
+/* ══════════════════════════════════════════════
+   KEY / SETUP
 ══════════════════════════════════════════════ */
 function saveKey() {
-  const v = document.getElementById('key-input').value.trim();
-  if (!v) { showErr('key-err','Saisissez votre clé.'); return; }
-  if (!v.startsWith('sk-or-')) { showErr('key-err','Clé invalide — doit commencer par sk-or-v1-…'); return; }
   hide('key-err');
+
+  // Offline mode — no key needed
+  if (activeMode === 'offline') {
+    localStorage.setItem(PROVSTORE, 'offline');
+    localStorage.removeItem(KEYSTORE);
+    hide('overlay'); show('app');
+    initAI();
+    return;
+  }
+
+  // Get key from the active provider input
+  const inputId = 'key-' + activeMode;
+  const el = document.getElementById(inputId);
+  const v = el ? el.value.trim() : '';
+
+  if (!v) { showErr('key-err', 'Saisissez votre clé API.'); return; }
+
+  // Validate prefix per provider
+  const prefixes = {
+    openrouter: ['sk-or-'],
+    anthropic:  ['sk-ant-'],
+    openai:     ['sk-proj-', 'sk-'],
+  };
+  const valid = prefixes[activeMode]?.some(p => v.startsWith(p));
+  if (!valid) {
+    const hints = {
+      openrouter: 'La clé OpenRouter commence par "sk-or-v1-…"',
+      anthropic:  'La clé Anthropic commence par "sk-ant-…"',
+      openai:     'La clé OpenAI commence par "sk-proj-…" ou "sk-…"',
+    };
+    showErr('key-err', hints[activeMode]||'Clé invalide.');
+    return;
+  }
+
   localStorage.setItem(KEYSTORE, v);
+  localStorage.setItem(PROVSTORE, activeMode);
   hide('overlay'); show('app');
   initAI();
 }
+
 function showSetup() {
-  document.getElementById('key-input').value = localStorage.getItem(KEYSTORE)||'';
-  hide('key-err'); show('overlay');
+  const key      = localStorage.getItem(KEYSTORE);
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  selectMode(provider);
+  const inputId = 'key-'+provider;
+  const el = document.getElementById(inputId);
+  if(el && key) el.value = key;
+  hide('key-err');
+  show('overlay');
 }
 
 /* ══════════════════════════════════════════════
@@ -915,15 +1055,22 @@ function showSetup() {
 ══════════════════════════════════════════════ */
 async function initAI(force=false) {
   updateAIPill('loading','⏳ Init…');
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  const labels   = {openrouter:'🌐 OpenRouter',anthropic:'🤖 Claude',openai:'✨ GPT-4o',offline:'🔒 Local'};
+
   // 1. Init Tesseract OCR (léger, ~10MB)
   initOCR();
-  // 2. Test API OpenRouter
-  const apiOk = await testApiSilent();
-  if (apiOk) {
-    updateAIPill('api','🌐 API');
-    setAIModeInfo('Mode API (OpenRouter) — connexion active. IA locale disponible en fallback hors-ligne.');
+
+  // 2. Test API (sauf offline)
+  if(provider !== 'offline'){
+    const apiOk = await testApiSilent();
+    if (apiOk) {
+      updateAIPill('api', labels[provider]||'🌐 API');
+      setAIModeInfo(`Mode ${labels[provider]||provider} actif. IA locale disponible en fallback hors-ligne.`);
+    }
   }
-  // 3. Init SmolVLM local (vision + texte)
+
+  // 3. Init IA locale (toujours, pour fallback)
   initLocalAI(force);
 }
 
@@ -1012,14 +1159,26 @@ function setAIModeInfo(txt) {
   if(el) el.textContent = txt;
 }
 async function testApiSilent() {
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  const apiKey   = localStorage.getItem(KEYSTORE);
+  if(!apiKey || provider==='offline') return provider==='offline';
   try {
-    const r = await fetch('https://openrouter.ai/api/v1/models',{headers:{'Authorization':'Bearer '+localStorage.getItem(KEYSTORE)}});
+    const urls = {
+      openrouter: ['https://openrouter.ai/api/v1/models', {'Authorization':'Bearer '+apiKey}],
+      anthropic:  ['https://api.anthropic.com/v1/models',  {'x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}],
+      openai:     ['https://api.openai.com/v1/models',      {'Authorization':'Bearer '+apiKey}],
+    };
+    const [url, headers] = urls[provider]||urls.openrouter;
+    const r = await fetch(url, {headers});
     return r.ok;
   } catch { return false; }
 }
 async function testApi() {
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  if(provider==='offline'){ alert('Mode hors-ligne — aucune API configurée.'); return; }
   const ok = await testApiSilent();
-  alert(ok ? '✅ API OpenRouter accessible !' : '❌ API inaccessible — vérifiez votre connexion ou clé.');
+  const labels = {openrouter:'OpenRouter',anthropic:'Claude (Anthropic)',openai:'OpenAI'};
+  alert(ok ? `✅ API ${labels[provider]||provider} accessible !` : `❌ API inaccessible — vérifiez votre clé dans ⚙️ Réglages.`);
 }
 
 /* ══════════════════════════════════════════════
@@ -1045,26 +1204,21 @@ async function analyzeImage(b64, mime) {
     } catch(e) { console.log('OCR erreur:', e.message); }
   }
 
-  // Étape 2 : Essai API OpenRouter (vision)
+  // Étape 2 : API vision (OpenRouter / Claude / GPT selon provider choisi)
   const apiKey = localStorage.getItem(KEYSTORE);
-  if (apiKey) {
-    for (const m of OR_MODELS) {
-      try {
-        document.getElementById('scan-lmod').textContent = 'Via API — '+m.label+'…';
-        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
-          body:JSON.stringify({model:m.id,max_tokens:800,messages:[{role:'user',content:[
-            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
-            {type:'text',text:SCAN_PROMPT+(ocrText?`\n\nTexte OCR extrait:\n${ocrText}`:'')}
-          ]}]})
-        });
-        if (!r.ok) { const e=await r.json().catch(()=>({})); if(r.status===401||r.status===402) throw new Error('auth'); continue; }
-        const d = await r.json();
-        const txt = d?.choices?.[0]?.message?.content||'';
-        if (!txt) continue;
-        return parseJSON(txt);
-      } catch(ex) { if(ex.message==='auth') break; }
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  if (apiKey && provider !== 'offline') {
+    try {
+      document.getElementById('scan-lmod').textContent = 'Analyse via API…';
+      const txt = await callOpenRouterVision(b64, mime, SCAN_PROMPT+(ocrText?`\n\nTexte OCR extrait:\n${ocrText}`:''));
+      if (txt) return parseJSON(txt);
+    } catch(ex) {
+      // Si erreur auth, on ne continue pas vers local
+      if(ex.message && (ex.message.includes('401') || ex.message.includes('402') || ex.message.includes('Credit') || ex.message.includes('auth'))) {
+        throw new Error('Clé API invalide ou crédit insuffisant. Vérifiez dans ⚙️ Réglages.');
+      }
+      // Sinon fallback local
+      console.log('API vision failed, falling back to local:', ex.message);
     }
   }
 
@@ -1093,33 +1247,95 @@ async function analyzeImage(b64, mime) {
     return parseJSON(out[0].generated_text.at(-1).content);
   }
 
-  throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion ou activez l\'IA locale.');
+  throw new Error('Aucune méthode d\'analyse disponible. En mode hors-ligne, l\'IA locale doit d\'abord se charger (~400MB).');
 }
 
 async function callAIText(prompt, system) {
-  // API d'abord
-  const apiKey = localStorage.getItem(KEYSTORE);
-  if (apiKey) {
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  const apiKey   = localStorage.getItem(KEYSTORE);
+  // Anthropic (Claude)
+  if (provider==='anthropic' && apiKey) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system,messages:[{role:'user',content:prompt}]})});
+      if(r.ok){const d=await r.json();return d.content?.[0]?.text||'';}
+    } catch(e){}
+  }
+  // OpenAI (GPT-4o-mini)
+  if (provider==='openai' && apiKey) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body:JSON.stringify({model:'gpt-4o-mini',max_tokens:900,messages:[{role:'system',content:system},{role:'user',content:prompt}]})});
+      if(r.ok){const d=await r.json();return d.choices?.[0]?.message?.content||'';}
+    } catch(e){}
+  }
+  // OpenRouter (Mistral/Llama/Gemini)
+  if (provider==='openrouter' && apiKey) {
     for (const m of OR_MODELS) {
       try {
-        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-          method:'POST',
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
-          body:JSON.stringify({model:m.id,max_tokens:900,messages:[{role:'system',content:system},{role:'user',content:prompt}]})
-        });
-        if (!r.ok) continue;
-        const d = await r.json();
-        const txt = d?.choices?.[0]?.message?.content||'';
-        if (txt) return txt;
-      } catch(ex) { /* continue */ }
+          body:JSON.stringify({model:m.id,max_tokens:900,messages:[{role:'system',content:system},{role:'user',content:prompt}]})});
+        if(!r.ok) continue;
+        const d=await r.json(); const txt=d?.choices?.[0]?.message?.content||'';
+        if(txt) return txt;
+      } catch(ex){}
     }
   }
-  // Fallback Phi-3 local
+  // Fallback Phi-3 local (hors-ligne)
   if (llmReady && localLLM) {
     const out = await localLLM([{role:'system',content:system},{role:'user',content:prompt}],{max_new_tokens:700,temperature:0.3});
     return out[0].generated_text.at(-1).content;
   }
-  throw new Error('Aucune IA disponible. Vérifiez votre connexion.');
+  throw new Error('Aucune IA disponible. Vérifiez votre clé dans ⚙️ Réglages.');
+}
+
+async function callOpenRouterVision(b64, mime, textPrompt) {
+  const provider = localStorage.getItem(PROVSTORE)||'openrouter';
+  const apiKey   = localStorage.getItem(KEYSTORE);
+  // Anthropic vision
+  if (provider==='anthropic' && apiKey) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+          {type:'text',text:textPrompt}
+        ]}]})});
+      if(r.ok){const d=await r.json();document.getElementById('scan-lmod').textContent='Via Claude';return d.content?.[0]?.text||'';}
+    } catch(e){}
+  }
+  // OpenAI vision
+  if (provider==='openai' && apiKey) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body:JSON.stringify({model:'gpt-4o-mini',max_tokens:800,messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+          {type:'text',text:textPrompt}
+        ]}]})});
+      if(r.ok){const d=await r.json();document.getElementById('scan-lmod').textContent='Via GPT-4o';return d.choices?.[0]?.message?.content||'';}
+    } catch(e){}
+  }
+  // OpenRouter vision
+  if (provider==='openrouter' && apiKey) {
+    for (const m of OR_MODELS) {
+      try {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
+          body:JSON.stringify({model:m.id,max_tokens:800,messages:[{role:'user',content:[
+            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+            {type:'text',text:textPrompt}
+          ]}]})});
+        if(!r.ok){const e=await r.json().catch(()=>({}));if(r.status===401||r.status===402)throw new Error(e?.error?.message);continue;}
+        const d=await r.json();const txt=d?.choices?.[0]?.message?.content||'';
+        if(txt){document.getElementById('scan-lmod').textContent='Via '+m.label;return txt;}
+      } catch(ex){if(ex.message&&(ex.message.includes('401')||ex.message.includes('402')||ex.message.includes('Credit')))throw ex;}
+    }
+  }
+  throw new Error('Aucune API disponible pour analyser cette image. Vérifiez votre clé dans ⚙️ Réglages.');
 }
 
 /* ══════════════════════════════════════════════
