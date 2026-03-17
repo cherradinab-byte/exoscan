@@ -4,730 +4,2667 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ExoScan">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%235B3FBF'/%3E%3Ctext x='256' y='340' font-size='300' text-anchor='middle' fill='white'%3E📷%3C/text%3E%3C/svg%3E">
 <title>ExoScan</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#F5F2EE;--surface:#FFF;--surface2:#F0EDE8;
-  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
-  --text:#1A1714;--muted:#6B6560;--hint:#A09A94;
-  --accent:#5B3FBF;--accent-l:#EEEBFB;--accent-d:#3D2990;
-  --green:#2D6A4F;--green-l:#EAF4EE;
-  --red:#B03030;--red-l:#FDECEA;
-  --amber:#8B5E1A;--amber-l:#FDF3E3;
+  --bg:#F5F2EE;--sur:#FFF;--sur2:#F0EDE8;
+  --bd:rgba(0,0,0,0.09);--bd2:rgba(0,0,0,0.16);
+  --tx:#1A1714;--mu:#6B6560;--hi:#A09A94;
+  --ac:#5B3FBF;--acl:#EEEBFB;--acd:#3D2990;
+  --gn:#2D6A4F;--gnl:#EAF4EE;
+  --rd:#B03030;--rdl:#FDECEA;
+  --am:#8B5E1A;--aml:#FDF3E3;
   --r:14px;--rs:8px;
-  --sh:0 2px 12px rgba(0,0,0,0.07),0 1px 3px rgba(0,0,0,0.05);
+  --sh:0 2px 12px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.05);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);font-size:16px;line-height:1.5}
-#wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
+html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--tx);font-size:16px;line-height:1.5}
+#wrap{max-width:760px;margin:0 auto;padding:0 16px 100px}
 
-/* HEADER */
-.hdr{padding:24px 0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:20px}
-.hdr h1{font-family:'Lora',serif;font-size:24px;font-weight:600;letter-spacing:-.3px}
-.hdr .tag{font-size:13px;color:var(--muted);margin-left:10px;font-weight:300}
-.key-btn{font-size:13px;color:var(--hint);background:none;border:none;cursor:pointer;padding:5px 9px;border-radius:6px;font-family:inherit}
-.key-btn:hover{background:var(--surface2)}
+.hdr{padding:18px 0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);margin-bottom:16px}
+.hdr h1{font-family:'Lora',serif;font-size:22px;font-weight:600;letter-spacing:-.3px}
+.hdr-tag{font-size:12px;color:var(--mu);margin-left:8px;font-weight:300}
+.hdr-right{display:flex;align-items:center;gap:8px}
 
-/* NAV TABS */
-.nav{display:flex;background:var(--surface);border-radius:var(--r);padding:5px;border:1px solid var(--border);margin-bottom:20px;gap:2px}
-.nav-tab{flex:1;text-align:center;padding:8px 4px;font-size:13px;color:var(--hint);border-radius:10px;cursor:pointer;user-select:none;transition:all .2s;border:none;background:none;font-family:inherit}
-.nav-tab.active{background:var(--accent);color:white;font-weight:500;box-shadow:0 2px 8px rgba(91,63,191,.3)}
-.nav-tab.done{color:var(--green);font-weight:500}
-.nav-tab.clickable:not(.active){cursor:pointer}
-.nav-tab.clickable:not(.active):hover{background:var(--surface2);color:var(--text)}
-.snum{display:inline-block;width:18px;height:18px;line-height:18px;border-radius:50%;font-size:11px;margin-right:4px;background:rgba(0,0,0,0.06);text-align:center}
-.nav-tab.active .snum{background:rgba(255,255,255,.25)}
-.nav-tab.done .snum{background:var(--green-l);color:var(--green)}
+/* AI STATUS PILL */
+.ai-pill{font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--bd2);color:var(--mu);background:var(--sur2);white-space:nowrap;cursor:default}
+.ai-pill.api{background:#E8F0FE;border-color:rgba(26,115,232,.3);color:#1557B0}
+.ai-pill.local{background:var(--gnl);border-color:rgba(45,106,79,.3);color:var(--gn)}
+.ai-pill.ocr{background:var(--aml);border-color:rgba(139,94,26,.3);color:var(--am)}
+.ai-pill.loading{background:var(--acl);border-color:rgba(91,63,191,.3);color:var(--acd)}
 
-/* CARD */
-.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:22px;margin-bottom:14px;box-shadow:var(--sh);animation:fu .2s ease}
-@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.card-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);margin-bottom:14px}
+.key-btn{font-size:12px;color:var(--hi);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;font-family:inherit}
+.key-btn:hover{background:var(--sur2)}
 
-/* SETUP OVERLAY */
-#setup-overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.setup-box{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:28px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12)}
-.setup-box h2{font-family:'Lora',serif;font-size:21px;font-weight:600;margin-bottom:8px}
-.setup-intro{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:18px}
-.setup-steps{border-radius:var(--rs);padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:2.1;border:1px solid var(--border);background:var(--surface2)}
-.sl{color:var(--accent);text-decoration:none;font-weight:500}
-.sl:hover{text-decoration:underline}
-.spill{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--accent-l);color:var(--accent);font-size:12px;font-weight:600;margin-right:6px}
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--bd);display:flex;z-index:50;padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border:none;background:none;color:var(--hi);font-family:inherit;font-size:10px;cursor:pointer;border-radius:10px;transition:all .2s}
+.bnav-btn .ico{font-size:19px;line-height:1}
+.bnav-btn.active{color:var(--ac);background:var(--acl)}
+.bnav-btn:active{transform:scale(.95)}
 
-/* UPLOAD */
-#upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
-#upload-zone:hover,#upload-zone:active{background:var(--accent-l);border-color:var(--accent)}
-.uico{width:52px;height:52px;background:var(--accent-l);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px}
-#upload-zone h2{font-size:16px;font-weight:500;margin-bottom:5px}
-#upload-zone p{font-size:13px;color:var(--muted)}
-#file-input{display:none}
-#img-prev{width:100%;max-height:180px;object-fit:contain;border-radius:var(--rs);background:var(--surface2);display:none;margin-bottom:14px}
+/* CARDS */
+.card{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:18px;margin-bottom:12px;box-shadow:var(--sh);animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--hi);margin-bottom:12px}
+.card-title .right{float:right;text-transform:none;font-weight:400;font-size:12px;letter-spacing:0}
 
-/* LOADING */
-#loading{display:none;text-align:center;padding:20px 0}
-.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-sub{font-size:12px;color:var(--hint);margin-top:5px}
+/* OVERLAY */
+#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.setup-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:26px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.setup-box h2{font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:8px}
+.sl{color:var(--ac);text-decoration:none;font-weight:500}.sl:hover{text-decoration:underline}
+.sp2{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--acl);color:var(--ac);font-size:11px;font-weight:600;margin-right:5px}
 
-/* ERRORS */
-.err{background:var(--red-l);border:1px solid rgba(176,48,48,.2);border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--red);line-height:1.5;display:none;margin-top:10px}
-
-/* TYPE BADGE */
-.tbadge{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:4px 11px;border-radius:20px;background:var(--accent-l);color:var(--accent-d);font-weight:500;border:1px solid rgba(91,63,191,.15);margin-bottom:14px}
+/* AI PROGRESS BAR */
+#ai-bar{background:var(--acl);border:1px solid rgba(91,63,191,.2);border-radius:var(--rs);padding:12px 14px;margin-bottom:12px;display:none}
+.ai-track{height:6px;background:rgba(91,63,191,.15);border-radius:3px;margin-top:7px;overflow:hidden}
+.ai-fill{height:100%;background:var(--ac);border-radius:3px;transition:width .4s;width:0%}
 
 /* FORM */
-.flabel{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:7px;display:block}
-textarea,input[type=text],input[type=number],input[type=password]{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;width:100%;outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none}
-textarea:focus,input:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(91,63,191,.1)}
-textarea{resize:vertical;min-height:85px;line-height:1.6}
-
-/* NUMBERS */
-.numgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;margin-top:8px}
-.nitem{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 13px;transition:border-color .15s}
-.nitem:focus-within{border-color:var(--accent)}
-.nlbl{font-size:11px;color:var(--hint);display:block;margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-.nitem input{background:transparent;border:none;padding:0;font-size:20px;font-weight:500;color:var(--text);width:100%;box-shadow:none}
-.nitem input:focus{box-shadow:none;background:transparent;border:none}
+.flbl{font-size:12px;font-weight:500;color:var(--mu);margin-bottom:6px;display:block}
+textarea,input[type=text],input[type=number],input[type=password],select{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--tx);background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none}
+textarea:focus,input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(91,63,191,.1)}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;cursor:pointer}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--rs);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .15s;-webkit-appearance:none;text-decoration:none}
-.btn:active{transform:scale(.97)}
-.btn:hover{background:var(--surface2)}
-.btn-p{background:var(--accent);color:white;border-color:var(--accent-d);box-shadow:0 2px 8px rgba(91,63,191,.25)}
-.btn-p:hover{background:var(--accent-d)}
-.btn-g{background:var(--green);color:white;border-color:#1A4D38;box-shadow:0 2px 8px rgba(45,106,79,.25)}
-.btn-g:hover{background:#1A4D38}
-.btn-ghost{border-color:transparent;background:transparent;color:var(--muted);font-weight:400}
-.btn-ghost:hover{background:var(--surface2);color:var(--text)}
-.btn-sm{padding:7px 13px;font-size:13px}
-.btn-full{width:100%}
-.arow{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:center}
-.sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--rs);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:1px solid var(--bd2);background:var(--sur);color:var(--tx);transition:all .15s;-webkit-appearance:none;text-decoration:none;white-space:nowrap}
+.btn:active{transform:scale(.97)}.btn:hover{background:var(--sur2)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-p{background:var(--ac);color:white;border-color:var(--acd);box-shadow:0 2px 8px rgba(91,63,191,.25)}.btn-p:hover{background:var(--acd)}
+.btn-g{background:var(--gn);color:white;border-color:#1A4D38;box-shadow:0 2px 8px rgba(45,106,79,.25)}.btn-g:hover{background:#1A4D38}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--mu);font-weight:400}.btn-ghost:hover{background:var(--sur2);color:var(--tx)}
+.btn-sm{padding:7px 12px;font-size:13px}.btn-full{width:100%}
+.arow{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;align-items:center}.sp{flex:1}
 
-/* HISTORY */
-.hist-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
-.hist-item:last-child{border-bottom:none}
-.hist-item:hover{background:var(--accent-l);margin:0 -10px;padding:12px 10px;border-radius:var(--rs)}
-.hist-thumb{width:48px;height:48px;border-radius:var(--rs);object-fit:cover;background:var(--surface2);flex-shrink:0;border:1px solid var(--border)}
-.hist-thumb-ph{width:48px;height:48px;border-radius:var(--rs);background:var(--accent-l);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.hist-info{flex:1;min-width:0}
-.hist-consigne{font-size:14px;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px}
-.hist-meta{font-size:12px;color:var(--hint)}
-.hist-del{background:none;border:none;color:var(--hint);cursor:pointer;padding:3px 7px;font-size:18px;border-radius:5px;flex-shrink:0}
-.hist-del:hover{color:var(--red);background:var(--red-l)}
+/* UPLOAD */
+#upzone{border:2px dashed var(--bd2);border-radius:var(--r);padding:30px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--sur2)}
+#upzone:hover,#upzone:active{background:var(--acl);border-color:var(--ac)}
+.uico{width:48px;height:48px;background:var(--acl);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px}
+#upzone h2{font-size:16px;font-weight:500;margin-bottom:4px}
+#upzone p{font-size:13px;color:var(--mu)}
+#finput{display:none}
+#iprev{width:100%;max-height:170px;object-fit:contain;border-radius:var(--rs);background:var(--sur2);display:none;margin-bottom:12px}
 
-/* FICHE / BASKET */
-.fitem{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+/* LOADING */
+.ldg{display:none;text-align:center;padding:18px 0}
+.spinner{width:28px;height:28px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ldg-sub{font-size:12px;color:var(--hi);margin-top:4px}
+
+/* ERRORS + NOTES */
+.err{background:var(--rdl);border:1px solid rgba(176,48,48,.2);border-radius:var(--rs);padding:11px 13px;font-size:13px;color:var(--rd);line-height:1.5;display:none;margin-top:8px}
+.note{background:var(--aml);border:1px solid rgba(139,94,26,.2);border-radius:var(--rs);padding:10px 12px;font-size:13px;color:var(--am);margin-top:12px;line-height:1.6}
+.info-box{background:var(--acl);border:1px solid rgba(91,63,191,.2);border-radius:var(--rs);padding:11px 13px;font-size:13px;color:var(--acd);margin-top:8px;line-height:1.5}
+
+/* BADGE */
+.tbadge{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:4px 10px;border-radius:20px;background:var(--acl);color:var(--acd);font-weight:500;border:1px solid rgba(91,63,191,.15);margin-bottom:12px}
+
+/* NUMBERS */
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:6px}
+.nitem{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px}
+.nitem:focus-within{border-color:var(--ac)}
+.nlbl{font-size:10px;color:var(--hi);display:block;margin-bottom:2px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.nitem input{background:transparent;border:none;padding:0;font-size:19px;font-weight:500;color:var(--tx);width:100%;box-shadow:none}
+.nitem input:focus{box-shadow:none;background:transparent;border:none}
+
+/* LIST ITEMS */
+.litem{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);cursor:pointer}
+.litem:last-child{border-bottom:none}
+.litem:hover{background:var(--acl);margin:0 -6px;padding:10px 6px;border-radius:var(--rs)}
+.lthumb{width:42px;height:42px;border-radius:var(--rs);object-fit:cover;background:var(--sur2);flex-shrink:0;border:1px solid var(--bd)}
+.lthumb-ph{width:42px;height:42px;border-radius:var(--rs);background:var(--acl);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.linfo{flex:1;min-width:0}
+.lcons{font-size:13px;color:var(--tx);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:2px}
+.lmeta{font-size:11px;color:var(--hi)}
+.ldel{background:none;border:none;color:var(--hi);cursor:pointer;padding:3px 7px;font-size:17px;border-radius:5px;flex-shrink:0}
+.ldel:hover{color:var(--rd);background:var(--rdl)}
+
+/* FICHE ITEMS */
+.fitem{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
 .fitem:last-child{border-bottom:none}
-.fnum{width:28px;height:28px;background:var(--accent-l);color:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
-.fcontent{flex:1;min-width:0}
-.fconsigne{font-size:14px;color:var(--text);line-height:1.4;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.ftag{font-size:12px;color:var(--hint)}
-.fdel{background:none;border:none;color:var(--hint);cursor:pointer;padding:3px 7px;font-size:18px;border-radius:5px;flex-shrink:0}
-.fdel:hover{color:var(--red);background:var(--red-l)}
+.fnum{width:26px;height:26px;background:var(--acl);color:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:1px}
+.fcont{flex:1;min-width:0}
+.fcons{font-size:13px;color:var(--tx);line-height:1.4;margin-bottom:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ftag{font-size:11px;color:var(--hi)}
+.fdel{background:none;border:none;color:var(--hi);cursor:pointer;padding:3px 7px;font-size:17px;border-radius:5px}
+.fdel:hover{color:var(--rd);background:var(--rdl)}
 
 /* EXPORT OPTIONS */
-.xopt{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--surface2);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:9px;cursor:pointer;transition:all .15s}
-.xopt:hover{border-color:var(--accent);background:var(--accent-l)}
-.xopt input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);flex-shrink:0;padding:0;border:none;background:none;box-shadow:none;cursor:pointer}
-.xopt-txt strong{font-size:14px;font-weight:500;display:block}
-.xopt-txt span{font-size:13px;color:var(--muted)}
+.xopt{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--sur2);border-radius:var(--rs);border:1px solid var(--bd);margin-bottom:8px;cursor:pointer;transition:all .15s}
+.xopt:hover{border-color:var(--ac);background:var(--acl)}
+.xopt input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);flex-shrink:0;padding:0;border:none;background:none;box-shadow:none;cursor:pointer}
+.xopt-txt strong{font-size:13px;font-weight:500;display:block}
+.xopt-txt span{font-size:12px;color:var(--mu)}
 
-/* DOWNLOAD LINKS */
-.dl-link{display:block;padding:14px 18px;background:var(--green);color:white;border-radius:var(--rs);text-decoration:none;font-weight:500;font-size:15px;text-align:center;margin-bottom:10px;cursor:pointer}
+/* DOWNLOAD */
+.dl-link{display:block;padding:13px 16px;background:var(--gn);color:white;border-radius:var(--rs);text-decoration:none;font-weight:500;font-size:14px;text-align:center;margin-bottom:8px}
 .dl-link:hover{background:#1A4D38}
 
-/* NOTE */
-.note{background:var(--amber-l);border:1px solid rgba(139,94,26,.2);border-radius:var(--rs);padding:11px 13px;font-size:13px;color:var(--amber);margin-top:13px;line-height:1.6}
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd2);background:var(--sur2);color:var(--mu);transition:all .15s}
+.chip.active{background:var(--ac);color:white;border-color:var(--acd)}
+.chip:hover:not(.active){background:var(--acl);color:var(--acd);border-color:var(--acd)}
 
-/* SUCCESS */
-.sblock{text-align:center;padding:24px 16px}
-.scheck{width:50px;height:50px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px}
+/* CORRECTION MODE */
+.corr-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.corr-panel{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px;text-align:center;cursor:pointer;transition:all .15s}
+.corr-panel:hover{border-color:var(--ac);background:var(--acl)}
+.corr-panel.has-img{cursor:default}
+.corr-panel img{width:100%;max-height:120px;object-fit:contain;border-radius:4px;margin-top:6px}
+.corr-panel-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--hi);margin-bottom:6px}
+.corr-result{margin-top:12px}
+.corr-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px}
+.corr-item:last-child{border-bottom:none}
+.corr-ok{color:var(--gn);flex-shrink:0;font-size:16px}
+.corr-ko{color:var(--rd);flex-shrink:0;font-size:16px}
 
-/* EMPTY STATE */
-.empty{text-align:center;padding:20px;color:var(--hint);font-size:14px}
+/* DICO */
+.dico-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-top:4px}
+.dico-card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rs);padding:12px;cursor:pointer;transition:all .15s;text-align:center}
+.dico-card:hover{border-color:var(--ac);background:var(--acl)}
+.dico-ico{font-size:26px;margin-bottom:5px}
+.dico-term{font-size:13px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.dico-def{font-size:11px;color:var(--mu);line-height:1.4}
 
-@media(min-width:600px){#wrap{padding:0 28px 80px}.hdr{padding:32px 0 20px}.hdr h1{font-size:28px}}
+/* PLAN */
+.plan-item{background:var(--sur2);border-radius:var(--rs);border:1px solid var(--bd);padding:12px;margin-bottom:8px}
+.plan-seq{font-size:11px;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.plan-tit{font-size:14px;font-weight:500;margin-bottom:3px}
+.plan-desc{font-size:13px;color:var(--mu);line-height:1.5}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{padding-left:34px}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--hi);font-size:15px;pointer-events:none}
+
+/* SYNC STATUS */
+.sync-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--sur2);border-radius:var(--rs);border:1px solid var(--bd);font-size:13px;margin-bottom:10px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--hi);flex-shrink:0}
+.sync-dot.ok{background:var(--gn)}
+.sync-dot.err{background:var(--rd)}
+.sync-dot.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ADAPT QUICK BUTTONS */
+.adapt-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.adapt-btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bd2);background:var(--sur2);color:var(--mu);font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.adapt-btn:hover{background:var(--acl);border-color:var(--ac);color:var(--acd)}
+.adapt-btn:active{transform:scale(.96)}
+
+/* 3 NIVEAUX */
+.levels-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.level-card{border-radius:var(--r);border:2px solid var(--bd);background:var(--sur);overflow:hidden;transition:border-color .15s}
+.level-card.selected{border-color:var(--ac)}
+.level-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+.level-stars{font-size:15px;flex-shrink:0}
+.level-label{font-size:14px;font-weight:500;color:var(--tx);flex:1}
+.level-diff{font-size:11px;color:var(--mu);font-weight:400}
+.level-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--bd2);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.level-card.selected .level-check{background:var(--ac);border-color:var(--ac);color:white}
+.level-body{padding:0 14px 12px;font-size:13px;color:var(--tx);line-height:1.6;border-top:1px solid var(--bd);margin-top:0;padding-top:10px;display:none}
+.level-card.open .level-body{display:block}
+.level-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.level-tag.easy{background:var(--gnl);color:var(--gn)}
+.level-tag.med{background:var(--acl);color:var(--acd)}
+.level-tag.hard{background:var(--rdl);color:var(--rd)}
+.levels-export-btn{display:block;padding:13px 16px;border-radius:var(--rs);text-align:center;font-weight:500;font-size:14px;margin-bottom:8px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;width:100%}
+.levels-export-btn:active{transform:scale(.97)}
+
+/* ADAPT LOADING */
+.adapt-ldg{display:none;font-size:13px;color:var(--mu);padding:8px 0;display:flex;align-items:center;gap:8px}
+.adapt-ldg .spinner{width:16px;height:16px;border-width:2px;margin:0}
+.trous-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:4px}
+.trous-item{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.trous-expr{font-size:18px;font-weight:600;color:var(--tx);font-family:'Lora',serif;letter-spacing:.02em}
+.trous-ans{font-size:13px;color:var(--ac);cursor:pointer;white-space:nowrap;user-select:none}
+
+/* GRILLE */
+.grille-table{border-collapse:collapse;width:100%;min-width:260px}
+.grille-table th{background:var(--acl);color:var(--acd);font-size:13px;font-weight:600;padding:8px 10px;border:1px solid var(--bd2);text-align:center}
+.grille-table td{border:1px solid var(--bd);text-align:center;padding:6px 8px;font-size:15px;font-weight:500;color:var(--tx)}
+.grille-label{background:var(--acl);color:var(--acd);font-weight:600;font-size:13px}
+.grille-blank{background:var(--sur2)}
+.grille-input{width:50px;border:none;background:transparent;font-size:15px;font-weight:600;color:var(--ac);text-align:center;outline:none;padding:0}
+.grille-input:focus{background:var(--acl);border-radius:4px}
+
+/* ÉTAPES */
+.etapes-wrap{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.etape-block{border-radius:var(--rs);padding:11px 14px;border-left:4px solid}
+.etape-lis{background:#EEF4FF;border-color:#1A4FA0}
+.etape-cherche{background:var(--gnl);border-color:var(--gn)}
+.etape-calcule{background:var(--aml);border-color:var(--am)}
+.etape-verifie{background:var(--rdl);border-color:var(--rd)}
+.etape-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;color:var(--mu)}
+.etape-content{font-size:14px;color:var(--tx);line-height:1.6;white-space:pre-wrap}
+
+/* TABLES DE MULTIPLICATION */
+.mult-table{border-collapse:collapse;width:100%}
+.mult-table th,.mult-table td{padding:7px 9px;text-align:center;border:1px solid var(--bd);font-size:14px}
+.mult-table th{background:var(--acl);color:var(--acd);font-weight:600;font-size:13px;position:sticky;top:0}
+.mult-table .diag{background:var(--sur2);color:var(--hi);font-weight:600}
+.mult-table .hi{background:var(--acl);color:var(--acd);font-weight:700}
+.mult-table .result{color:var(--tx)}
+.mult-table tr:nth-child(even) td{background:rgba(0,0,0,.015)}
+#drill-answer:focus{border-color:var(--ac) !important;box-shadow:0 0 0 3px rgba(91,63,191,.15)}
+
+.empty{text-align:center;padding:20px;color:var(--hi);font-size:14px}
+.scheck{width:44px;height:44px;background:var(--gnl);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px}
+
+/* GEOMETRY */
+.geo-type-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.geo-type-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:var(--rs);background:var(--sur2);cursor:pointer;font-size:11px;font-weight:500;color:var(--mu);font-family:'DM Sans',sans-serif;transition:all .15s;min-width:60px}
+.geo-type-btn:hover{border-color:var(--ac);background:var(--acl);color:var(--acd)}
+.geo-type-btn.active{border-color:var(--ac);background:var(--acl);color:var(--acd)}
+.geo-color-row{display:flex;gap:6px}
+.geo-color-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s}
+.geo-color-btn:hover{transform:scale(1.15)}
+.geo-color-btn.active{border-color:var(--tx);transform:scale(1.15)}
+.geo-dim-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.geo-dim-item{display:flex;align-items:center;gap:8px;background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px}
+.geo-dim-item label{font-size:12px;color:var(--mu);white-space:nowrap;min-width:60px}
+.geo-dim-item input{border:none;background:transparent;font-size:16px;font-weight:500;color:var(--tx);width:60px;text-align:right;outline:none;padding:0;box-shadow:none}
+.geo-info-pill{background:var(--sur2);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--mu)}
+.geo-info-pill strong{color:var(--tx)}
+.geo-fig-thumb{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rs);padding:8px;cursor:pointer;transition:border-color .15s;position:relative}
+.geo-fig-thumb:hover{border-color:var(--ac)}
+.geo-fig-del{position:absolute;top:3px;right:3px;background:none;border:none;color:var(--hi);cursor:pointer;font-size:15px;line-height:1;border-radius:4px;padding:1px 4px}
+.geo-fig-del:hover{color:var(--rd);background:var(--rdl)}
+
+/* BANK */
+.bank-item{border:1px solid var(--bd);border-radius:var(--r);background:var(--sur);margin-bottom:10px;overflow:hidden;transition:box-shadow .15s}
+.bank-item:hover{box-shadow:var(--sh)}
+.bank-item-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.bank-ctx-badge{font-size:11px;padding:3px 9px;border-radius:12px;background:var(--acl);color:var(--acd);font-weight:500;white-space:nowrap;border:1px solid rgba(91,63,191,.15)}
+.bank-level-badge{font-size:11px;padding:3px 7px;border-radius:12px;background:var(--gnl);color:var(--gn);font-weight:500;border:1px solid rgba(45,106,79,.15)}
+.bank-op-badge{font-size:11px;padding:3px 7px;border-radius:12px;background:var(--aml);color:var(--am);font-weight:500;border:1px solid rgba(139,94,26,.15)}
+.bank-item-title{flex:1;font-size:14px;color:var(--tx);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bank-use-btn{font-size:12px;padding:6px 12px;border-radius:var(--rs);background:var(--ac);color:white;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;flex-shrink:0}
+.bank-use-btn:hover{background:var(--acd)}
+
+@media(min-width:600px){#wrap{padding:0 22px 100px}.hdr h1{font-size:25px}}
 </style>
 </head>
 <body>
 
 <!-- SETUP OVERLAY -->
-<div id="setup-overlay">
+<div id="overlay">
   <div class="setup-box">
     <h2>Bienvenue dans ExoScan</h2>
-    <p class="setup-intro">Analyse de photos d'exercices via <strong>OpenRouter</strong> — modèles gratuits, aucune carte bancaire.</p>
-    <div class="setup-steps">
-      <div><span class="spill">1</span>Aller sur <a class="sl" href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
-      <div><span class="spill">2</span>Créer un compte (email suffit)</div>
-      <div><span class="spill">3</span>Menu <strong>Keys</strong> → <strong>Create Key</strong></div>
-      <div><span class="spill">4</span>Copier la clé <code style="font-size:12px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px">sk-or-v1-…</code></div>
+    <p style="font-size:14px;color:var(--mu);line-height:1.6;margin-bottom:14px">Analyse de photos via <strong>OpenRouter</strong> (gratuit). En hors-ligne, l'IA locale prend le relais automatiquement.</p>
+    <div style="background:var(--sur2);border-radius:var(--rs);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:2;border:1px solid var(--bd)">
+      <div><span class="sp2">1</span>Aller sur <a class="sl" href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
+      <div><span class="sp2">2</span>Créer un compte (email suffit)</div>
+      <div><span class="sp2">3</span><strong>Keys</strong> → <strong>Create Key</strong> → copier</div>
     </div>
-    <div style="background:#EAF4EE;border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--green);margin-bottom:16px">
-      ✓ Gratuit · Sans carte bancaire · Mistral, Llama, Gemini disponibles
-    </div>
-    <label class="flabel">Clé API OpenRouter</label>
-    <input type="password" id="key-input" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" style="margin-bottom:11px;font-family:monospace;font-size:13px">
-    <div id="key-err" class="err" style="margin-bottom:11px"></div>
+    <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:var(--rs);padding:8px 12px;font-size:12px;color:var(--gn);margin-bottom:14px">✓ Gratuit · Sans carte · Fonctionne hors-ligne avec Chrome/Brave/Firefox</div>
+    <label class="flbl">Clé API OpenRouter</label>
+    <input type="password" id="key-input" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" style="margin-bottom:10px;font-family:monospace;font-size:13px">
+    <div id="key-err" class="err" style="margin-bottom:10px"></div>
     <button class="btn btn-p btn-full" onclick="saveKey()">Enregistrer et commencer →</button>
-    <p style="font-size:12px;color:var(--hint);margin-top:10px;text-align:center">Clé stockée sur cet appareil uniquement (localStorage).</p>
+    <p style="font-size:11px;color:var(--hi);margin-top:9px;text-align:center">Clé stockée uniquement sur cet appareil (localStorage).</p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none">
+<div id="wrap">
+
+  <!-- HEADER -->
   <div class="hdr">
-    <div><span style="font-family:'Lora',serif;font-size:24px;font-weight:600">ExoScan</span><span class="tag">Photo → Word</span></div>
-    <button class="key-btn" onclick="showSetup()">⚙ Clé API</button>
+    <div>
+      <span style="font-family:'Lora',serif;font-size:22px;font-weight:600">ExoScan</span>
+      <span class="hdr-tag">Maths primaire</span>
+    </div>
+    <div class="hdr-right">
+      <span class="ai-pill" id="ai-status" title="Mode IA actif">⚙ Init…</span>
+      <button class="key-btn" onclick="showSetup()">⚙</button>
+    </div>
   </div>
 
-  <!-- NAV -->
-  <div class="nav">
-    <button class="nav-tab active" id="t0" onclick="goTab(0)"><span class="snum">1</span>Scan</button>
-    <button class="nav-tab" id="t1" onclick="goTab(1)"><span class="snum">2</span>Édition</button>
-    <button class="nav-tab" id="t2" onclick="goTab(2)"><span class="snum">3</span>Export</button>
-    <button class="nav-tab" id="t3" onclick="goTab(3)"><span class="snum">4</span>Historique</button>
+  <!-- AI LOADING BAR -->
+  <div id="ai-bar">
+    <div style="display:flex;justify-content:space-between">
+      <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA locale…</span>
+      <span style="font-size:12px;color:var(--mu)" id="ai-pct">0%</span>
+    </div>
+    <div class="ai-track"><div class="ai-fill" id="ai-fill"></div></div>
+    <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">Téléchargement du modèle SmolVLM (~400MB une seule fois)…</p>
   </div>
 
   <!-- PAGE 0 : SCAN -->
-  <div id="page0">
+  <div id="p0">
     <div class="card">
-      <div class="card-title">Nouvelle photo</div>
-      <div id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <div class="card-title">Scanner un exercice</div>
+      <div id="upzone" onclick="document.getElementById('finput').click()">
         <div class="uico">📷</div>
         <h2>Photo ou screenshot</h2>
-        <p>Manuel scolaire · Site web · FR ou EN</p>
+        <p>Manuel · Site web · FR ou EN</p>
       </div>
-      <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)">
-      <img id="img-prev" alt="">
-      <div id="loading">
+      <input type="file" id="finput" accept="image/*" onchange="handleFile(event)">
+      <img id="iprev" alt="">
+      <div class="ldg" id="scan-ldg">
         <div class="spinner"></div>
-        <div style="font-size:14px;color:var(--muted)" id="ltxt">Analyse en cours…</div>
-        <div class="loading-sub" id="lmodel"></div>
+        <div style="font-size:14px;color:var(--mu)" id="scan-ltxt">Analyse…</div>
+        <div class="ldg-sub" id="scan-lmod"></div>
       </div>
-      <div id="scan-err" class="err"></div>
+      <div class="err" id="scan-err"></div>
     </div>
-
-    <!-- Fiche en cours (mini) -->
-    <div class="card" id="basket-mini" style="display:none">
-      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s)</div>
-      <div id="basket-mini-list"></div>
-      <div class="arow">
-        <button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button>
-        <div class="sp"></div>
-        <button class="btn btn-p btn-sm" onclick="goTab(2)">Exporter la fiche →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE 1 : ÉDITION -->
-  <div id="page1" style="display:none">
-    <div class="card">
-      <div class="card-title">Exercice analysé</div>
-      <div id="tbadge" class="tbadge">✏️ Exercice</div>
-      <label class="flabel">Consigne</label>
-      <textarea id="cons-edit" placeholder="La consigne de l'exercice…"></textarea>
-      <div style="margin-top:16px">
-        <label class="flabel">Valeurs numériques</label>
-        <div class="numgrid" id="numgrid"></div>
+    <!-- Inline editor (shown after scan) -->
+    <div id="inline-ed" style="display:none" class="card">
+      <div class="card-title">Exercice analysé — modifiable</div>
+      <div id="ed-badge" class="tbadge">✏️ Exercice</div>
+      <label class="flbl">Consigne</label>
+      <textarea id="ed-cons"></textarea>
+      <div style="margin-top:12px"><label class="flbl">Valeurs numériques</label><div class="ngrid" id="ed-nums"></div></div>
+      <!-- Adaptation rapide -->
+      <div class="adapt-row">
+        <button class="adapt-btn" onclick="adaptExo('simplify')" title="Rendre plus facile">⬇ Simplifier</button>
+        <button class="adapt-btn" onclick="adaptExo('enrich')" title="Rendre plus difficile">⬆ Enrichir</button>
+        <button class="adapt-btn" onclick="adaptExo('context')" title="Changer le contexte">🔄 Contexte</button>
+        <button class="adapt-btn" onclick="randomNums()" title="Nouveaux chiffres">🔢 Chiffres</button>
       </div>
       <div class="arow">
-        <button class="btn btn-ghost btn-sm" onclick="randomNums()">🔀 Nouveaux chiffres</button>
+        <button class="btn btn-ghost btn-sm" onclick="scan3Levels()">⭐ 3 niveaux</button>
         <div class="sp"></div>
         <button class="btn btn-p" onclick="addToFiche()">Ajouter à la fiche →</button>
       </div>
     </div>
-    <div class="arow" style="margin-top:0">
-      <button class="btn btn-ghost btn-sm" onclick="goTab(0)">← Retour scan</button>
+    <!-- Basket mini -->
+    <div id="bmini" style="display:none" class="card">
+      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter →</button></span></div>
+      <div id="bmini-list"></div>
+      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button></div>
     </div>
   </div>
 
-  <!-- PAGE 2 : EXPORT -->
-  <div id="page2" style="display:none">
-    <div class="card" id="fiche-card">
-      <div class="card-title">Exercices de la fiche · <span id="fcount">0</span></div>
-      <div id="fiche-list"></div>
+  <!-- PAGE 1 : CRÉER -->
+  <div id="p1" style="display:none">
+    <div class="card">
+      <div class="card-title">Générer un exercice</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label class="flbl">Type</label>
+          <select id="gen-type" onchange="onGenTypeChange()">
+            <option>Calcul mental</option><option>Addition / Soustraction</option>
+            <option>Multiplication / Division</option><option>Fractions</option>
+            <option>Géométrie</option><option>Mesures</option>
+            <option>Problème textuel</option><option>Numération</option>
+            <option value="trous">Exercice à trous</option>
+            <option value="grille">Grille de nombres</option>
+            <option value="probleme-etapes">Problème par étapes</option>
+          </select></div>
+        <div><label class="flbl">Niveau</label>
+          <select id="gen-level">
+            <option value="1re primaire (6-7 ans)">1re — 6 ans</option>
+            <option value="2e primaire (7-8 ans)">2e — 7 ans</option>
+            <option value="3e primaire (8-9 ans)" selected>3e — 8 ans</option>
+            <option value="4e primaire (9-10 ans)">4e — 9 ans</option>
+            <option value="5e primaire (10-11 ans)">5e — 10 ans</option>
+            <option value="6e primaire (11-12 ans)">6e — 11 ans</option>
+          </select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label class="flbl">Questions</label>
+          <select id="gen-count"><option value="3">3</option><option value="5" selected>5</option><option value="8">8</option><option value="10">10</option></select></div>
+        <div><label class="flbl">Difficulté</label>
+          <select id="gen-diff"><option value="facile">Facile</option><option value="normal" selected>Normal</option><option value="difficile">Difficile</option></select></div>
+      </div>
+      <label class="flbl">Thème / contexte (optionnel)</label>
+      <input type="text" id="gen-ctx" placeholder="Ex: animaux, sport, saisons…" style="margin-bottom:8px">
+      <div id="gen-type-hint" class="info-box" style="display:none;margin-bottom:12px;font-size:12px"></div>
+      <button class="btn btn-p btn-full" id="gen-btn" onclick="generateExo()">✨ Générer l'exercice</button>
+      <div class="ldg" id="gen-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)" id="gen-src">Génération…</div></div>
+      <div class="err" id="gen-err"></div>
+    </div>
+    <div id="gen-result" style="display:none" class="card">
+      <div class="card-title">Exercice généré</div>
+      <div id="gen-badge" class="tbadge">✨</div>
+      <label class="flbl">Consigne</label>
+      <textarea id="gen-cons"></textarea>
+      <div style="margin-top:12px"><label class="flbl">Valeurs</label><div class="ngrid" id="gen-nums"></div></div>
       <div class="arow">
-        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter</button>
+        <button class="btn btn-ghost btn-sm" onclick="generateExo()">🔄 Régénérer</button>
+        <button class="btn btn-ghost btn-sm" onclick="generate3Levels()">⭐ 3 niveaux</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" onclick="addGenToFiche()">Ajouter à la fiche →</button>
       </div>
     </div>
-    <div class="card" id="export-opts-card">
+  </div>
+
+  <!-- PAGE 2 : BIBLIOTHÈQUE -->
+  <div id="p2" style="display:none">
+    <div class="card">
+      <div class="card-title">Bibliothèque <span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
+      <div class="search-wrap"><span class="search-ico">🔍</span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
+      <div class="chips" id="lib-chips"></div>
+      <div id="lib-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 3 : EXPORT -->
+  <div id="p3" style="display:none">
+    <div class="card">
+      <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
+      <div id="fiche-list"></div>
+      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button><button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button></div>
+    </div>
+    <!-- Variantes -->
+    <div class="card" id="var-card" style="display:none">
+      <div class="card-title">Variantes anti-copie</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+        <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
+        <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
+        <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
+      </div>
+      <div id="var-result"></div>
+    </div>
+    <!-- Export options -->
+    <div class="card">
       <div class="card-title">Options Word</div>
-      <label class="flabel">Titre de la fiche</label>
-      <input type="text" id="doc-title" placeholder="Ex : Exercices — Multiplication — 3e année" style="margin-bottom:16px">
-      <label class="xopt">
-        <input type="checkbox" id="opt-hdr" checked>
-        <div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div>
-      </label>
-      <label class="xopt">
-        <input type="checkbox" id="opt-lines" checked>
-        <div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés sous chaque exercice</span></div>
-      </label>
-      <label class="xopt">
-        <input type="checkbox" id="opt-corr">
-        <div class="xopt-txt"><strong>Version corrigé</strong><span>2e fichier avec les réponses</span></div>
-      </label>
-      <div id="dl-zone" style="margin-top:18px">
-        <button class="btn btn-g btn-full" id="gen-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>
+      <label class="flbl">Titre</label>
+      <input type="text" id="doc-title" placeholder="Exercices — Multiplication — 3e année" style="margin-bottom:12px">
+      <label class="xopt"><input type="checkbox" id="opt-hdr" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-bareme"><div class="xopt-txt"><strong>Barème</strong><span>Points par exercice</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>2e fichier avec réponses</span></div></label>
+      <label class="xopt"><input type="checkbox" id="opt-belge"><div class="xopt-txt"><strong>Style manuel belge</strong><span>Mise en page Tip Top / Maths et Moustique</span></div></label>
+      <div id="dl-zone" style="margin-top:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-g btn-full" id="gen-word-btn" onclick="generateWord()">⬇ Word (.docx)</button>
+          <button class="btn btn-full" id="gen-pdf-btn" onclick="generatePDF()" style="border-color:var(--rd);color:var(--rd)">⬇ PDF</button>
+        </div>
       </div>
       <div class="note" id="dl-note" style="display:none"></div>
     </div>
-  </div>
 
-  <!-- PAGE 3 : HISTORIQUE -->
-  <div id="page3" style="display:none">
-    <div class="card">
-      <div class="card-title">Exercices analysés <span style="float:right"><button class="btn btn-ghost btn-sm" onclick="clearHistory()" style="margin-top:-4px">Tout effacer</button></span></div>
-      <div id="hist-list"></div>
+    <!-- FICHES 3 NIVEAUX -->
+    <div class="card" id="levels-card" style="display:none">
+      <div class="card-title">Fiches 3 niveaux <span class="right" id="levels-badge"></span></div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:14px">Sélectionnez les niveaux à inclure dans votre export.</p>
+      <div id="levels-preview"></div>
+      <div id="levels-select" style="margin-top:14px"></div>
+      <div id="levels-dl-zone" style="margin-top:14px"></div>
     </div>
   </div>
+
+  <!-- PAGE 4 : CORRECTION -->
+  <div id="p4" style="display:none">
+    <div class="card">
+      <div class="card-title">Corriger une copie d'élève</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Photographiez le corrigé attendu et la copie de l'élève. L'IA compare et identifie les erreurs.</p>
+      <div class="corr-split">
+        <div class="corr-panel" id="corr-ref-panel" onclick="document.getElementById('corr-ref-input').click()">
+          <div class="corr-panel-label">📋 Corrigé</div>
+          <p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>
+          <input type="file" id="corr-ref-input" accept="image/*" style="display:none" onchange="loadCorrImg(event,'ref')">
+        </div>
+        <div class="corr-panel" id="corr-copy-panel" onclick="document.getElementById('corr-copy-input').click()">
+          <div class="corr-panel-label">📝 Copie élève</div>
+          <p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>
+          <input type="file" id="corr-copy-input" accept="image/*" style="display:none" onchange="loadCorrImg(event,'copy')">
+        </div>
+      </div>
+      <div class="arow" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="resetCorr()">Réinitialiser</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" id="corr-btn" onclick="runCorrection()" disabled>🔍 Analyser la copie</button>
+      </div>
+      <div class="ldg" id="corr-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">Comparaison en cours…</div></div>
+      <div class="err" id="corr-err"></div>
+    </div>
+    <div id="corr-result" style="display:none" class="card">
+      <div class="card-title" id="corr-result-title">Résultat</div>
+      <div id="corr-items"></div>
+      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="resetCorr()">Nouvelle correction</button></div>
+    </div>
+  </div>
+
+  <!-- PAGE 5 : PLANNING -->
+  <div id="p5" style="display:none">
+    <div class="card">
+      <div class="card-title">Planifier une séquence</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label class="flbl">Thème</label><input type="text" id="plan-topic" placeholder="Ex: Les fractions"></div>
+        <div><label class="flbl">Niveau</label>
+          <select id="plan-level"><option>1re primaire</option><option>2e primaire</option><option selected>3e primaire</option><option>4e primaire</option><option>5e primaire</option><option>6e primaire</option></select></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><label class="flbl">Durée</label>
+          <select id="plan-dur"><option>1 semaine</option><option selected>2 semaines</option><option>3 semaines</option></select></div>
+        <div><label class="flbl">Objectif</label><input type="text" id="plan-obj" placeholder="Comprendre et calculer"></div>
+      </div>
+      <button class="btn btn-p btn-full" id="plan-btn" onclick="generatePlan()">📅 Générer le planning</button>
+      <div class="ldg" id="plan-ldg"><div class="spinner"></div><div style="font-size:14px;color:var(--mu)">Génération…</div></div>
+      <div class="err" id="plan-err"></div>
+    </div>
+    <div id="plan-result" style="display:none" class="card">
+      <div class="card-title">Séquence <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">⬇ Word</button></span></div>
+      <div id="plan-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 6 : GÉOMÉTRIE -->
+  <div id="p6" style="display:none">
+    <div class="card">
+      <div class="card-title">Figures géométriques</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:14px">Construis une figure, ajuste ses dimensions, puis insère-la dans ta fiche Word.</p>
+
+      <!-- Sélecteur de figure -->
+      <div class="geo-type-row" id="geo-type-row">
+        <button class="geo-type-btn active" data-type="rectangle" onclick="selectGeoType('rectangle',this)">
+          <svg width="36" height="28" viewBox="0 0 36 28"><rect x="2" y="4" width="32" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Rectangle</span>
+        </button>
+        <button class="geo-type-btn" data-type="square" onclick="selectGeoType('square',this)">
+          <svg width="32" height="32" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Carré</span>
+        </button>
+        <button class="geo-type-btn" data-type="triangle" onclick="selectGeoType('triangle',this)">
+          <svg width="36" height="32" viewBox="0 0 36 32"><polygon points="18,2 34,30 2,30" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Triangle</span>
+        </button>
+        <button class="geo-type-btn" data-type="circle" onclick="selectGeoType('circle',this)">
+          <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Cercle</span>
+        </button>
+        <button class="geo-type-btn" data-type="triangle-right" onclick="selectGeoType('triangle-right',this)">
+          <svg width="36" height="32" viewBox="0 0 36 32"><polygon points="2,30 2,2 34,30" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Tr. rect.</span>
+        </button>
+        <button class="geo-type-btn" data-type="pentagon" onclick="selectGeoType('pentagon',this)">
+          <svg width="32" height="32" viewBox="0 0 32 32"><polygon points="16,2 30,12 25,28 7,28 2,12" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Pentagone</span>
+        </button>
+      </div>
+
+      <!-- Contrôles dimensions -->
+      <div id="geo-controls" style="margin-bottom:16px"></div>
+
+      <!-- Options d'affichage -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer">
+          <input type="checkbox" id="geo-show-dims" checked onchange="renderGeoPreview()" style="width:15px;height:15px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none"> Afficher dimensions
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer">
+          <input type="checkbox" id="geo-show-angles" onchange="renderGeoPreview()" style="width:15px;height:15px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none"> Afficher angles
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer">
+          <input type="checkbox" id="geo-show-area" onchange="renderGeoPreview()" style="width:15px;height:15px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none"> Afficher aire
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer">
+          <input type="checkbox" id="geo-show-perim" onchange="renderGeoPreview()" style="width:15px;height:15px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none"> Afficher périmètre
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer">
+          <input type="checkbox" id="geo-show-grid" onchange="renderGeoPreview()" style="width:15px;height:15px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none"> Quadrillage
+        </label>
+      </div>
+
+      <!-- Couleur + style -->
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label class="flbl" style="margin:0;white-space:nowrap;font-size:12px">Couleur :</label>
+          <div class="geo-color-row" id="geo-color-row">
+            <button class="geo-color-btn active" data-color="#5B3FBF" style="background:#5B3FBF" onclick="selectGeoColor('#5B3FBF',this)"></button>
+            <button class="geo-color-btn" data-color="#2D6A4F" style="background:#2D6A4F" onclick="selectGeoColor('#2D6A4F',this)"></button>
+            <button class="geo-color-btn" data-color="#B03030" style="background:#B03030" onclick="selectGeoColor('#B03030',this)"></button>
+            <button class="geo-color-btn" data-color="#1A73E8" style="background:#1A73E8" onclick="selectGeoColor('#1A73E8',this)"></button>
+            <button class="geo-color-btn" data-color="#8B5E1A" style="background:#8B5E1A" onclick="selectGeoColor('#8B5E1A',this)"></button>
+            <button class="geo-color-btn" data-color="#444441" style="background:#444441" onclick="selectGeoColor('#444441',this)"></button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label class="flbl" style="margin:0;white-space:nowrap;font-size:12px">Remplissage :</label>
+          <select id="geo-fill" onchange="renderGeoPreview()" style="width:120px;font-size:13px;padding:6px 10px">
+            <option value="none">Vide</option>
+            <option value="light">Clair</option>
+            <option value="solid">Plein</option>
+            <option value="hatch">Hachuré</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Aperçu SVG -->
+      <div id="geo-preview-wrap" style="background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:16px;margin-bottom:14px;min-height:200px;display:flex;align-items:center;justify-content:center">
+        <div id="geo-preview"></div>
+      </div>
+
+      <!-- Infos calculées -->
+      <div id="geo-info" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+
+      <!-- Consigne associée -->
+      <label class="flbl">Consigne associée (optionnel)</label>
+      <textarea id="geo-cons" placeholder="Ex: Calcule le périmètre de ce rectangle." style="min-height:60px;margin-bottom:12px"></textarea>
+
+      <div class="arow">
+        <button class="btn btn-ghost btn-sm" onclick="resetGeo()">Réinitialiser</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" onclick="addGeoToFiche()">Ajouter à la fiche →</button>
+      </div>
+    </div>
+
+    <!-- Galerie de figures ajoutées -->
+    <div id="geo-fiche-mini" style="display:none" class="card">
+      <div class="card-title">Figures dans la fiche · <span id="geo-count">0</span></div>
+      <div id="geo-fiche-list" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 7 : BANQUE DE PROBLÈMES -->
+  <div id="p7" style="display:none">
+    <div class="card">
+      <div class="card-title">Banque de problèmes contextualisés</div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:14px">Problèmes ancrés dans la vie quotidienne belge. Un clic pour personnaliser et ajouter à ta fiche.</p>
+
+      <!-- Filtres -->
+      <div class="search-wrap" style="margin-bottom:10px">
+        <span class="search-ico">🔍</span>
+        <input type="text" id="bank-search" placeholder="Rechercher…" oninput="renderBank()">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div>
+          <label class="flbl" style="font-size:11px">Contexte</label>
+          <select id="bank-ctx" onchange="renderBank()" style="font-size:13px;padding:6px 10px">
+            <option value="">Tous</option>
+            <option>🛒 Marché / courses</option>
+            <option>🚲 Vélo / transport</option>
+            <option>🍟 Friterie / resto</option>
+            <option>⚽ Sport</option>
+            <option>🌧️ Météo / saisons</option>
+            <option>🎂 Anniversaires / fêtes</option>
+            <option>📚 École / classe</option>
+            <option>🌿 Nature / jardin</option>
+            <option>🏠 Maison / cuisine</option>
+            <option>🎡 Kermesse / foire</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl" style="font-size:11px">Niveau</label>
+          <select id="bank-level" onchange="renderBank()" style="font-size:13px;padding:6px 10px">
+            <option value="">Tous</option>
+            <option value="1">1re-2e</option>
+            <option value="3">3e-4e</option>
+            <option value="5">5e-6e</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl" style="font-size:11px">Opération</label>
+          <select id="bank-op" onchange="renderBank()" style="font-size:13px;padding:6px 10px">
+            <option value="">Toutes</option>
+            <option value="+">Addition</option>
+            <option value="-">Soustraction</option>
+            <option value="×">Multiplication</option>
+            <option value="÷">Division</option>
+            <option value="mix">Mixte</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="bank-list"></div>
+    </div>
+
+    <!-- Éditeur rapide d'un problème de la banque -->
+    <div id="bank-editor" style="display:none" class="card">
+      <div class="card-title">Personnaliser le problème</div>
+      <div id="bank-ed-badge" class="tbadge">🛒 Problème</div>
+      <label class="flbl">Énoncé</label>
+      <textarea id="bank-ed-cons" style="min-height:100px"></textarea>
+      <div style="margin-top:12px"><label class="flbl">Valeurs modifiables</label><div class="ngrid" id="bank-ed-nums"></div></div>
+      <div style="margin-top:12px">
+        <label class="flbl">Réponse attendue</label>
+        <input type="text" id="bank-ed-corr" placeholder="Ex: 3,50 €">
+      </div>
+      <div class="arow">
+        <button class="btn btn-ghost btn-sm" onclick="hide('bank-editor')">Annuler</button>
+        <div class="sp"></div>
+        <button class="btn btn-p" onclick="addBankToFiche()">Ajouter à la fiche →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 8 : TABLES DE MULTIPLICATION -->
+  <div id="p8" style="display:none">
+    <div class="card">
+      <div class="card-title">Tables de multiplication</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <div>
+          <label class="flbl" style="font-size:11px">Table de</label>
+          <div class="chips" id="table-chips" style="margin-bottom:0"></div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="tableMode='grid';renderTable()">Grille</button>
+          <button class="btn btn-ghost btn-sm" onclick="tableMode='drill';startDrill()">Drill ⚡</button>
+          <button class="btn btn-p btn-sm" onclick="exportTableWord()">⬇ Word</button>
+        </div>
+      </div>
+
+      <!-- Mode grille -->
+      <div id="table-grid-view">
+        <div id="table-grid" style="overflow-x:auto"></div>
+      </div>
+
+      <!-- Mode drill -->
+      <div id="table-drill-view" style="display:none">
+        <div style="text-align:center;padding:20px 0">
+          <div id="drill-question" style="font-family:'Lora',serif;font-size:36px;font-weight:600;color:var(--tx);margin-bottom:20px"></div>
+          <input type="number" id="drill-answer" placeholder="?" style="width:120px;font-size:28px;font-weight:600;text-align:center;border:2px solid var(--bd2);border-radius:var(--rs);padding:10px;background:var(--sur)" onkeydown="if(event.key==='Enter')checkDrill()">
+          <div id="drill-feedback" style="margin-top:14px;font-size:18px;min-height:28px"></div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+            <button class="btn btn-p" onclick="checkDrill()">Valider</button>
+            <button class="btn btn-ghost btn-sm" onclick="stopDrill()">Arrêter</button>
+          </div>
+          <div style="margin-top:14px">
+            <div id="drill-progress" style="font-size:13px;color:var(--mu)"></div>
+            <div style="background:var(--sur2);border-radius:3px;height:6px;margin-top:6px;overflow:hidden">
+              <div id="drill-bar" style="height:100%;background:var(--gn);border-radius:3px;transition:width .3s;width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score drill -->
+      <div id="drill-score" style="display:none;text-align:center;padding:20px">
+        <div class="scheck" style="width:52px;height:52px;font-size:24px">🏆</div>
+        <h3 style="font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:8px" id="drill-score-title"></h3>
+        <p style="font-size:14px;color:var(--mu);margin-bottom:16px" id="drill-score-detail"></p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-p btn-sm" onclick="startDrill()">Recommencer</button>
+          <button class="btn btn-ghost btn-sm" onclick="tableMode='grid';renderTable();hide('drill-score');show('table-grid-view')">Voir la grille</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 9 : DICO (ex-8) -->
+  <div id="p9" style="display:none">
+    <div class="card">
+      <div class="card-title">Dictionnaire mathématique</div>
+      <div class="search-wrap"><span class="search-ico">🔍</span><input type="text" id="dico-search" placeholder="Chercher un terme…" oninput="renderDico()"></div>
+      <div class="chips" id="dico-chips"></div>
+      <div id="dico-detail"></div>
+      <div class="dico-grid" id="dico-grid"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 10 : RÉGLAGES (ex-9) -->
+  <div id="p10" style="display:none">
+    <div class="card">
+      <div class="card-title">Synchronisation entre appareils</div>
+      <div class="sync-row"><div class="sync-dot" id="sync-dot"></div><span id="sync-status" style="flex:1;font-size:13px">Non configuré</span></div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:12px;line-height:1.6">La sync utilise un <strong>GitHub Gist</strong> (fichier privé sur votre compte GitHub). Votre bibliothèque est sauvegardée automatiquement et accessible sur tous vos appareils.</p>
+      <label class="flbl">Token GitHub (Personal Access Token)</label>
+      <input type="password" id="gh-token" placeholder="ghp_…" style="margin-bottom:8px;font-family:monospace;font-size:13px">
+      <p style="font-size:12px;color:var(--hi);margin-bottom:12px">Créer sur <a class="sl" href="https://github.com/settings/tokens/new?scopes=gist" target="_blank">github.com/settings/tokens</a> → scope <strong>gist</strong> uniquement.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-p btn-sm" onclick="syncSave()">⬆ Sauvegarder</button>
+        <button class="btn btn-ghost btn-sm" onclick="syncLoad()">⬇ Restaurer</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveGhToken()">💾 Enregistrer token</button>
+      </div>
+      <div class="err" id="sync-err" style="margin-top:10px"></div>
+      <div class="info-box" id="sync-ok" style="display:none"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Mode IA</div>
+      <div class="info-box" id="ai-mode-info">Chargement…</div>
+      <div class="arow" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="initLocalAI(true)">🔄 Recharger IA locale</button>
+        <button class="btn btn-ghost btn-sm" onclick="testApi()">🧪 Tester l'API</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">À propos</div>
+      <p style="font-size:13px;color:var(--mu);line-height:1.7">
+        <strong>ExoScan Pro</strong> — Assistant mathématiques pour enseignantes du primaire<br>
+        IA locale : SmolVLM (HuggingFace) via Transformers.js<br>
+        OCR : Tesseract.js<br>
+        Export : docx.js<br>
+        Hébergement : GitHub Pages (gratuit)
+      </p>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bnav-btn active" id="bn0" onclick="goTab(0)"><span class="ico">📷</span>Scan</button>
+  <button class="bnav-btn" id="bn1" onclick="goTab(1)"><span class="ico">✨</span>Créer</button>
+  <button class="bnav-btn" id="bn2" onclick="goTab(2)"><span class="ico">🗂️</span>Biblio</button>
+  <button class="bnav-btn" id="bn3" onclick="goTab(3)"><span class="ico">📄</span>Export</button>
+  <button class="bnav-btn" id="bn4" onclick="goTab(4)"><span class="ico">✅</span>Corriger</button>
+  <button class="bnav-btn" id="bn5" onclick="goTab(5)"><span class="ico">📅</span>Plan</button>
+  <button class="bnav-btn" id="bn6" onclick="goTab(6)"><span class="ico">📐</span>Géom.</button>
+  <button class="bnav-btn" id="bn7" onclick="goTab(7)"><span class="ico">🛒</span>Banque</button>
+  <button class="bnav-btn" id="bn8" onclick="goTab(8)"><span class="ico">✖️</span>Tables</button>
+  <button class="bnav-btn" id="bn9" onclick="goTab(9)"><span class="ico">📖</span>Dico</button>
+  <button class="bnav-btn" id="bn10" onclick="goTab(10)"><span class="ico">⚙️</span>Régl.</button>
 </div>
+</div><!-- /app -->
 
 <script>
-/* ═══════════ CONSTANTS ═══════════ */
-const KEYSTORE   = 'exoscan_or_key';
-const HISTSTORE  = 'exoscan_history';
-const MODELS = [
+/* ══════════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════════ */
+const KEYSTORE  = 'exoscan_or_key';
+const LIBSTORE  = 'exoscan_lib_v2';
+const GISTSTORE = 'exoscan_gist_id';
+const GHSTORE   = 'exoscan_gh_token';
+const MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const OR_MODELS = [
   {id:'mistralai/mistral-small-3.1-24b-instruct:free', label:'Mistral Small 3.1'},
   {id:'meta-llama/llama-3.2-11b-vision-instruct:free',  label:'Llama 3.2 Vision'},
   {id:'google/gemini-2.0-flash-exp:free',               label:'Gemini 2.0 Flash'},
 ];
+const CHAPTERS = ['Tout','Numération','Addition','Soustraction','Multiplication','Division','Fractions','Géométrie','Mesures','Problèmes'];
 
-/* ═══════════ STATE ═══════════ */
-let basket   = [];   // exercices dans la fiche courante
-let curExo   = null; // exercice en cours d'édition
-let curNums  = [];
-let curImg   = null; // data URL de l'image en cours
-let history  = [];   // [] of {id, date, emoji, type, consigne, numbers, correction, imgSrc}
+/* ══════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════ */
+let basket   = [];
+let library  = JSON.parse(localStorage.getItem(LIBSTORE)||'[]');
+let curExo   = null, curNums = [], curImg = null;
+let genExo   = null, genNums = [];
+let localVLM = null;   // SmolVLM pipeline (vision)
+let localLLM = null;   // Phi-3 pipeline (text)
+let ocrEngine= null;   // Tesseract worker
+let vlmReady = false, llmReady = false, ocrReady = false;
+let libFilter= 'Tout';
+let planData = [];
+let corrRef  = null, corrCopy = null;
+let dicoFilter='Tout', dicoOpen=null;
 
-/* ═══════════ INIT ═══════════ */
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
-  history = JSON.parse(localStorage.getItem(HISTSTORE) || '[]');
   if (localStorage.getItem(KEYSTORE)) {
-    document.getElementById('setup-overlay').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    refreshBasketMini();
+    hide('overlay'); show('app');
+    initAI();
   }
   document.getElementById('key-input').addEventListener('keydown', e => { if(e.key==='Enter') saveKey(); });
+  const ghToken = localStorage.getItem(GHSTORE);
+  if (ghToken) document.getElementById('gh-token').value = ghToken;
 });
 
-/* ═══════════ KEY ═══════════ */
+/* ══════════════════════════════════════════════
+   KEY
+══════════════════════════════════════════════ */
 function saveKey() {
   const v = document.getElementById('key-input').value.trim();
   if (!v) { showErr('key-err','Saisissez votre clé.'); return; }
-  if (!v.startsWith('sk-or-')) { showErr('key-err','La clé doit commencer par "sk-or-v1-…". Vérifiez sur openrouter.ai → Keys.'); return; }
+  if (!v.startsWith('sk-or-')) { showErr('key-err','Clé invalide — doit commencer par sk-or-v1-…'); return; }
   hide('key-err');
   localStorage.setItem(KEYSTORE, v);
-  document.getElementById('setup-overlay').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  refreshBasketMini();
+  hide('overlay'); show('app');
+  initAI();
 }
 function showSetup() {
   document.getElementById('key-input').value = localStorage.getItem(KEYSTORE)||'';
-  hide('key-err');
-  document.getElementById('setup-overlay').style.display = 'flex';
+  hide('key-err'); show('overlay');
 }
 
-/* ═══════════ NAVIGATION ═══════════ */
-let currentTab = 0;
+/* ══════════════════════════════════════════════
+   AI INIT — SmolVLM + Phi-3 + Tesseract
+══════════════════════════════════════════════ */
+async function initAI(force=false) {
+  updateAIPill('loading','⏳ Init…');
+  // 1. Init Tesseract OCR (léger, ~10MB)
+  initOCR();
+  // 2. Test API OpenRouter
+  const apiOk = await testApiSilent();
+  if (apiOk) {
+    updateAIPill('api','🌐 API');
+    setAIModeInfo('Mode API (OpenRouter) — connexion active. IA locale disponible en fallback hors-ligne.');
+  }
+  // 3. Init SmolVLM local (vision + texte)
+  initLocalAI(force);
+}
+
+async function initOCR() {
+  try {
+    const { createWorker } = await import('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js');
+    ocrEngine = await createWorker(['fra','eng'], 1, {
+      logger: m => { if(m.status==='recognizing text') console.log('OCR:',Math.round(m.progress*100)+'%'); }
+    });
+    ocrReady = true;
+    console.log('OCR Tesseract prêt');
+  } catch(e) { console.log('OCR non disponible:', e.message); }
+}
+
+async function initLocalAI(force=false) {
+  const bar = document.getElementById('ai-bar');
+  try {
+    const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
+    env.allowLocalModels = false;
+
+    const onProgress = (p) => {
+      bar.style.display = 'block';
+      if (p.progress) {
+        const pct = Math.round(p.progress);
+        document.getElementById('ai-fill').style.width = pct+'%';
+        document.getElementById('ai-pct').textContent = pct+'%';
+        document.getElementById('ai-msg').textContent = `Chargement ${p.file||''}…`;
+      }
+    };
+
+    document.getElementById('ai-bar-label').textContent = 'Chargement SmolVLM (vision)…';
+    // SmolVLM — modèle vision-langage compact, fonctionne sur WebGPU (Chrome/Brave/Firefox) et WASM
+    localVLM = await pipeline(
+      'image-text-to-text',
+      'HuggingFaceTB/SmolVLM-256M-Instruct',
+      { dtype: {embed_tokens:'fp16', vision_encoder:'fp16', decoder_model_merged:'q4'},
+        device: 'webgpu',
+        progress_callback: onProgress }
+    );
+    vlmReady = true;
+    bar.style.display = 'none';
+
+    // Phi-3 Mini pour génération texte
+    document.getElementById('ai-bar-label').textContent = 'Chargement Phi-3 Mini (texte)…';
+    bar.style.display = 'block';
+    document.getElementById('ai-fill').style.width = '0%';
+    localLLM = await pipeline('text-generation','Xenova/Phi-3-mini-4k-instruct',
+      { dtype:'q4', device:'webgpu', progress_callback: onProgress });
+    llmReady = true;
+    bar.style.display = 'none';
+
+    updateAIPill('local','🟢 IA locale');
+    setAIModeInfo('Mode IA locale actif (SmolVLM + Phi-3). Fonctionne entièrement hors-ligne.');
+  } catch(e) {
+    bar.style.display = 'none';
+    // Fallback WASM si WebGPU non disponible
+    if (e.message && e.message.includes('webgpu')) {
+      try {
+        const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
+        env.allowLocalModels = false;
+        document.getElementById('ai-bar').style.display='block';
+        document.getElementById('ai-bar-label').textContent='SmolVLM (WASM, ~30s par analyse)…';
+        localVLM = await pipeline('image-text-to-text','HuggingFaceTB/SmolVLM-256M-Instruct',
+          { dtype:'q4', device:'wasm',
+            progress_callback: p=>{ if(p.progress){document.getElementById('ai-fill').style.width=Math.round(p.progress)+'%';} } });
+        vlmReady = true;
+        document.getElementById('ai-bar').style.display='none';
+        updateAIPill('local','🟡 IA WASM');
+        setAIModeInfo('IA locale en mode WASM (WebGPU non disponible sur ce navigateur). Analyse ~20-40s. Recommandé : Chrome ou Brave.');
+      } catch(e2) {
+        updateAIPill('api','🌐 API seule');
+        setAIModeInfo('IA locale non disponible. Mode API uniquement. Vérifiez votre navigateur (Chrome/Brave recommandé).');
+      }
+    } else {
+      if (!vlmReady) { updateAIPill('api','🌐 API'); setAIModeInfo('IA locale non chargée. Mode API actif.'); }
+    }
+  }
+}
+
+function updateAIPill(cls, txt) {
+  const p = document.getElementById('ai-status');
+  p.className = 'ai-pill '+cls; p.textContent = txt;
+}
+function setAIModeInfo(txt) {
+  const el = document.getElementById('ai-mode-info');
+  if(el) el.textContent = txt;
+}
+async function testApiSilent() {
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models',{headers:{'Authorization':'Bearer '+localStorage.getItem(KEYSTORE)}});
+    return r.ok;
+  } catch { return false; }
+}
+async function testApi() {
+  const ok = await testApiSilent();
+  alert(ok ? '✅ API OpenRouter accessible !' : '❌ API inaccessible — vérifiez votre connexion ou clé.');
+}
+
+/* ══════════════════════════════════════════════
+   CALL AI — Hybride automatique
+══════════════════════════════════════════════ */
+const SCAN_PROMPT = `Tu es un assistant pour enseignantes de mathématiques primaire (enfants 7-10 ans).
+Analyse cet exercice. Réponds UNIQUEMENT en JSON valide sans backticks :
+{"type":"Calcul|Géométrie|Problème textuel|Tableau|Autre","emoji":"emoji","consigne":"consigne FR naturelle (traduite si anglais, adaptée 8 ans)","numbers":[{"label":"nom court","value":12}],"correction":"réponse si visible sinon vide","chapitre":"Addition|Soustraction|Multiplication|Division|Fractions|Géométrie|Mesures|Numération|Problèmes"}
+Règles : traduire EN→FR, adapter unités, numbers=chiffres modifiables max 8.`;
+
+async function analyzeImage(b64, mime) {
+  // Étape 1 : OCR pour extraire le texte (toujours local, rapide)
+  let ocrText = '';
+  if (ocrReady && ocrEngine) {
+    try {
+      document.getElementById('scan-lmod').textContent = 'OCR extraction du texte…';
+      const blob = b64ToBlob(b64, mime);
+      const url = URL.createObjectURL(blob);
+      const { data } = await ocrEngine.recognize(url);
+      ocrText = data.text?.trim() || '';
+      URL.revokeObjectURL(url);
+      if (ocrText) document.getElementById('scan-lmod').textContent = `OCR: ${ocrText.substring(0,40)}…`;
+    } catch(e) { console.log('OCR erreur:', e.message); }
+  }
+
+  // Étape 2 : Essai API OpenRouter (vision)
+  const apiKey = localStorage.getItem(KEYSTORE);
+  if (apiKey) {
+    for (const m of OR_MODELS) {
+      try {
+        document.getElementById('scan-lmod').textContent = 'Via API — '+m.label+'…';
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
+          body:JSON.stringify({model:m.id,max_tokens:800,messages:[{role:'user',content:[
+            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+            {type:'text',text:SCAN_PROMPT+(ocrText?`\n\nTexte OCR extrait:\n${ocrText}`:'')}
+          ]}]})
+        });
+        if (!r.ok) { const e=await r.json().catch(()=>({})); if(r.status===401||r.status===402) throw new Error('auth'); continue; }
+        const d = await r.json();
+        const txt = d?.choices?.[0]?.message?.content||'';
+        if (!txt) continue;
+        return parseJSON(txt);
+      } catch(ex) { if(ex.message==='auth') break; }
+    }
+  }
+
+  // Étape 3 : Fallback SmolVLM local
+  if (vlmReady && localVLM) {
+    document.getElementById('scan-lmod').textContent = '🔒 IA locale SmolVLM…';
+    const dataUrl = `data:${mime};base64,${b64}`;
+    const messages = [{role:'user',content:[
+      {type:'image',image:dataUrl},
+      {type:'text',text:'Analyse cet exercice de mathématiques pour enfants de primaire. Réponds en JSON: {"type":"...","emoji":"...","consigne":"...en français...","numbers":[{"label":"...","value":0}],"correction":"...","chapitre":"..."}'+
+       (ocrText?`\nTexte visible dans l'image: ${ocrText}`:'') }
+    ]}];
+    const out = await localVLM(messages,{max_new_tokens:500,temperature:0.2});
+    const txt = out[0]?.generated_text?.at(-1)?.content||'';
+    return parseJSON(txt);
+  }
+
+  // Étape 4 : Fallback OCR seul → Phi-3 texte
+  if (ocrText && llmReady && localLLM) {
+    document.getElementById('scan-lmod').textContent = '🔒 OCR + Phi-3 texte…';
+    const msgs = [
+      {role:'system',content:'Tu es assistant pour enseignantes de maths primaire. Analyse un exercice et réponds en JSON.'},
+      {role:'user',content:`Texte extrait d'un exercice de maths:\n${ocrText}\n\nRéponds en JSON: {"type":"...","emoji":"...","consigne":"...","numbers":[...],"correction":"...","chapitre":"..."}`}
+    ];
+    const out = await localLLM(msgs,{max_new_tokens:400,temperature:0.2});
+    return parseJSON(out[0].generated_text.at(-1).content);
+  }
+
+  throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion ou activez l\'IA locale.');
+}
+
+async function callAIText(prompt, system) {
+  // API d'abord
+  const apiKey = localStorage.getItem(KEYSTORE);
+  if (apiKey) {
+    for (const m of OR_MODELS) {
+      try {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
+          body:JSON.stringify({model:m.id,max_tokens:900,messages:[{role:'system',content:system},{role:'user',content:prompt}]})
+        });
+        if (!r.ok) continue;
+        const d = await r.json();
+        const txt = d?.choices?.[0]?.message?.content||'';
+        if (txt) return txt;
+      } catch(ex) { /* continue */ }
+    }
+  }
+  // Fallback Phi-3 local
+  if (llmReady && localLLM) {
+    const out = await localLLM([{role:'system',content:system},{role:'user',content:prompt}],{max_new_tokens:700,temperature:0.3});
+    return out[0].generated_text.at(-1).content;
+  }
+  throw new Error('Aucune IA disponible. Vérifiez votre connexion.');
+}
+
+/* ══════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════ */
 function goTab(n) {
-  // Autorise la navigation seulement si les conditions sont remplies
-  if (n === 1 && !curExo) return; // pas d'exo en édition
-  currentTab = n;
-  ['page0','page1','page2','page3'].forEach((id,i) => {
-    document.getElementById(id).style.display = i===n ? 'block' : 'none';
-  });
-  ['t0','t1','t2','t3'].forEach((id,i) => {
-    const el = document.getElementById(id);
-    const enabled = i===0 || (i===1 && curExo) || i===2 || i===3;
-    el.className = 'nav-tab' + (i===n ? ' active' : '') + (i < n ? ' done' : '') + (enabled && i!==n ? ' clickable' : '');
-  });
-  if (n === 2) renderFiche();
-  if (n === 3) renderHistory();
+  for(let i=0;i<11;i++){
+    document.getElementById('p'+i).style.display = i===n?'block':'none';
+    document.getElementById('bn'+i).className = 'bnav-btn'+(i===n?' active':'');
+  }
+  if(n===2) renderLib();
+  if(n===3){ renderFiche(); document.getElementById('var-card').style.display=basket.length>1?'block':'none'; }
+  if(n===6){ initGeo(); }
+  if(n===7){ renderBank(); }
+  if(n===8){ initTables(); }
+  if(n===9) renderDico();
   window.scrollTo(0,0);
 }
 
-/* ═══════════ FILE UPLOAD ═══════════ */
+/* ══════════════════════════════════════════════
+   FILE UPLOAD & SCAN
+══════════════════════════════════════════════ */
 function handleFile(e) {
-  const file = e.target.files[0]; if (!file) return;
-  hide('scan-err');
+  const file = e.target.files[0]; if(!file) return;
+  hide('scan-err'); hide('inline-ed');
   const reader = new FileReader();
-  reader.onload = async (ev) => {
+  reader.onload = async(ev) => {
     curImg = ev.target.result;
-    document.getElementById('img-prev').src = curImg;
-    show('img-prev'); hide('upload-zone');
-    show('loading');
-    await runAnalysis(curImg.split(',')[1], file.type||'image/jpeg');
+    document.getElementById('iprev').src = curImg;
+    show('iprev'); hide('upzone');
+    document.getElementById('scan-ltxt').textContent = 'Analyse en cours…';
+    show('scan-ldg');
+    try {
+      const b64  = curImg.split(',')[1];
+      const mime = file.type||'image/jpeg';
+      const data = await analyzeImage(b64, mime);
+      hide('scan-ldg');
+      curExo  = data;
+      curNums = (data.numbers||[]).map(n=>({...n}));
+      saveToLib(data, curImg);
+      showInlineEditor();
+    } catch(ex) {
+      hide('scan-ldg');
+      showErr('scan-err','⚠ '+ex.message);
+      show('upzone'); hide('iprev');
+      document.getElementById('finput').value='';
+    }
   };
   reader.readAsDataURL(file);
 }
 
-/* ═══════════ AI ANALYSIS ═══════════ */
-const PROMPT = `Tu es un assistant pour enseignantes de mathématiques primaire (enfants 7-10 ans).
-Analyse cet exercice. Réponds UNIQUEMENT en JSON valide sans backticks :
-{
-  "type": "Calcul | Géométrie | Problème textuel | Tableau | Autre",
-  "emoji": "un seul emoji",
-  "consigne": "consigne en français naturel (traduite si anglais, adaptée 8 ans)",
-  "numbers": [{"label": "nom court", "value": 12}],
-  "correction": "réponse si visible sinon chaine vide"
-}
-Règles : traduire EN→FR, adapter unités (miles→km, lbs→kg), numbers = chiffres modifiables max 8.`;
-
-async function runAnalysis(b64, mime) {
-  const ltxt   = document.getElementById('ltxt');
-  const lmodel = document.getElementById('lmodel');
-  const msgs   = ['Lecture de l\'image…','Détection des données…','Traduction si besoin…','Finalisation…'];
-  let mi = 0;
-  const tick = setInterval(()=>{ ltxt.textContent = msgs[mi=(mi+1)%msgs.length]; }, 1600);
-  let lastErr = '';
-
-  for (const m of MODELS) {
-    try {
-      lmodel.textContent = 'Modèle : ' + m.label;
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem(KEYSTORE),
-          'HTTP-Referer': 'https://exoscan.local',
-          'X-Title': 'ExoScan'
-        },
-        body: JSON.stringify({
-          model: m.id, max_tokens: 800,
-          messages:[{role:'user',content:[
-            {type:'image_url', image_url:{url:`data:${mime};base64,${b64}`}},
-            {type:'text', text: PROMPT}
-          ]}]
-        })
-      });
-      if (!r.ok) {
-        const e = await r.json().catch(()=>({}));
-        if (r.status===401) { lastErr='Clé API invalide. Vérifiez dans ⚙ Clé API.'; break; }
-        if (r.status===402) { lastErr='Crédits insuffisants sur OpenRouter.'; break; }
-        lastErr = e?.error?.message || 'HTTP '+r.status;
-        continue;
-      }
-      const data = await r.json();
-      const txt  = data?.choices?.[0]?.message?.content || '';
-      if (!txt) { lastErr='Réponse vide.'; continue; }
-      let parsed;
-      try { parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()); }
-      catch { parsed = {type:'Exercice',emoji:'✏️',consigne:txt.substring(0,300),numbers:[],correction:''}; }
-      clearInterval(tick);
-      hide('loading'); lmodel.textContent='';
-      onAnalysisDone(parsed);
-      return;
-    } catch(ex) { lastErr = ex.message; }
-  }
-  clearInterval(tick);
-  hide('loading'); lmodel.textContent='';
-  showErr('scan-err', '⚠ ' + lastErr + ' — Vérifiez votre connexion ou votre clé API.');
-  show('upload-zone'); hide('img-prev');
-  document.getElementById('file-input').value='';
+function showInlineEditor() {
+  document.getElementById('ed-badge').textContent = (curExo.emoji||'✏️')+' '+(curExo.type||'Exercice');
+  document.getElementById('ed-cons').value = curExo.consigne||'';
+  renderNumsIn('ed-nums', curNums);
+  show('inline-ed');
 }
 
-function onAnalysisDone(data) {
-  curExo  = data;
-  curNums = (data.numbers||[]).map(n=>({...n}));
-  // Rempli l'éditeur
-  document.getElementById('tbadge').textContent = (data.emoji||'✏️')+' '+(data.type||'Exercice');
-  document.getElementById('cons-edit').value = data.consigne||'';
-  renderNums();
-  // Sauvegarde dans l'historique
-  const entry = {
-    id: Date.now(),
-    date: new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
-    emoji: data.emoji||'✏️',
-    type: data.type||'Exercice',
-    consigne: data.consigne||'',
-    numbers: curNums.map(n=>({...n})),
-    correction: data.correction||'',
-    imgSrc: curImg
-  };
-  history.unshift(entry);
-  if (history.length > 50) history = history.slice(0,50);
-  localStorage.setItem(HISTSTORE, JSON.stringify(history));
-  // Navigation auto vers édition
-  goTab(1);
+/* ══════════════════════════════════════════════
+   NUMBERS
+══════════════════════════════════════════════ */
+function renderNumsIn(gridId, nums) {
+  const g = document.getElementById(gridId); if(!g) return;
+  if(!nums.length){g.innerHTML='<p style="font-size:13px;color:var(--hi);padding:4px 0">Aucune valeur — modifiez la consigne directement.</p>';return;}
+  g.innerHTML = nums.map((n,i)=>`
+    <div class="nitem"><span class="nlbl">${esc(n.label)}</span>
+    <input type="number" value="${n.value}" oninput="onNumInput('${gridId}',${i},this.value)"></div>`).join('');
 }
-
-/* ═══════════ EDITOR ═══════════ */
-function renderNums() {
-  const g = document.getElementById('numgrid');
-  if (!curNums.length) {
-    g.innerHTML='<p style="font-size:13px;color:var(--hint);padding:4px 0">Aucune valeur numérique — modifiez la consigne directement.</p>';
-    return;
-  }
-  g.innerHTML = curNums.map((n,i)=>`
-    <div class="nitem">
-      <span class="nlbl">${esc(n.label)}</span>
-      <input type="number" value="${n.value}" oninput="curNums[${i}].value=parseFloat(this.value)||0">
-    </div>`).join('');
+function onNumInput(gridId, i, val) {
+  if(gridId==='ed-nums')       curNums[i].value = parseFloat(val)||0;
+  if(gridId==='gen-nums')      genNums[i].value = parseFloat(val)||0;
+  if(gridId==='bank-ed-nums' && bankCurItem) bankCurItem.nums[i].value = parseFloat(val)||0;
 }
-
 function randomNums() {
-  curNums = curNums.map(n => {
-    const v = parseFloat(n.value);
-    if (isNaN(v)||v===0) return n;
-    const mag = Math.max(1, Math.pow(10, Math.floor(Math.log10(Math.abs(v)))));
-    return {...n, value: Math.floor(Math.random()*9*mag)+mag};
-  });
-  renderNums();
+  curNums = curNums.map(n=>{ const v=parseFloat(n.value); if(isNaN(v)||v===0)return n; const mag=Math.max(1,Math.pow(10,Math.floor(Math.log10(Math.abs(v))))); return{...n,value:Math.floor(Math.random()*9*mag)+mag}; });
+  renderNumsIn('ed-nums', curNums);
 }
 
+/* ══════════════════════════════════════════════
+   BASKET
+══════════════════════════════════════════════ */
 function addToFiche() {
-  const c = document.getElementById('cons-edit').value.trim();
-  if (!c) { document.getElementById('cons-edit').focus(); return; }
-  basket.push({
-    type: (curExo?.emoji||'✏️')+' '+(curExo?.type||'Exercice'),
-    consigne: c,
-    numbers: [...curNums],
-    correction: curExo?.correction||''
-  });
-  curExo = null; // reset editor
-  refreshBasketMini();
-  goTab(0);
-  // reset upload zone
-  hide('img-prev'); show('upload-zone');
-  document.getElementById('file-input').value='';
+  const c = document.getElementById('ed-cons').value.trim();
+  if(!c) return;
+  basket.push({type:(curExo?.emoji||'✏️')+' '+(curExo?.type||'Exercice'),consigne:c,numbers:[...curNums],correction:curExo?.correction||''});
+  curExo=null; hide('inline-ed'); hide('iprev'); show('upzone');
+  document.getElementById('finput').value='';
+  refreshBmini();
+}
+function addGenToFiche() {
+  const c = document.getElementById('gen-cons').value.trim();
+  if(!c) return;
+  basket.push({type:(genExo?.emoji||'✨')+' '+(genExo?.type||'Exercice'),consigne:c,numbers:[...genNums],correction:genExo?.correction||''});
+  refreshBmini(); goTab(3);
+}
+function refreshBmini() {
+  const m=document.getElementById('bmini');
+  if(!basket.length){m.style.display='none';return;}
+  m.style.display='block';
+  document.getElementById('bcount').textContent=basket.length;
+  document.getElementById('bmini-list').innerHTML=basket.map((e,i)=>`
+    <div class="fitem"><div class="fnum">${i+1}</div>
+    <div class="fcont"><div class="fcons">${esc(e.consigne)}</div><div class="ftag">${esc(e.type)}</div></div>
+    <button class="fdel" onclick="basket.splice(${i},1);refreshBmini()">×</button></div>`).join('');
+}
+function clearBasket(){if(confirm('Vider la fiche ?')){basket=[];refreshBmini();renderFiche();}}
+
+/* ══════════════════════════════════════════════
+   GENERATE EXO
+══════════════════════════════════════════════ */
+function onGenTypeChange() {
+  const type = document.getElementById('gen-type').value;
+  // Show/hide structure hint
+  const hint = document.getElementById('gen-type-hint');
+  if(!hint) return;
+  const hints = {
+    'trous':'Génère des opérations avec des cases vides à compléter : 3 × ___ = 12',
+    'grille':'Génère un tableau de nombres à compléter',
+    'probleme-etapes':'Structure en 4 étapes : Je lis · Je cherche · Je calcule · Je vérifie'
+  };
+  hint.textContent = hints[type]||'';
+  hint.style.display = hints[type]?'block':'none';
 }
 
-/* ═══════════ BASKET MINI (page scan) ═══════════ */
-function refreshBasketMini() {
-  const mini = document.getElementById('basket-mini');
-  if (!basket.length) { mini.style.display='none'; return; }
-  mini.style.display='block';
-  document.getElementById('bcount').textContent = basket.length;
-  document.getElementById('basket-mini-list').innerHTML = basket.map((e,i)=>`
-    <div class="fitem">
-      <div class="fnum">${i+1}</div>
-      <div class="fcontent">
-        <div class="fconsigne">${esc(e.consigne)}</div>
-        <div class="ftag">${esc(e.type)}</div>
-      </div>
-      <button class="fdel" onclick="removeFromBasket(${i})">×</button>
-    </div>`).join('');
-}
+async function generateExo() {
+  const type=document.getElementById('gen-type').value;
+  const level=document.getElementById('gen-level').value;
+  const count=document.getElementById('gen-count').value;
+  const diff=document.getElementById('gen-diff').value;
+  const ctx=document.getElementById('gen-ctx').value.trim();
+  document.getElementById('gen-btn').disabled=true; hide('gen-result'); hide('gen-err'); show('gen-ldg');
+  document.getElementById('gen-src').textContent = llmReady ? '🔒 IA locale' : '🌐 Via API…';
 
-function removeFromBasket(i) {
-  basket.splice(i,1);
-  refreshBasketMini();
-  if (currentTab===2) renderFiche();
-}
+  const sys=`Tu es experte en mathématiques primaire belge (Fédération Wallonie-Bruxelles). Tu crées des exercices pédagogiques clairs, adaptés aux référentiels CEB belges, avec un langage simple pour les enfants.`;
 
-function clearBasket() {
-  if (!basket.length) return;
-  if (confirm('Vider la fiche ? Les exercices seront supprimés.')) {
-    basket=[]; refreshBasketMini(); renderFiche();
-  }
-}
-
-/* ═══════════ EXPORT PAGE ═══════════ */
-function renderFiche() {
-  document.getElementById('fcount').textContent = basket.length;
-  const list = document.getElementById('fiche-list');
-  if (!basket.length) {
-    list.innerHTML='<div class="empty">Aucun exercice — scannez une photo d\'abord.</div>';
-    return;
-  }
-  list.innerHTML = basket.map((e,i)=>`
-    <div class="fitem">
-      <div class="fnum">${i+1}</div>
-      <div class="fcontent">
-        <div class="fconsigne">${esc(e.consigne)}</div>
-        <div class="ftag">${esc(e.type)}</div>
-      </div>
-      <button class="fdel" onclick="removeFromBasket(${i});renderFiche()">×</button>
-    </div>`).join('');
-}
-
-async function generateWord() {
-  if (!basket.length) { alert('Ajoutez au moins un exercice avant de générer.'); return; }
-
-  const btn = document.getElementById('gen-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Génération en cours…';
-
-  const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType} = docx;
-  const title    = document.getElementById('doc-title').value.trim() || 'Fiche d\'exercices';
-  const withHdr  = document.getElementById('opt-hdr').checked;
-  const withLine = document.getElementById('opt-lines').checked;
-  const withCorr = document.getElementById('opt-corr').checked;
-  const MIME     = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-  const safe     = title.replace(/[^a-zA-Z0-9àâéèêëîïôùûüæœç\s-]/g,'').trim().replace(/\s+/g,'_') || 'fiche';
-
-  function buildDoc(corrMode) {
-    const ch = [];
-    if (withHdr) ch.push(new Paragraph({
-      children:[
-        new TextRun({text:'Nom : ___________________________   ',size:24}),
-        new TextRun({text:'Date : ______________   ',size:24}),
-        new TextRun({text:'Classe : _______',size:24})
-      ], spacing:{after:200}
-    }));
-    ch.push(new Paragraph({
-      text: title + (corrMode?' — CORRIGÉ':''),
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing:{before:80,after:300}
-    }));
-    basket.forEach((exo,idx) => {
-      ch.push(new Paragraph({
-        children:[
-          new TextRun({text:`Exercice ${idx+1}`,bold:true,size:28,color:'5B3FBF'}),
-          new TextRun({text:`   ${exo.type}`,size:22,color:'999999'})
-        ], spacing:{before:260,after:100}
-      }));
-      ch.push(new Paragraph({
-        children:[new TextRun({text:exo.consigne,size:26})],
-        spacing:{after:140}
-      }));
-      if (corrMode && exo.correction) {
-        ch.push(new Paragraph({
-          children:[new TextRun({text:'→ '+exo.correction,size:24,color:'2D6A4F',italics:true})],
-          spacing:{after:200}
-        }));
-      } else if (withLine) {
-        for(let i=0;i<3;i++) ch.push(new Paragraph({
-          children:[new TextRun({text:'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _',color:'CCCCCC',size:24})],
-          spacing:{after:100}
-        }));
-      }
-      ch.push(new Paragraph({text:'',spacing:{after:60}}));
-    });
-    return new Document({sections:[{children:ch}]});
+  let prompt;
+  if(type==='trous'){
+    prompt=`Crée ${count} exercices à trous de type "${diff}" pour le niveau ${level}.${ctx?` Contexte: ${ctx}.`:''}
+Format : opérations avec ___ à compléter. Exemples : "3 × ___ = 12", "___ + 7 = 15", "24 ÷ ___ = 6"
+Mélange additions, soustractions, multiplications selon le niveau.
+Réponds UNIQUEMENT en JSON: {"type":"Exercice à trous","emoji":"🔲","consigne":"${count} exercices à trous à compléter :","items":[{"expression":"3 × ___ = 12","answer":"4"}],"chapitre":"Calcul"}`;
+  } else if(type==='grille'){
+    prompt=`Crée une grille de nombres pour le niveau ${level}, difficulté ${diff}.${ctx?` Contexte: ${ctx}.`:''}
+C'est un tableau à double entrée (type table de multiplication ou additions) avec certaines cases vides à compléter.
+Réponds UNIQUEMENT en JSON: {"type":"Grille de nombres","emoji":"🔢","consigne":"Complète la grille :","grid":{"headers":["×","1","2","3","4","5"],"rows":[{"label":"2","values":["2","4","","8","10"]},{"label":"3","values":["3","","9","12",""]},{"label":"4","values":["","8","12","","20"]}],"blanks":3},"chapitre":"Multiplication"}`;
+  } else if(type==='probleme-etapes'){
+    prompt=`Crée un problème mathématique en ${count} étapes pour le niveau ${level}, difficulté ${diff}.${ctx?` Contexte belge: ${ctx}.`:''}
+Structure obligatoire en 4 parties selon les manuels belges (Maths et Moustique, Math Pratique) :
+- Je lis : énoncé du problème (contexte belge concret)
+- Je cherche : ce qu'on doit trouver + données utiles
+- Je calcule : opération(s) à effectuer
+- Je vérifie : vérification + réponse complète
+Réponds UNIQUEMENT en JSON: {"type":"Problème par étapes","emoji":"📝","je_lis":"énoncé complet","je_cherche":"Ce que je cherche : ...\nDonnées : ...","je_calcule":"Opération : ...\nCalcul : ...","je_verifie":"Vérification : ...\nRéponse : ...","numbers":[{"label":"nom","value":12}],"correction":"réponse courte","chapitre":"Problèmes"}`;
+  } else {
+    prompt=`Crée un exercice de "${type}" pour le niveau ${level}, difficulté ${diff}, ${count} questions.${ctx?` Thème: ${ctx}.`:''}
+Style des manuels belges (Tip Top, Maths et Moustique) : langage simple, consignes courtes, verbes d'action (entoure, calcule, écris, colorie, relie).
+Réponds UNIQUEMENT en JSON: {"type":"${type}","emoji":"emoji","consigne":"texte complet FR avec verbes d'action","numbers":[{"label":"nom","value":12}],"correction":"réponses","chapitre":"chapitre"}`;
   }
 
   try {
-    // Packer.toBase64String est la méthode native du build browser de docx.js
-    const b64main = await Packer.toBase64String(buildDoc(false));
-    let b64corr = null;
-    if (withCorr) b64corr = await Packer.toBase64String(buildDoc(true));
+    const txt=await callAIText(prompt,sys);
+    genExo=parseJSON(txt); genNums=(genExo.numbers||[]).map(n=>({...n}));
+    document.getElementById('gen-badge').textContent=(genExo.emoji||'✨')+' '+(genExo.type||type);
 
-    btn.disabled = false;
-    btn.textContent = '⬇ Générer et télécharger le .docx';
-
-    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
-    const note = document.getElementById('dl-note');
-
-    // Tente Web Share sur mobile d'abord
-    if (isMobile && navigator.share && navigator.canShare) {
-      try {
-        function b64toFile(b64, name) {
-          const bytes = atob(b64), arr = new Uint8Array(bytes.length);
-          for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
-          return new File([arr], name, {type:MIME});
-        }
-        const sfiles = [b64toFile(b64main, safe+'.docx')];
-        if (b64corr) sfiles.push(b64toFile(b64corr, safe+'_corrige.docx'));
-        if (navigator.canShare({files:sfiles})) {
-          await navigator.share({files:sfiles, title});
-          showExportSuccess(basket.length, withCorr);
-          return;
-        }
-      } catch(e) { if(e.name==='AbortError') return; }
+    // Rendu spécial selon le type
+    if(type==='trous' && genExo.items){
+      renderTrousResult(genExo);
+    } else if(type==='grille' && genExo.grid){
+      renderGrilleResult(genExo);
+    } else if(type==='probleme-etapes'){
+      renderEtapesResult(genExo);
+    } else {
+      document.getElementById('gen-cons').value=genExo.consigne||'';
+      renderNumsIn('gen-nums',genNums);
     }
-
-    // Affiche les liens data: URL téléchargeables (marche partout)
-    const dlZone = document.getElementById('dl-zone');
-    let links = `<a class="dl-link" href="data:${MIME};base64,${b64main}" download="${safe}.docx">⬇ ${safe}.docx</a>`;
-    if (b64corr) links += `<a class="dl-link" href="data:${MIME};base64,${b64corr}" download="${safe}_corrige.docx" style="margin-top:8px">⬇ ${safe}_corrige.docx</a>`;
-
-    dlZone.innerHTML = links + `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter un exercice</button>
-        <button class="btn btn-p btn-sm" onclick="resetFiche()">Nouvelle fiche</button>
-      </div>`;
-
-    note.style.display='block';
-    note.innerHTML = isMobile
-      ? '<strong>iPad :</strong> Appuyez sur le bouton → icône <strong>□↑</strong> → <strong>Enregistrer dans Fichiers</strong>'
-      : '<strong>PC :</strong> Cliquez sur le bouton vert — le fichier se télécharge dans votre dossier Téléchargements.';
-
-  } catch(err) {
-    btn.disabled = false;
-    btn.textContent = '⬇ Générer et télécharger le .docx';
-    alert('Erreur : ' + err.message);
-  }
+    show('gen-result');
+    saveToLib(genExo,null);
+  }catch(ex){showErr('gen-err','⚠ '+ex.message);}
+  hide('gen-ldg'); document.getElementById('gen-btn').disabled=false;
 }
 
-function showExportSuccess(count, withCorr) {
-  document.getElementById('dl-zone').innerHTML=`
-    <div class="sblock">
-      <div class="scheck">✓</div>
-      <h3 style="font-size:16px;font-weight:500;margin-bottom:6px">Fichier partagé !</h3>
-      <p style="font-size:14px;color:var(--muted);margin-bottom:16px">${count} exercice${count>1?'s':''}${withCorr?' + corrigé':''}</p>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Ajouter</button>
-        <button class="btn btn-p btn-sm" onclick="resetFiche()">Nouvelle fiche</button>
-      </div>
+function renderTrousResult(exo) {
+  const items = exo.items||[];
+  const html = `
+    <div class="trous-grid">
+      ${items.map((it,i)=>`
+        <div class="trous-item">
+          <span class="trous-expr">${esc(it.expression)}</span>
+          <span class="trous-ans" data-idx="${i}" onclick="toggleTrousAns(${i})" title="Voir la réponse">→ <span style="filter:blur(4px);transition:filter .2s" id="tans-${i}">${esc(it.answer)}</span></span>
+        </div>`).join('')}
     </div>`;
+  document.getElementById('gen-cons').value = exo.consigne + '\n' + items.map(it=>it.expression).join('\n');
+  document.getElementById('gen-nums').innerHTML = html;
+  document.getElementById('gen-nums').parentElement.querySelector('.flbl').textContent = 'Aperçu des trous';
 }
 
-function resetFiche() {
-  basket=[];
-  refreshBasketMini();
-  document.getElementById('dl-zone').innerHTML='<button class="btn btn-g btn-full" id="gen-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>';
+function toggleTrousAns(i) {
+  const el = document.getElementById('tans-'+i);
+  el.style.filter = el.style.filter==='none'?'blur(4px)':'none';
+}
+
+function renderGrilleResult(exo) {
+  const g = exo.grid;
+  if(!g) { document.getElementById('gen-cons').value=exo.consigne||''; return; }
+  let html = `<div style="overflow-x:auto"><table class="grille-table"><thead><tr>`;
+  g.headers.forEach(h=>{ html+=`<th>${esc(h)}</th>`; });
+  html+=`</tr></thead><tbody>`;
+  g.rows.forEach(row=>{
+    html+=`<tr><td class="grille-label">${esc(row.label)}</td>`;
+    row.values.forEach(v=>{ html+=v===''?`<td class="grille-blank"><input type="number" class="grille-input" placeholder="?"></td>`:`<td class="grille-filled">${esc(v)}</td>`; });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('gen-cons').value = exo.consigne||'Complète la grille :';
+  document.getElementById('gen-nums').innerHTML = html;
+  document.getElementById('gen-nums').parentElement.querySelector('.flbl').textContent = 'Grille interactive';
+}
+
+function renderEtapesResult(exo) {
+  const html = `
+    <div class="etapes-wrap">
+      <div class="etape-block etape-lis"><div class="etape-label">📖 Je lis</div><div class="etape-content">${esc(exo.je_lis||'')}</div></div>
+      <div class="etape-block etape-cherche"><div class="etape-label">🔍 Je cherche</div><div class="etape-content">${esc(exo.je_cherche||'').replace(/\n/g,'<br>')}</div></div>
+      <div class="etape-block etape-calcule"><div class="etape-label">✏️ Je calcule</div><div class="etape-content" style="min-height:50px">&nbsp;</div></div>
+      <div class="etape-block etape-verifie"><div class="etape-label">✅ Je vérifie</div><div class="etape-content" style="min-height:40px">&nbsp;</div></div>
+    </div>`;
+  // Build full text for basket
+  const fullText = `${exo.je_lis||''}\n\nJe cherche : ${exo.je_cherche||''}\n\nJe calcule : ${exo.je_calcule||''}\n\nJe vérifie : ${exo.je_verifie||''}`;
+  document.getElementById('gen-cons').value = fullText;
+  document.getElementById('gen-nums').innerHTML = html;
+  document.getElementById('gen-nums').parentElement.querySelector('.flbl').textContent = 'Aperçu structuré';
+  if(genExo) genExo.isEtapes = true;
+}
+
+/* ══════════════════════════════════════════════
+   LIBRARY
+══════════════════════════════════════════════ */
+function saveToLib(data,imgSrc){
+  const e={id:Date.now(),date:new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric'}),emoji:data.emoji||'✏️',type:data.type||'Exercice',chapitre:data.chapitre||'Autre',consigne:data.consigne||'',numbers:(data.numbers||[]).map(n=>({...n})),correction:data.correction||'',imgSrc:imgSrc||null};
+  library.unshift(e); if(library.length>200)library=library.slice(0,200);
+  localStorage.setItem(LIBSTORE,JSON.stringify(library));
+}
+function renderLib(){
+  const search=(document.getElementById('lib-search')?.value||'').toLowerCase();
+  document.getElementById('lib-chips').innerHTML=CHAPTERS.map(c=>`<div class="chip${libFilter===c?' active':''}" onclick="libFilter='${c}';renderLib()">${c}</div>`).join('');
+  let items=library;
+  if(libFilter!=='Tout')items=items.filter(e=>e.chapitre===libFilter||e.type===libFilter);
+  if(search)items=items.filter(e=>e.consigne.toLowerCase().includes(search));
+  const list=document.getElementById('lib-list');
+  if(!items.length){list.innerHTML='<div class="empty">Bibliothèque vide.</div>';return;}
+  list.innerHTML=items.map(h=>`<div class="litem" onclick="loadFromLib(${h.id})">
+    ${h.imgSrc?`<img class="lthumb" src="${h.imgSrc}" alt="">`:`<div class="lthumb-ph">${h.emoji}</div>`}
+    <div class="linfo"><div class="lcons">${esc(h.consigne)}</div><div class="lmeta">${h.emoji} ${h.chapitre||h.type} · ${h.date}</div></div>
+    <button class="ldel" onclick="event.stopPropagation();deleteLib(${h.id})">×</button></div>`).join('');
+}
+function loadFromLib(id){
+  const h=library.find(x=>x.id===id); if(!h) return;
+  curExo=h; curNums=h.numbers.map(n=>({...n})); curImg=h.imgSrc||null;
+  if(curImg){document.getElementById('iprev').src=curImg;show('iprev');}else hide('iprev');
+  hide('upzone'); showInlineEditor(); goTab(0);
+}
+function deleteLib(id){library=library.filter(x=>x.id!==id);localStorage.setItem(LIBSTORE,JSON.stringify(library));renderLib();}
+function clearLib(){if(confirm('Effacer toute la bibliothèque ?')){library=[];localStorage.setItem(LIBSTORE,'[]');renderLib();}}
+
+/* ══════════════════════════════════════════════
+   EXPORT WORD
+══════════════════════════════════════════════ */
+function renderFiche(){
+  document.getElementById('fcount').textContent=basket.length;
+  const list=document.getElementById('fiche-list');
+  if(!basket.length){list.innerHTML='<div class="empty">Aucun exercice ajouté.</div>';return;}
+  list.innerHTML=basket.map((e,i)=>`<div class="fitem"><div class="fnum">${i+1}</div>
+    <div class="fcont"><div class="fcons">${esc(e.consigne)}</div><div class="ftag">${esc(e.type)}</div></div>
+    <button class="fdel" onclick="basket.splice(${i},1);refreshBmini();renderFiche()">×</button></div>`).join('');
+}
+
+function generateVariants(){
+  const n=parseInt(document.getElementById('var-count').value);
+  const letters=['A','B','C','D'];
+  if(!basket.length){document.getElementById('var-result').innerHTML='<p style="font-size:13px;color:var(--mu)">Ajoutez des exercices d\'abord.</p>';return;}
+  const versions=Array.from({length:n},(_,vi)=>basket.map(exo=>{
+    const newNums=exo.numbers.map(num=>{const v=parseFloat(num.value);if(isNaN(v)||v===0)return num;const mag=Math.max(1,Math.pow(10,Math.floor(Math.log10(Math.abs(v)))));return{...num,value:Math.floor(Math.random()*9*mag)+mag};});
+    let cons=exo.consigne; exo.numbers.forEach((num,ni)=>{cons=cons.replace(new RegExp('\\b'+num.value+'\\b','g'),newNums[ni].value);});
+    return{...exo,consigne:cons,numbers:newNums};
+  }));
+  document.getElementById('var-result').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(${Math.min(n,2)},1fr);gap:8px">
+      ${versions.map((v,vi)=>`<div style="background:var(--sur2);border:1px solid var(--bd);border-radius:var(--rs);padding:10px">
+        <div style="font-size:10px;font-weight:600;color:var(--ac);text-transform:uppercase;margin-bottom:5px">Version ${letters[vi]}</div>
+        ${v.map(e=>`<div style="font-size:12px;color:var(--tx);margin-bottom:4px">${esc(e.consigne.substring(0,70))}…</div>`).join('')}
+      </div>`).join('')}
+    </div>
+    <div class="arow"><button class="btn btn-g btn-sm" onclick='exportVariantsWord(${JSON.stringify(versions).replace(/'/g,"&#39;")})'>⬇ Exporter Word</button></div>`;
+}
+
+async function exportVariantsWord(versions){
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType}=docx;
+  const letters=['A','B','C','D'];
+  const title=document.getElementById('doc-title').value.trim()||'Fiche d\'exercices';
+  const ch=[];
+  versions.forEach((ver,vi)=>{
+    if(vi>0)ch.push(new Paragraph({pageBreakBefore:true,text:''}));
+    ch.push(new Paragraph({children:[new TextRun({text:'Nom : _______________   Date : ___________',size:24})],spacing:{after:180}}));
+    ch.push(new Paragraph({text:`${title} — Version ${letters[vi]}`,heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,spacing:{before:60,after:240}}));
+    ver.forEach((exo,idx)=>{
+      ch.push(new Paragraph({children:[new TextRun({text:`Exercice ${idx+1}`,bold:true,size:26,color:'5B3FBF'}),new TextRun({text:`   ${exo.type}`,size:21,color:'999999'})],spacing:{before:220,after:90}}));
+      ch.push(new Paragraph({children:[new TextRun({text:exo.consigne,size:25})],spacing:{after:120}}));
+      for(let i=0;i<3;i++)ch.push(new Paragraph({children:[new TextRun({text:'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _',color:'CCCCCC',size:22})],spacing:{after:80}}));
+    });
+  });
+  const b64=await Packer.toBase64String(new Document({sections:[{children:ch}]}));
+  const safe=title.replace(/[^a-zA-Z0-9àâéèêëîïôùûüæœç\s-]/g,'').trim().replace(/\s+/g,'_')||'fiche';
+  appendDlLink(b64,safe+'_variantes.docx','dl-zone');
+}
+
+async function generateWord(){
+  if(!basket.length){alert('Ajoutez au moins un exercice.');return;}
+  const btn=document.getElementById('gen-word-btn');
+  btn.disabled=true; btn.textContent='⏳ Génération…';
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,Table,TableRow,TableCell,WidthType,ShadingType}=docx;
+  const title=document.getElementById('doc-title').value.trim()||"Fiche d'exercices";
+  const withHdr=document.getElementById('opt-hdr').checked;
+  const withLn=document.getElementById('opt-lines').checked;
+  const withBar=document.getElementById('opt-bareme').checked;
+  const withCor=document.getElementById('opt-corr').checked;
+  const belge=document.getElementById('opt-belge')?.checked||false;
+  const pts=Math.max(1,Math.round(20/basket.length));
+  const acColor=belge?'1A4FA0':'5B3FBF';
+  const bodySize=belge?26:25;
+
+  function lineRow(){
+    return new Paragraph({children:[new TextRun({text:'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _',color:'CCCCCC',size:belge?20:23})],spacing:{after:belge?100:80}});
+  }
+
+  function build(corrMode){
+    const ch=[];
+    // EN-TETE
+    if(withHdr){
+      if(belge){
+        ch.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},
+          borders:{top:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'},bottom:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'},left:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'},right:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'},insideH:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'},insideV:{style:BorderStyle.SINGLE,size:4,color:'BBBBBB'}},
+          rows:[new TableRow({children:[
+            new TableCell({children:[new Paragraph({children:[new TextRun({text:'Nom : ',bold:true,size:22}),new TextRun({text:'_______________________',size:22,color:'BBBBBB'})]})],width:{size:40,type:WidthType.PERCENTAGE}}),
+            new TableCell({children:[new Paragraph({children:[new TextRun({text:'Date : ',bold:true,size:22}),new TextRun({text:'___________',size:22,color:'BBBBBB'})]})],width:{size:30,type:WidthType.PERCENTAGE}}),
+            new TableCell({children:[new Paragraph({children:[new TextRun({text:'Classe : ',bold:true,size:22}),new TextRun({text:'_______',size:22,color:'BBBBBB'})]})],width:{size:30,type:WidthType.PERCENTAGE}}),
+          ]})]
+        }));
+        ch.push(new Paragraph({text:'',spacing:{after:140}}));
+      } else {
+        ch.push(new Paragraph({children:[new TextRun({text:'Nom : ___________________________   ',size:24}),new TextRun({text:'Date : ______________   ',size:24}),new TextRun({text:'Classe : _______',size:24})],spacing:{after:200}}));
+      }
+    }
+    // TITRE
+    ch.push(new Paragraph({children:[new TextRun({text:title+(corrMode?' — CORRIGÉ':''),bold:true,size:belge?32:28,color:acColor})],alignment:AlignmentType.CENTER,spacing:{before:60,after:belge?280:260}}));
+    if(withBar&&!corrMode) ch.push(new Paragraph({children:[new TextRun({text:'Score : ……/20',size:22,color:'888888'})],alignment:AlignmentType.RIGHT,spacing:{after:160}}));
+
+    basket.forEach((exo,idx)=>{
+      // LABEL EXERCICE
+      if(belge){
+        ch.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},
+          borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.NONE},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE},insideH:{style:BorderStyle.NONE},insideV:{style:BorderStyle.NONE}},
+          rows:[new TableRow({children:[
+            new TableCell({children:[new Paragraph({children:[new TextRun({text:String(idx+1),bold:true,size:24,color:'FFFFFF'})],alignment:AlignmentType.CENTER})],
+              shading:{type:ShadingType.SOLID,color:acColor},width:{size:6,type:WidthType.PERCENTAGE},margins:{top:60,bottom:60,left:80,right:80}}),
+            new TableCell({children:[new Paragraph({children:[new TextRun({text:'  '+exo.type+(withBar?'  ('+pts+'pt'+(pts>1?'s':'')+')':''),size:22,color:'666666',italics:true})]})],
+              width:{size:94,type:WidthType.PERCENTAGE},margins:{top:70,bottom:60,left:120,right:60}}),
+          ]})]
+        }));
+        ch.push(new Paragraph({text:'',spacing:{after:60}}));
+      } else {
+        ch.push(new Paragraph({children:[new TextRun({text:'Exercice '+(idx+1),bold:true,size:27,color:acColor}),new TextRun({text:'   '+exo.type+(withBar?'  ('+pts+'pt'+(pts>1?'s':'')+')':''),size:21,color:'999999'})],spacing:{before:240,after:90}}));
+      }
+
+      // CONSIGNE — détecte problème par étapes
+      const isEtapes = exo.consigne && exo.consigne.includes('Je cherche');
+      if(isEtapes){
+        const parts = exo.consigne.split(/
+
++/);
+        const lis      = parts[0]||'';
+        const cherche  = (parts[1]||'').replace('Je cherche :','').trim();
+        const calcule  = (parts[2]||'').replace('Je calcule :','').trim();
+        const verifie  = (parts[3]||'').replace('Je vérifie :','').trim();
+        ch.push(new Paragraph({children:[new TextRun({text:lis,size:bodySize})],spacing:{after:140}}));
+        [['Je cherche :','2D6A4F'],['Je calcule :','8B5E1A'],['Je vérifie :','1A4FA0']].forEach(([lbl,col])=>{
+          ch.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},
+            borders:{top:{style:BorderStyle.SINGLE,size:6,color:col},bottom:{style:BorderStyle.SINGLE,size:6,color:col},left:{style:BorderStyle.SINGLE,size:6,color:col},right:{style:BorderStyle.SINGLE,size:6,color:col}},
+            rows:[new TableRow({children:[new TableCell({children:[
+              new Paragraph({children:[new TextRun({text:lbl,bold:true,size:22,color:col})],spacing:{after:40}}),
+              lineRow(),lineRow(),lineRow()
+            ],margins:{top:80,bottom:80,left:140,right:140}})]})]
+          }));
+          ch.push(new Paragraph({text:'',spacing:{after:80}}));
+        });
+      } else {
+        ch.push(new Paragraph({children:[new TextRun({text:exo.consigne,size:bodySize})],spacing:{after:belge?160:120}}));
+      }
+
+      // RÉPONSE ou LIGNES
+      if(corrMode&&exo.correction){
+        ch.push(new Paragraph({children:[new TextRun({text:'→ '+exo.correction,size:22,color:'2D6A4F',italics:true})],spacing:{after:180}}));
+      } else if(withLn && !isEtapes){
+        for(let i=0;i<(belge?4:3);i++) ch.push(lineRow());
+      }
+      ch.push(new Paragraph({text:'',spacing:{after:belge?100:40}}));
+    });
+    return new Document({sections:[{children:ch}]});
+  }
+  try{
+    const b64=await Packer.toBase64String(build(false));
+    let b64c=null; if(withCor)b64c=await Packer.toBase64String(build(true));
+    btn.disabled=false; btn.textContent='⬇ Générer et télécharger le .docx';
+    const safe=title.replace(/[^a-zA-Z0-9àâéèêëîïôùûüæœç\s-]/g,'').trim().replace(/\s+/g,'_')||'fiche';
+    const isMobile=/iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    // Web Share sur mobile
+    if(isMobile&&navigator.share&&navigator.canShare){
+      try{
+        const sf=[b64toFile(b64,safe+'.docx')];
+        if(b64c)sf.push(b64toFile(b64c,safe+'_corrige.docx'));
+        if(navigator.canShare({files:sf})){await navigator.share({files:sf,title});return;}
+      }catch(e){if(e.name==='AbortError')return;}
+    }
+    // Liens data:
+    const zone=document.getElementById('dl-zone');
+    zone.innerHTML='';
+    appendDlLink(b64,safe+'.docx','dl-zone');
+    if(b64c)appendDlLink(b64c,safe+'_corrige.docx','dl-zone');
+    const btns=document.createElement('div'); btns.className='arow'; btns.style.marginTop='10px';
+    btns.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button><div class="sp"></div><button class="btn btn-p btn-sm" onclick="resetExport()">Nouvelle fiche</button>`;
+    zone.appendChild(btns);
+    const note=document.getElementById('dl-note'); note.style.display='block';
+    note.innerHTML=isMobile?'<strong>iPad :</strong> Appuyez sur le lien → icône □↑ → Enregistrer dans Fichiers':'<strong>PC :</strong> Cliquez sur le lien vert pour télécharger.';
+  }catch(err){btn.disabled=false;btn.textContent='⬇ Générer et télécharger le .docx';alert('Erreur : '+err.message);}
+}
+
+function appendDlLink(b64,filename,zoneId){
+  const a=document.createElement('a');
+  a.href=`data:${MIME_DOCX};base64,${b64}`;
+  a.download=filename; a.className='dl-link'; a.textContent='⬇  '+filename;
+  document.getElementById(zoneId).appendChild(a);
+}
+function b64toFile(b,name){const s=atob(b),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new File([a],name,{type:MIME_DOCX});}
+function resetExport(){
+  basket=[];refreshBmini();renderFiche();
+  document.getElementById('dl-zone').innerHTML='<button class="btn btn-g btn-full" id="gen-word-btn" onclick="generateWord()">⬇ Générer et télécharger le .docx</button>';
   document.getElementById('dl-note').style.display='none';
   document.getElementById('doc-title').value='';
-  goTab(0);
+  document.getElementById('var-card').style.display='none';
 }
 
-/* ═══════════ HISTORIQUE ═══════════ */
-function renderHistory() {
-  const list = document.getElementById('hist-list');
-  if (!history.length) {
-    list.innerHTML='<div class="empty">Aucun exercice analysé pour l\'instant.</div>';
-    return;
+/* ══════════════════════════════════════════════
+   CORRECTION DE COPIES
+══════════════════════════════════════════════ */
+function loadCorrImg(e, which) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const src=ev.target.result;
+    if(which==='ref'){corrRef=src; document.getElementById('corr-ref-panel').innerHTML=`<div class="corr-panel-label">📋 Corrigé</div><img src="${src}">`;}
+    else{corrCopy=src; document.getElementById('corr-copy-panel').innerHTML=`<div class="corr-panel-label">📝 Copie élève</div><img src="${src}">`;}
+    document.getElementById('corr-btn').disabled=!(corrRef&&corrCopy);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runCorrection() {
+  if(!corrRef||!corrCopy) return;
+  hide('corr-err'); hide('corr-result');
+  show('corr-ldg'); document.getElementById('corr-btn').disabled=true;
+  const sys=`Tu es une enseignante experte qui corrige des copies de maths primaire. Tu compares le corrigé avec la copie d'un élève.`;
+  const prompt=`Voici le corrigé attendu et la copie d'un élève. Compare-les et identifie les erreurs.\nRéponds en JSON: {"score":"X/Y","items":[{"question":"intitulé court","attendu":"réponse correcte","obtenu":"réponse élève","ok":true}],"commentaire":"feedback bienveillant pour l'élève"}\nSois précis et bienveillant.`;
+  try {
+    // Vision requise — API prioritaire, sinon SmolVLM
+    let result;
+    const apiKey=localStorage.getItem(KEYSTORE);
+    if(apiKey){
+      for(const m of OR_MODELS){
+        try{
+          const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
+            body:JSON.stringify({model:m.id,max_tokens:1000,messages:[{role:'user',content:[
+              {type:'image_url',image_url:{url:corrRef}},{type:'text',text:'IMAGE 1: Corrigé attendu'},
+              {type:'image_url',image_url:{url:corrCopy}},{type:'text',text:'IMAGE 2: Copie élève. '+prompt}
+            ]}]})
+          });
+          if(!r.ok)continue;
+          const d=await r.json(); const txt=d?.choices?.[0]?.message?.content||'';
+          if(txt){result=parseJSON(txt);break;}
+        }catch(ex){continue;}
+      }
+    }
+    if(!result&&vlmReady&&localVLM){
+      const msgs=[{role:'user',content:[
+        {type:'image',image:corrRef},{type:'image',image:corrCopy},
+        {type:'text',text:sys+'\n'+prompt}
+      ]}];
+      const out=await localVLM(msgs,{max_new_tokens:600,temperature:0.2});
+      result=parseJSON(out[0]?.generated_text?.at(-1)?.content||'{}');
+    }
+    if(!result)throw new Error('Aucune IA disponible pour comparer les images.');
+    hide('corr-ldg');
+    document.getElementById('corr-result-title').textContent=`Résultat : ${result.score||'?'} — ${result.commentaire||''}`;
+    document.getElementById('corr-items').innerHTML=(result.items||[]).map(it=>`
+      <div class="corr-item">
+        <span class="${it.ok?'corr-ok':'corr-ko'}">${it.ok?'✓':'✗'}</span>
+        <div><strong style="font-size:13px">${esc(it.question||'')}</strong>
+        ${!it.ok?`<br><span style="font-size:12px;color:var(--mu)">Attendu : ${esc(it.attendu||'')} · Obtenu : ${esc(it.obtenu||'')}</span>`:''}
+        </div>
+      </div>`).join('');
+    show('corr-result');
+  }catch(ex){
+    hide('corr-ldg');
+    showErr('corr-err','⚠ '+ex.message);
   }
-  list.innerHTML = history.map(h=>`
-    <div class="hist-item" onclick="loadFromHistory(${h.id})">
-      ${h.imgSrc
-        ? `<img class="hist-thumb" src="${h.imgSrc}" alt="">`
-        : `<div class="hist-thumb-ph">${h.emoji}</div>`}
-      <div class="hist-info">
-        <div class="hist-consigne">${esc(h.consigne)}</div>
-        <div class="hist-meta">${h.emoji} ${h.type} · ${h.date}</div>
-      </div>
-      <button class="hist-del" onclick="event.stopPropagation();deleteHistory(${h.id})">×</button>
+  document.getElementById('corr-btn').disabled=false;
+}
+
+function resetCorr(){
+  corrRef=null; corrCopy=null;
+  document.getElementById('corr-ref-panel').innerHTML='<div class="corr-panel-label">📋 Corrigé</div><p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>';
+  document.getElementById('corr-copy-panel').innerHTML='<div class="corr-panel-label">📝 Copie élève</div><p style="font-size:12px;color:var(--hi)">Appuyer pour ajouter</p>';
+  document.getElementById('corr-ref-panel').onclick=()=>document.getElementById('corr-ref-input').click();
+  document.getElementById('corr-copy-panel').onclick=()=>document.getElementById('corr-copy-input').click();
+  document.getElementById('corr-ref-input').value='';
+  document.getElementById('corr-copy-input').value='';
+  document.getElementById('corr-btn').disabled=true;
+  hide('corr-result'); hide('corr-err');
+}
+
+/* ══════════════════════════════════════════════
+   PLANNING
+══════════════════════════════════════════════ */
+async function generatePlan(){
+  const topic=document.getElementById('plan-topic').value.trim();
+  if(!topic){document.getElementById('plan-topic').focus();return;}
+  const level=document.getElementById('plan-level').value, dur=document.getElementById('plan-dur').value, obj=document.getElementById('plan-obj').value.trim();
+  hide('plan-result'); hide('plan-err');
+  document.getElementById('plan-btn').disabled=true; show('plan-ldg');
+  const sys=`Tu es pédagogue experte en mathématiques primaire. Tu crées des plannings progressifs et pratiques.`;
+  const prompt=`Crée une séquence pour "${topic}" niveau ${level}, durée ${dur}${obj?', objectif: '+obj:''}.
+Réponds en JSON: {"titre":"titre","seances":[{"numero":1,"titre":"titre","duree":"45 min","objectif":"objectif","activites":"description","materiel":"matériel"}]}`;
+  try{
+    const txt=await callAIText(prompt,sys);
+    const data=parseJSON(txt); planData=data.seances||[];
+    document.querySelector('#plan-result .card-title').innerHTML=`${esc(data.titre||topic)} <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">⬇ Word</button></span>`;
+    document.getElementById('plan-list').innerHTML=planData.map(s=>`
+      <div class="plan-item">
+        <div class="plan-seq">Séance ${s.numero}</div>
+        <div class="plan-tit">${esc(s.titre||'')}</div>
+        <div class="plan-desc">${esc(s.activites||'')}</div>
+        <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;font-size:12px">
+          ${s.objectif?`<span style="color:var(--acd)">🎯 ${esc(s.objectif)}</span>`:''}
+          ${s.materiel?`<span style="color:var(--mu)">📦 ${esc(s.materiel)}</span>`:''}
+          <span style="color:var(--hi)">⏱ ${esc(s.duree||'45 min')}</span>
+        </div>
+      </div>`).join('');
+    show('plan-result');
+  }catch(ex){showErr('plan-err','⚠ '+ex.message);}
+  hide('plan-ldg'); document.getElementById('plan-btn').disabled=false;
+}
+
+async function exportPlan(){
+  if(!planData.length)return;
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel}=docx;
+  const topic=document.getElementById('plan-topic').value.trim()||'Planning';
+  const ch=[new Paragraph({text:topic,heading:HeadingLevel.HEADING_1,spacing:{after:280}})];
+  planData.forEach(s=>{
+    ch.push(new Paragraph({children:[new TextRun({text:`Séance ${s.numero} — ${s.titre||''}`,bold:true,size:25,color:'5B3FBF'})],spacing:{before:220,after:70}}));
+    if(s.objectif)ch.push(new Paragraph({children:[new TextRun({text:'Objectif : '+s.objectif,size:23,italics:true,color:'666666'})],spacing:{after:70}}));
+    if(s.activites)ch.push(new Paragraph({children:[new TextRun({text:s.activites,size:23})],spacing:{after:70}}));
+    if(s.materiel)ch.push(new Paragraph({children:[new TextRun({text:'Matériel : '+s.materiel,size:21,color:'888888'})],spacing:{after:40}}));
+    ch.push(new Paragraph({children:[new TextRun({text:'Durée : '+(s.duree||'45 min'),size:21,color:'888888'})],spacing:{after:140}}));
+  });
+  const b64=await Packer.toBase64String(new Document({sections:[{children:ch}]}));
+  const safe=(topic).replace(/[^a-zA-Z0-9àâéèêëîïôùûüæœç\s-]/g,'').trim().replace(/\s+/g,'_')||'planning';
+  const a=document.createElement('a'); a.href=`data:${MIME_DOCX};base64,${b64}`; a.download=safe+'.docx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ══════════════════════════════════════════════
+   DICTIONNAIRE
+══════════════════════════════════════════════ */
+const DICO=[
+  {term:'Addition',cat:'Addition',emoji:'➕',def:'Réunir deux quantités.',ex:'3 + 5 = 8'},
+  {term:'Soustraction',cat:'Soustraction',emoji:'➖',def:'Enlever une quantité d\'une autre.',ex:'9 − 4 = 5'},
+  {term:'Multiplication',cat:'Multiplication',emoji:'✖️',def:'Addition répétée d\'un même nombre.',ex:'3 × 4 = 12'},
+  {term:'Division',cat:'Division',emoji:'➗',def:'Partager en parts égales.',ex:'12 ÷ 4 = 3'},
+  {term:'Fraction',cat:'Fractions',emoji:'½',def:'Partie d\'un tout divisé en parts égales.',ex:'½ = une moitié'},
+  {term:'Numérateur',cat:'Fractions',emoji:'🔢',def:'Chiffre du haut — parts prises.',ex:'Dans ¾, le numérateur est 3'},
+  {term:'Dénominateur',cat:'Fractions',emoji:'🔣',def:'Chiffre du bas — parts totales.',ex:'Dans ¾, le dénominateur est 4'},
+  {term:'Nombre pair',cat:'Numération',emoji:'2️⃣',def:'Divisible par 2. Termine par 0,2,4,6,8.',ex:'2, 4, 6, 8, 10…'},
+  {term:'Nombre impair',cat:'Numération',emoji:'1️⃣',def:'Non divisible par 2. Termine par 1,3,5,7,9.',ex:'1, 3, 5, 7, 9…'},
+  {term:'Dizaine',cat:'Numération',emoji:'🔟',def:'Groupe de dix unités.',ex:'3 dizaines = 30'},
+  {term:'Centaine',cat:'Numération',emoji:'💯',def:'Groupe de cent unités.',ex:'2 centaines = 200'},
+  {term:'Millier',cat:'Numération',emoji:'🔢',def:'Groupe de mille unités.',ex:'5 milliers = 5 000'},
+  {term:'Périmètre',cat:'Géométrie',emoji:'📐',def:'Longueur du contour d\'une figure.',ex:'Carré 3cm : périmètre = 12cm'},
+  {term:'Aire',cat:'Géométrie',emoji:'🟦',def:'Surface intérieure d\'une figure.',ex:'Rectangle 4×3 = 12cm²'},
+  {term:'Triangle',cat:'Géométrie',emoji:'🔺',def:'Polygone à 3 côtés et 3 angles.',ex:'Triangle équilatéral : 3 côtés égaux'},
+  {term:'Carré',cat:'Géométrie',emoji:'🟥',def:'Rectangle avec 4 côtés égaux.',ex:'Côté 5cm → périmètre 20cm'},
+  {term:'Rectangle',cat:'Géométrie',emoji:'▬',def:'4 angles droits, côtés opposés égaux.',ex:'6cm × 3cm'},
+  {term:'Cercle',cat:'Géométrie',emoji:'⭕',def:'Courbe dont tous les points sont équidistants du centre.',ex:'Rayon = distance centre-bord'},
+  {term:'Angle droit',cat:'Géométrie',emoji:'📐',def:'Angle de 90°.',ex:'Coins d\'une feuille de papier'},
+  {term:'Symétrie',cat:'Géométrie',emoji:'🪞',def:'Figure identique de chaque côté d\'un axe.',ex:'Le papillon'},
+  {term:'Litre',cat:'Mesures',emoji:'🫙',def:'Unité de volume/capacité.',ex:'1 bouteille d\'eau = 1L'},
+  {term:'Kilogramme',cat:'Mesures',emoji:'⚖️',def:'Unité de masse.',ex:'1 kg = 1 000 g'},
+  {term:'Mètre',cat:'Mesures',emoji:'📏',def:'Unité de longueur.',ex:'1 m = 100 cm'},
+  {term:'Heure',cat:'Mesures',emoji:'🕐',def:'Unité de temps.',ex:'1h = 60 min'},
+  {term:'Multiple',cat:'Multiplication',emoji:'✖️',def:'Obtenu en multipliant par un entier.',ex:'Multiples de 3 : 3, 6, 9…'},
+  {term:'Diviseur',cat:'Division',emoji:'➗',def:'Divise un nombre sans reste.',ex:'Diviseurs de 12 : 1,2,3,4,6,12'},
+  {term:'Reste',cat:'Division',emoji:'🔢',def:'Ce qui reste après une division entière.',ex:'13 ÷ 4 = 3 reste 1'},
+  {term:'Problème',cat:'Problèmes',emoji:'🧩',def:'Situation à résoudre par raisonnement.',ex:'Paul a 12 billes…'},
+  {term:'Données',cat:'Problèmes',emoji:'📊',def:'Informations données dans un problème.',ex:'12 billes = une donnée'},
+  {term:'Arrondi',cat:'Numération',emoji:'🔄',def:'Valeur approchée d\'un nombre.',ex:'3,7 arrondi = 4'},
+  {term:'Estimation',cat:'Numération',emoji:'🎯',def:'Calcul approximatif rapide.',ex:'127+58 ≈ 130+60 = 190'},
+  {term:'Égalité',cat:'Addition',emoji:'🟰',def:'Deux expressions de même valeur.',ex:'3+5 = 8 = 4+4'},
+  {term:'Tableau',cat:'Problèmes',emoji:'📋',def:'Données organisées en lignes et colonnes.',ex:'Résultats d\'une classe'},
+  {term:'Graphique',cat:'Problèmes',emoji:'📈',def:'Représentation visuelle de données.',ex:'Températures de la semaine'},
+  {term:'Parallèles',cat:'Géométrie',emoji:'⇉',def:'Droites qui ne se croisent jamais.',ex:'Les rails d\'un train'},
+  {term:'Perpendiculaires',cat:'Géométrie',emoji:'⊥',def:'Droites qui se croisent à 90°.',ex:'Côtés adjacents d\'un carré'},
+];
+
+function renderDico(){
+  const search=(document.getElementById('dico-search')?.value||'').toLowerCase();
+  const cats=['Tout',...new Set(DICO.map(d=>d.cat))];
+  document.getElementById('dico-chips').innerHTML=cats.map(c=>`<div class="chip${dicoFilter===c?' active':''}" onclick="dicoFilter='${c}';renderDico()">${c}</div>`).join('');
+  let items=DICO;
+  if(dicoFilter!=='Tout')items=items.filter(d=>d.cat===dicoFilter);
+  if(search)items=items.filter(d=>d.term.toLowerCase().includes(search)||d.def.toLowerCase().includes(search));
+  const det=document.getElementById('dico-detail');
+  if(dicoOpen){
+    const d=DICO.find(x=>x.term===dicoOpen);
+    if(d)det.innerHTML=`<div style="background:var(--acl);border:1px solid rgba(91,63,191,.2);border-radius:var(--rs);padding:14px;margin-bottom:12px;animation:fu .2s ease">
+      <h3 style="font-size:16px;font-weight:600;color:var(--acd);margin-bottom:6px">${d.emoji} ${esc(d.term)}</h3>
+      <p style="font-size:14px;color:var(--tx);line-height:1.6;margin-bottom:8px">${esc(d.def)}</p>
+      <div style="background:var(--sur);border-radius:var(--rs);padding:9px 11px;font-size:13px;color:var(--mu);border:1px solid var(--bd)">Exemple : ${esc(d.ex)}</div>
+      <div class="arow" style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="dicoOpen=null;renderDico()">← Retour</button></div>
+    </div>`;
+    else det.innerHTML='';
+  }else det.innerHTML='';
+  document.getElementById('dico-grid').innerHTML=items.map(d=>`
+    <div class="dico-card" onclick="dicoOpen='${d.term}';renderDico()">
+      <div class="dico-ico">${d.emoji}</div>
+      <div class="dico-term">${esc(d.term)}</div>
+      <div class="dico-def">${esc(d.def.substring(0,55))}${d.def.length>55?'…':''}</div>
     </div>`).join('');
 }
 
-function loadFromHistory(id) {
-  const h = history.find(x=>x.id===id); if(!h) return;
-  curExo  = {type:h.type, emoji:h.emoji, consigne:h.consigne, numbers:h.numbers, correction:h.correction};
-  curNums = h.numbers.map(n=>({...n}));
-  curImg  = h.imgSrc;
-  document.getElementById('tbadge').textContent = h.emoji+' '+h.type;
-  document.getElementById('cons-edit').value = h.consigne;
-  renderNums();
-  goTab(1);
+/* ══════════════════════════════════════════════
+   SYNC — GitHub Gist
+══════════════════════════════════════════════ */
+function saveGhToken(){
+  const t=document.getElementById('gh-token').value.trim();
+  if(!t){showErr('sync-err','Saisissez votre token.');return;}
+  localStorage.setItem(GHSTORE,t);
+  showSyncOk('Token enregistré.');
 }
 
-function deleteHistory(id) {
-  history = history.filter(x=>x.id!==id);
-  localStorage.setItem(HISTSTORE, JSON.stringify(history));
-  renderHistory();
+async function syncSave(){
+  const token=localStorage.getItem(GHSTORE)||document.getElementById('gh-token').value.trim();
+  if(!token){showErr('sync-err','Configurez votre token GitHub d\'abord.');return;}
+  hide('sync-err'); hide('sync-ok');
+  setSyncDot('pulse');
+  const payload=JSON.stringify({library,exportedAt:new Date().toISOString()});
+  try{
+    const gistId=localStorage.getItem(GISTSTORE);
+    let url='https://api.github.com/gists', method='POST';
+    if(gistId){url+='/'+gistId; method='PATCH';}
+    const r=await fetch(url,{method,headers:{'Authorization':'token '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({description:'ExoScan bibliothèque',public:false,files:{'exoscan-library.json':{content:payload}}})});
+    if(!r.ok){const e=await r.json();throw new Error(e.message||'Erreur GitHub');}
+    const d=await r.json();
+    localStorage.setItem(GISTSTORE,d.id);
+    setSyncDot('ok');
+    document.getElementById('sync-status').textContent=`Sauvegardé le ${new Date().toLocaleString('fr-BE')}`;
+    showSyncOk(`✅ ${library.length} exercices sauvegardés sur GitHub Gist.`);
+  }catch(ex){setSyncDot('err');showErr('sync-err','⚠ '+ex.message);}
 }
 
-function clearHistory() {
-  if (!history.length) return;
-  if (confirm('Effacer tout l\'historique ?')) {
-    history=[];
-    localStorage.setItem(HISTSTORE, JSON.stringify(history));
-    renderHistory();
+async function syncLoad(){
+  const token=localStorage.getItem(GHSTORE)||document.getElementById('gh-token').value.trim();
+  const gistId=localStorage.getItem(GISTSTORE);
+  if(!token){showErr('sync-err','Configurez votre token GitHub d\'abord.');return;}
+  hide('sync-err'); hide('sync-ok');
+  setSyncDot('pulse');
+  try{
+    let gist;
+    if(gistId){
+      const r=await fetch('https://api.github.com/gists/'+gistId,{headers:{'Authorization':'token '+token}});
+      if(!r.ok)throw new Error('Gist introuvable');
+      gist=await r.json();
+    }else{
+      // Cherche le gist ExoScan dans la liste
+      const r=await fetch('https://api.github.com/gists',{headers:{'Authorization':'token '+token}});
+      const gists=await r.json();
+      gist=gists.find(g=>g.description==='ExoScan bibliothèque');
+      if(!gist)throw new Error('Aucun Gist ExoScan trouvé. Faites d\'abord une sauvegarde.');
+      localStorage.setItem(GISTSTORE,gist.id);
+    }
+    const content=gist.files['exoscan-library.json']?.content;
+    if(!content)throw new Error('Fichier vide.');
+    const data=JSON.parse(content);
+    library=data.library||[];
+    localStorage.setItem(LIBSTORE,JSON.stringify(library));
+    setSyncDot('ok');
+    document.getElementById('sync-status').textContent=`Restauré — ${library.length} exercices`;
+    showSyncOk(`✅ ${library.length} exercices restaurés depuis GitHub Gist (${data.exportedAt?.substring(0,10)||'?'}).`);
+  }catch(ex){setSyncDot('err');showErr('sync-err','⚠ '+ex.message);}
+}
+
+function setSyncDot(state){
+  const d=document.getElementById('sync-dot');
+  d.className='sync-dot'+(state==='ok'?' ok':state==='err'?' err':state==='pulse'?' pulse':'');
+}
+function showSyncOk(msg){const e=document.getElementById('sync-ok');e.textContent=msg;e.style.display='block';}
+
+/* ══════════════════════════════════════════════
+   GÉOMÉTRIE — Éditeur de figures SVG
+══════════════════════════════════════════════ */
+let geoType = 'rectangle';
+let geoColor = '#5B3FBF';
+let geoFigs = []; // figures ajoutées à la fiche
+let geoDims = { w:6, h:4, r:3, a:5, b:4, c:6, side:5 };
+
+function initGeo() {
+  selectGeoType('rectangle', document.querySelector('[data-type="rectangle"]'));
+}
+
+function selectGeoType(type, btn) {
+  geoType = type;
+  document.querySelectorAll('.geo-type-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderGeoControls();
+  renderGeoPreview();
+}
+
+function selectGeoColor(color, btn) {
+  geoColor = color;
+  document.querySelectorAll('.geo-color-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderGeoPreview();
+}
+
+function renderGeoControls() {
+  const c = document.getElementById('geo-controls');
+  const inp = (id, label, val, min=1, max=30) =>
+    `<div class="geo-dim-item"><label>${label}</label><input type="number" id="gd-${id}" value="${val}" min="${min}" max="${max}" step="0.5" oninput="geoDims.${id}=parseFloat(this.value)||1;renderGeoPreview()"></div>`;
+  let html = '<div class="geo-dim-row">';
+  if(geoType==='rectangle') html += inp('w','Longueur (cm)',geoDims.w) + inp('h','Largeur (cm)',geoDims.h);
+  else if(geoType==='square') html += inp('side','Côté (cm)',geoDims.side);
+  else if(geoType==='triangle') html += inp('a','Côté a (cm)',geoDims.a) + inp('b','Côté b (cm)',geoDims.b) + inp('c','Côté c (cm)',geoDims.c);
+  else if(geoType==='triangle-right') html += inp('a','Base (cm)',geoDims.a) + inp('b','Hauteur (cm)',geoDims.b);
+  else if(geoType==='circle') html += inp('r','Rayon (cm)',geoDims.r);
+  else if(geoType==='pentagon') html += inp('side','Côté (cm)',geoDims.side);
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function renderGeoPreview() {
+  const showDims  = document.getElementById('geo-show-dims')?.checked;
+  const showAng   = document.getElementById('geo-show-angles')?.checked;
+  const showArea  = document.getElementById('geo-show-area')?.checked;
+  const showPerim = document.getElementById('geo-show-perim')?.checked;
+  const showGrid  = document.getElementById('geo-show-grid')?.checked;
+  const fillMode  = document.getElementById('geo-fill')?.value || 'none';
+
+  const scale = 28; // px per cm
+  const pad = 48;
+  const col = geoColor;
+  const fillAlpha = fillMode==='none'?'none' : fillMode==='light'?col+'22' : fillMode==='solid'?col : 'url(#hatch)';
+
+  let svgW, svgH, shapeSVG='', dims=[], angles=[], area=0, perim=0;
+
+  if(geoType==='rectangle'){
+    const W=geoDims.w*scale, H=geoDims.h*scale;
+    svgW=W+pad*2; svgH=H+pad*2;
+    shapeSVG=`<rect x="${pad}" y="${pad}" width="${W}" height="${H}" fill="${fillAlpha}" stroke="${col}" stroke-width="2" rx="1"/>`;
+    if(showDims){
+      dims.push(`<text x="${pad+W/2}" y="${pad-10}" text-anchor="middle" font-size="13" fill="${col}" font-family="DM Sans,sans-serif" font-weight="500">${geoDims.w} cm</text>`);
+      dims.push(`<text x="${pad-12}" y="${pad+H/2}" text-anchor="middle" font-size="13" fill="${col}" font-family="DM Sans,sans-serif" font-weight="500" transform="rotate(-90,${pad-12},${pad+H/2})">${geoDims.h} cm</text>`);
+    }
+    if(showAng){
+      const arc=`<path d="M${pad+16},${pad} A16,16,0,0,1,${pad},${pad+16}" fill="none" stroke="${col}" stroke-width="1.5"/>`;
+      const sq=`<polyline points="${pad+12},${pad} ${pad+12},${pad+12} ${pad},${pad+12}" fill="none" stroke="${col}" stroke-width="1.5"/>`;
+      angles.push(sq);
+    }
+    area = geoDims.w * geoDims.h;
+    perim = 2*(geoDims.w + geoDims.h);
+  }
+  else if(geoType==='square'){
+    const S=geoDims.side*scale;
+    svgW=S+pad*2; svgH=S+pad*2;
+    shapeSVG=`<rect x="${pad}" y="${pad}" width="${S}" height="${S}" fill="${fillAlpha}" stroke="${col}" stroke-width="2" rx="1"/>`;
+    if(showDims) dims.push(`<text x="${pad+S/2}" y="${pad-10}" text-anchor="middle" font-size="13" fill="${col}" font-family="DM Sans,sans-serif" font-weight="500">${geoDims.side} cm</text>`);
+    if(showAng) dims.push(`<polyline points="${pad+12},${pad} ${pad+12},${pad+12} ${pad},${pad+12}" fill="none" stroke="${col}" stroke-width="1.5"/>`);
+    area = geoDims.side**2;
+    perim = 4*geoDims.side;
+  }
+  else if(geoType==='triangle'){
+    const a=geoDims.a*scale, b=geoDims.b*scale, c=geoDims.c*scale;
+    // Heron placement
+    const cosA = (b*b+c*c-a*a)/(2*b*c);
+    const Bx=c, By=0, Cx=b*cosA, Cy=-b*Math.sqrt(Math.max(0,1-cosA*cosA));
+    const minX=Math.min(0,Bx,Cx), minY=Math.min(0,By,Cy);
+    const maxX=Math.max(0,Bx,Cx), maxY=Math.max(0,By,Cy);
+    const ox=pad-minX, oy=pad-minY;
+    svgW=maxX-minX+pad*2; svgH=maxY-minY+pad*2;
+    const pts=`${ox},${oy+By} ${ox+Bx},${oy+By} ${ox+Cx},${oy+Cy}`;
+    shapeSVG=`<polygon points="${pts}" fill="${fillAlpha}" stroke="${col}" stroke-width="2"/>`;
+    if(showDims){
+      dims.push(`<text x="${(ox+ox+Bx)/2}" y="${oy+By+18}" text-anchor="middle" font-size="12" fill="${col}" font-family="DM Sans,sans-serif">${geoDims.c} cm</text>`);
+    }
+    area = parseFloat((0.5*Math.abs(Bx*Cy)).toFixed(2));
+    perim = parseFloat((geoDims.a+geoDims.b+geoDims.c).toFixed(1));
+  }
+  else if(geoType==='triangle-right'){
+    const W=geoDims.a*scale, H=geoDims.b*scale;
+    svgW=W+pad*2; svgH=H+pad*2;
+    shapeSVG=`<polygon points="${pad},${pad+H} ${pad+W},${pad+H} ${pad},${pad}" fill="${fillAlpha}" stroke="${col}" stroke-width="2"/>`;
+    if(showAng) dims.push(`<polyline points="${pad+16},${pad+H} ${pad+16},${pad+H-16} ${pad},${pad+H-16}" fill="none" stroke="${col}" stroke-width="1.5"/>`);
+    if(showDims){
+      dims.push(`<text x="${pad+W/2}" y="${pad+H+18}" text-anchor="middle" font-size="12" fill="${col}" font-family="DM Sans,sans-serif">${geoDims.a} cm</text>`);
+      dims.push(`<text x="${pad-16}" y="${pad+H/2}" text-anchor="middle" font-size="12" fill="${col}" font-family="DM Sans,sans-serif" transform="rotate(-90,${pad-16},${pad+H/2})">${geoDims.b} cm</text>`);
+    }
+    const hyp = parseFloat(Math.sqrt(geoDims.a**2+geoDims.b**2).toFixed(2));
+    area = parseFloat((0.5*geoDims.a*geoDims.b).toFixed(2));
+    perim = parseFloat((geoDims.a+geoDims.b+hyp).toFixed(2));
+  }
+  else if(geoType==='circle'){
+    const R=geoDims.r*scale;
+    svgW=R*2+pad*2; svgH=R*2+pad*2;
+    shapeSVG=`<circle cx="${pad+R}" cy="${pad+R}" r="${R}" fill="${fillAlpha}" stroke="${col}" stroke-width="2"/>`;
+    if(showDims){
+      dims.push(`<line x1="${pad+R}" y1="${pad+R}" x2="${pad+R*2}" y2="${pad+R}" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/>`);
+      dims.push(`<text x="${pad+R+R/2}" y="${pad+R-8}" text-anchor="middle" font-size="12" fill="${col}" font-family="DM Sans,sans-serif">r = ${geoDims.r} cm</text>`);
+    }
+    area = parseFloat((Math.PI*geoDims.r**2).toFixed(2));
+    perim = parseFloat((2*Math.PI*geoDims.r).toFixed(2));
+  }
+  else if(geoType==='pentagon'){
+    const S=geoDims.side*scale;
+    const R2=S/(2*Math.sin(Math.PI/5));
+    const pts=[0,1,2,3,4].map(i=>{
+      const a=i*2*Math.PI/5 - Math.PI/2;
+      return `${pad+R2+R2*Math.cos(a)},${pad+R2+R2*Math.sin(a)}`;
+    }).join(' ');
+    svgW=R2*2+pad*2; svgH=R2*2+pad*2;
+    shapeSVG=`<polygon points="${pts}" fill="${fillAlpha}" stroke="${col}" stroke-width="2"/>`;
+    area = parseFloat((5*S**2/(4*Math.tan(Math.PI/5))).toFixed(2));
+    perim = parseFloat((5*geoDims.side).toFixed(1));
+  }
+
+  // Grid
+  let gridSVG = '';
+  if(showGrid){
+    for(let x=0;x<svgW;x+=scale) gridSVG+=`<line x1="${x}" y1="0" x2="${x}" y2="${svgH}" stroke="#DDD" stroke-width="0.5"/>`;
+    for(let y=0;y<svgH;y+=scale) gridSVG+=`<line x1="0" y1="${y}" x2="${svgW}" y2="${y}" stroke="#DDD" stroke-width="0.5"/>`;
+  }
+
+  // Hatch pattern
+  const hatchDef = fillMode==='hatch' ? `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="${col}" stroke-width="1.5" opacity="0.4"/></pattern></defs>` : '';
+
+  const infoSVG = [];
+  if(showArea)  infoSVG.push(`Aire = ${area} cm²`);
+  if(showPerim) infoSVG.push(`Périmètre = ${perim} cm`);
+  let infoLabel = '';
+  if(infoSVG.length) infoLabel = `<text x="${svgW/2}" y="${svgH-8}" text-anchor="middle" font-size="12" fill="${col}" font-family="DM Sans,sans-serif" font-weight="500">${infoSVG.join('  ·  ')}</text>`;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.min(svgW,360)}" height="${Math.min(svgH,280)}" viewBox="0 0 ${svgW} ${svgH}">
+    ${hatchDef}${gridSVG}${shapeSVG}${dims.join('')}${angles.join('')}${infoLabel}
+  </svg>`;
+
+  document.getElementById('geo-preview').innerHTML = svg;
+
+  // Info pills
+  const infoPills = [];
+  if(area)  infoPills.push(`<span class="geo-info-pill"><strong>Aire :</strong> ${area} cm²</span>`);
+  if(perim) infoPills.push(`<span class="geo-info-pill"><strong>Périmètre :</strong> ${perim} cm</span>`);
+  document.getElementById('geo-info').innerHTML = infoPills.join('');
+}
+
+function resetGeo() {
+  geoDims = { w:6, h:4, r:3, a:5, b:4, c:6, side:5 };
+  geoColor = '#5B3FBF';
+  document.querySelectorAll('.geo-color-btn').forEach((b,i)=>{ if(i===0)b.classList.add('active'); else b.classList.remove('active'); });
+  document.getElementById('geo-cons').value='';
+  renderGeoControls(); renderGeoPreview();
+}
+
+function addGeoToFiche() {
+  const svgEl = document.getElementById('geo-preview')?.querySelector('svg');
+  if(!svgEl) return;
+  const svgStr = svgEl.outerHTML;
+  const cons   = document.getElementById('geo-cons').value.trim();
+  // Serialize dims for label
+  let dimLabel = geoType==='rectangle' ? `${geoDims.w}×${geoDims.h} cm` :
+                 geoType==='square'    ? `Côté ${geoDims.side} cm` :
+                 geoType==='circle'    ? `r = ${geoDims.r} cm` :
+                 geoType==='triangle'  ? `${geoDims.a}/${geoDims.b}/${geoDims.c} cm` :
+                 geoType==='triangle-right' ? `${geoDims.a}×${geoDims.b} cm` :
+                 `Côté ${geoDims.side} cm`;
+
+  const fig = { id:Date.now(), type:geoType, dims:{...geoDims}, color:geoColor,
+    svgStr, cons, dimLabel,
+    showDims:  document.getElementById('geo-show-dims')?.checked,
+    showAng:   document.getElementById('geo-show-angles')?.checked,
+    showArea:  document.getElementById('geo-show-area')?.checked,
+    showPerim: document.getElementById('geo-show-perim')?.checked,
+    showGrid:  document.getElementById('geo-show-grid')?.checked,
+    fillMode:  document.getElementById('geo-fill')?.value };
+
+  geoFigs.push(fig);
+  // Also add to basket
+  basket.push({ type:'📐 Géométrie', consigne: cons || `Figure : ${dimLabel}`, numbers:[], correction:'', geoFig:fig });
+  refreshBmini();
+  renderGeoFicheMini();
+  resetGeo();
+  show('geo-fiche-mini');
+}
+
+function renderGeoFicheMini() {
+  document.getElementById('geo-count').textContent = geoFigs.length;
+  document.getElementById('geo-fiche-list').innerHTML = geoFigs.map((f,i)=>`
+    <div class="geo-fig-thumb">
+      ${f.svgStr.replace(/width="[^"]*"/, 'width="80"').replace(/height="[^"]*"/, 'height="70"')}
+      <div style="font-size:10px;color:var(--hi);text-align:center;margin-top:3px">${f.dimLabel}</div>
+      <button class="geo-fig-del" onclick="removeGeoFig(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeGeoFig(i) {
+  geoFigs.splice(i,1);
+  basket = basket.filter(e=>!e.geoFig || geoFigs.includes(e.geoFig));
+  refreshBmini(); renderGeoFicheMini();
+  if(!geoFigs.length) hide('geo-fiche-mini');
+}
+
+/* ══════════════════════════════════════════════
+   BANQUE DE PROBLÈMES CONTEXTUALISÉS
+══════════════════════════════════════════════ */
+const BANK = [
+  // 🛒 Marché / courses
+  {ctx:'🛒 Marché / courses',level:'1',op:'+',title:'Pommes et poires',cons:'Au marché, maman achète {n1} pommes et {n2} poires. Combien de fruits a-t-elle achetés en tout ?',nums:[{label:'Pommes',value:5},{label:'Poires',value:3}],corr:'8 fruits',tags:['addition','fruits']},
+  {ctx:'🛒 Marché / courses',level:'1',op:'-',title:'Monnaie rendue',cons:'Tu paies une baguette {n1} cents avec une pièce de {n2} cents. Combien reçois-tu en monnaie ?',nums:[{label:'Prix (cts)',value:65},{label:'Pièce (cts)',value:100}],corr:'35 cents',tags:['soustraction','argent']},
+  {ctx:'🛒 Marché / courses',level:'3',op:'×',title:'Caisses de légumes',cons:'Le maraîcher a {n1} caisses de tomates. Chaque caisse contient {n2} tomates. Combien de tomates au total ?',nums:[{label:'Caisses',value:4},{label:'Tomates/caisse',value:12}],corr:'48 tomates',tags:['multiplication']},
+  {ctx:'🛒 Marché / courses',level:'3',op:'÷',title:'Partage de chocolats',cons:'Tu achètes {n1} chocolats à partager équitablement entre {n2} enfants. Combien chaque enfant reçoit-il ?',nums:[{label:'Chocolats',value:24},{label:'Enfants',value:6}],corr:'4 chocolats',tags:['division']},
+  {ctx:'🛒 Marché / courses',level:'5',op:'mix',title:'Budget courses',cons:'Maman a {n1} € pour faire ses courses. Elle achète de la viande pour {n2} €, des légumes pour {n3} € et du pain pour {n4} €. Combien lui reste-t-il ?',nums:[{label:'Budget (€)',value:50},{label:'Viande (€)',value:18},{label:'Légumes (€)',value:9},{label:'Pain (€)',value:3}],corr:'20 €',tags:['soustraction','argent','multi-étapes']},
+
+  // 🚲 Vélo / transport
+  {ctx:'🚲 Vélo / transport',level:'1',op:'+',title:'Trajet à vélo',cons:'Le matin, Lena roule {n1} km pour aller à l\'école. Le soir, elle fait le même chemin. Quelle distance a-t-elle parcourue en tout ?',nums:[{label:'Distance (km)',value:3}],corr:'6 km',tags:['addition','doubles']},
+  {ctx:'🚲 Vélo / transport',level:'3',op:'×',title:'Semaine en vélo',cons:'Tom va à l\'école à vélo {n1} jours par semaine. Chaque trajet aller-retour fait {n2} km. Combien de km roule-t-il par semaine ?',nums:[{label:'Jours/semaine',value:5},{label:'Km aller-retour',value:4}],corr:'20 km',tags:['multiplication']},
+  {ctx:'🚲 Vélo / transport',level:'5',op:'mix',title:'Voyage en train',cons:'Un train roule à {n1} km/h. Il part à {n2}h et arrive à {n3}h. Quelle distance a-t-il parcourue ?',nums:[{label:'Vitesse (km/h)',value:120},{label:'Départ (h)',value:9},{label:'Arrivée (h)',value:11}],corr:'240 km',tags:['multiplication','temps']},
+
+  // 🍟 Friterie
+  {ctx:'🍟 Friterie / resto',level:'1',op:'+',title:'Commande à la friture',cons:'Jules commande {n1} frites et {n2} croquettes. Combien d\'articles a-t-il commandés ?',nums:[{label:'Frites',value:1},{label:'Croquettes',value:3}],corr:'4 articles',tags:['addition']},
+  {ctx:'🍟 Friterie / resto',level:'3',op:'mix',title:'Sortie classe à la friterie',cons:'La classe compte {n1} élèves. Chaque cornet de frites coûte {n2} €. La maîtresse a un budget de {n3} €. A-t-elle assez ? Combien reste-t-il ou manque-t-il ?',nums:[{label:'Élèves',value:22},{label:'Prix cornet (€)',value:3},{label:'Budget (€)',value:70}],corr:'Il manque 1 €  (22×3=66 €, mais 70-66=4 € restants)',tags:['multiplication','soustraction','argent']},
+  {ctx:'🍟 Friterie / resto',level:'5',op:'÷',title:'Partage de la note',cons:'{n1} amis partagent une note de {n2} €. Combien chacun doit-il payer ?',nums:[{label:'Amis',value:4},{label:'Note (€)',value:36}],corr:'9 € chacun',tags:['division','argent']},
+
+  // ⚽ Sport
+  {ctx:'⚽ Sport',level:'1',op:'+',title:'Buts dans le match',cons:'L\'équipe de Liège a marqué {n1} buts en première mi-temps et {n2} en deuxième. Quel est le score final ?',nums:[{label:'1re mi-temps',value:2},{label:'2e mi-temps',value:3}],corr:'5 buts',tags:['addition']},
+  {ctx:'⚽ Sport',level:'3',op:'×',title:'Entraînements hebdomadaires',cons:'Un joueur s\'entraîne {n1} fois par semaine pendant {n2} semaines. Combien de séances en tout ?',nums:[{label:'Fois/semaine',value:3},{label:'Semaines',value:8}],corr:'24 séances',tags:['multiplication']},
+  {ctx:'⚽ Sport',level:'5',op:'mix',title:'Classement du tournoi',cons:'Dans un tournoi, chaque victoire vaut {n1} points, chaque nul {n2} points. L\'équipe a {n3} victoires et {n4} nuls. Quel est son total ?',nums:[{label:'Pts victoire',value:3},{label:'Pts nul',value:1},{label:'Victoires',value:5},{label:'Nuls',value:3}],corr:'18 points',tags:['multiplication','addition']},
+
+  // 🌧️ Météo / saisons
+  {ctx:'🌧️ Météo / saisons',level:'1',op:'+',title:'Jours de pluie',cons:'En octobre, il a plu {n1} jours. En novembre, il a plu {n2} jours. Combien de jours de pluie en tout ?',nums:[{label:'Octobre',value:12},{label:'Novembre',value:15}],corr:'27 jours',tags:['addition']},
+  {ctx:'🌧️ Météo / saisons',level:'3',op:'-',title:'Températures',cons:'Le matin, il fait {n1}°C. L\'après-midi, il fait {n2}°C. De combien de degrés la température a-t-elle monté ?',nums:[{label:'Matin (°C)',value:7},{label:'Après-midi (°C)',value:19}],corr:'12°C',tags:['soustraction','mesures']},
+  {ctx:'🌧️ Météo / saisons',level:'5',op:'mix',title:'Moyenne de température',cons:'Sur {n1} jours, les températures sont : {n2}°C, {n3}°C, {n4}°C, {n5}°C. Quelle est la température moyenne ?',nums:[{label:'Nb jours',value:4},{label:'Jour 1 (°C)',value:8},{label:'Jour 2 (°C)',value:12},{label:'Jour 3 (°C)',value:10},{label:'Jour 4 (°C)',value:14}],corr:'11°C',tags:['division','addition']},
+
+  // 🎂 Anniversaires
+  {ctx:'🎂 Anniversaires / fêtes',level:'1',op:'+',title:'Bougies sur le gâteau',cons:'Le gâteau d\'anniversaire de Zoé a {n1} bougies bleues et {n2} bougies roses. Combien de bougies en tout ?',nums:[{label:'Bleues',value:4},{label:'Roses',value:5}],corr:'9 bougies',tags:['addition']},
+  {ctx:'🎂 Anniversaires / fêtes',level:'3',op:'×',title:'Sachets de bonbons',cons:'Pour son anniversaire, Matteo prépare {n1} sachets contenant chacun {n2} bonbons. Combien de bonbons au total ?',nums:[{label:'Sachets',value:8},{label:'Bonbons/sachet',value:6}],corr:'48 bonbons',tags:['multiplication']},
+
+  // 📚 École / classe
+  {ctx:'📚 École / classe',level:'1',op:'-',title:'Crayons perdus',cons:'La boîte de crayons contient {n1} crayons. Après la journée, il n\'en reste que {n2}. Combien ont été perdus ou cassés ?',nums:[{label:'Au début',value:20},{label:'À la fin',value:14}],corr:'6 crayons',tags:['soustraction']},
+  {ctx:'📚 École / classe',level:'3',op:'÷',title:'Distribution de feuilles',cons:'La maîtresse a {n1} feuilles à distribuer à {n2} élèves. Combien chaque élève reçoit-il de feuilles ?',nums:[{label:'Feuilles',value:60},{label:'Élèves',value:20}],corr:'3 feuilles',tags:['division']},
+  {ctx:'📚 École / classe',level:'5',op:'mix',title:'Livres à la bibliothèque',cons:'La bibliothèque a {n1} livres. {n2} % ont été empruntés. Combien de livres sont encore disponibles ?',nums:[{label:'Total livres',value:200},{label:'Empruntés (%)',value:35}],corr:'130 livres',tags:['pourcentages','soustraction']},
+
+  // 🌿 Nature / jardin
+  {ctx:'🌿 Nature / jardin',level:'1',op:'+',title:'Fleurs dans le jardin',cons:'Grand-mère a planté {n1} tulipes et {n2} jonquilles. Combien de fleurs a-t-elle plantées ?',nums:[{label:'Tulipes',value:7},{label:'Jonquilles',value:9}],corr:'16 fleurs',tags:['addition']},
+  {ctx:'🌿 Nature / jardin',level:'3',op:'×',title:'Rangées de légumes',cons:'Le potager a {n1} rangées de carottes. Chaque rangée contient {n2} plants. Combien de plants au total ?',nums:[{label:'Rangées',value:6},{label:'Plants/rangée',value:8}],corr:'48 plants',tags:['multiplication']},
+
+  // 🏠 Maison / cuisine
+  {ctx:'🏠 Maison / cuisine',level:'1',op:'+',title:'Ingrédients pour la recette',cons:'Une recette nécessite {n1} œufs et {n2} autres ingrédients. Combien d\'ingrédients en tout ?',nums:[{label:'Œufs',value:3},{label:'Autres',value:5}],corr:'8 ingrédients',tags:['addition']},
+  {ctx:'🏠 Maison / cuisine',level:'3',op:'×',title:'Carreaux de salle de bain',cons:'Une rangée de carreaux mesure {n1} carreaux de large et {n2} de haut. Combien de carreaux faut-il ?',nums:[{label:'Largeur',value:8},{label:'Hauteur',value:6}],corr:'48 carreaux',tags:['multiplication','géométrie']},
+  {ctx:'🏠 Maison / cuisine',level:'5',op:'mix',title:'Recette pour plus de personnes',cons:'Une recette pour {n1} personnes nécessite {n2} g de farine. Quelle quantité faut-il pour {n3} personnes ?',nums:[{label:'Personnes recette',value:4},{label:'Farine (g)',value:200},{label:'Personnes cibles',value:6}],corr:'300 g',tags:['proportionnalité']},
+
+  // 🎡 Kermesse
+  {ctx:'🎡 Kermesse / foire',level:'1',op:'+',title:'Points au tir',cons:'Au stand de tir, Axel a marqué {n1} points au premier tour et {n2} au deuxième. Quel est son total ?',nums:[{label:'Tour 1',value:8},{label:'Tour 2',value:7}],corr:'15 points',tags:['addition']},
+  {ctx:'🎡 Kermesse / foire',level:'3',op:'mix',title:'Tickets de manège',cons:'Les tickets coûtent {n1} € chacun. Emma a {n2} € et veut faire {n3} tours de manège. A-t-elle assez ?',nums:[{label:'Prix ticket (€)',value:2},{label:'Budget Emma (€)',value:10},{label:'Tours souhaités',value:6}],corr:'Oui, il lui restera 10-(6×2)=10-12=-2 → Non, il manque 2 €',tags:['multiplication','soustraction']},
+];
+
+let bankCurItem = null;
+
+function renderBank() {
+  const search = (document.getElementById('bank-search')?.value||'').toLowerCase();
+  const ctx    =  document.getElementById('bank-ctx')?.value||'';
+  const level  =  document.getElementById('bank-level')?.value||'';
+  const op     =  document.getElementById('bank-op')?.value||'';
+
+  let items = BANK;
+  if(ctx)   items = items.filter(b=>b.ctx===ctx);
+  if(level) items = items.filter(b=>b.level===level);
+  if(op)    items = items.filter(b=>b.op===op);
+  if(search)items = items.filter(b=>b.title.toLowerCase().includes(search)||b.cons.toLowerCase().includes(search)||b.tags.some(t=>t.includes(search)));
+
+  const opLabel = {'+':'➕','-':'➖','×':'✖️','÷':'➗','mix':'🔀'};
+  const levelLabel = {'1':'1re-2e','3':'3e-4e','5':'5e-6e'};
+
+  const list = document.getElementById('bank-list');
+  if(!items.length){list.innerHTML='<div class="empty">Aucun problème trouvé pour ces filtres.</div>';return;}
+
+  list.innerHTML = items.map((b,i)=>`
+    <div class="bank-item">
+      <div class="bank-item-head">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+            <span class="bank-ctx-badge">${b.ctx}</span>
+            <span class="bank-level-badge">${levelLabel[b.level]||b.level}</span>
+            <span class="bank-op-badge">${opLabel[b.op]||b.op}</span>
+          </div>
+          <div class="bank-item-title"><strong>${esc(b.title)}</strong> — ${esc(formatBankCons(b.cons,b.nums))}</div>
+        </div>
+        <button class="bank-use-btn" onclick="openBankEditor(${BANK.indexOf(b)})">Utiliser →</button>
+      </div>
+    </div>`).join('');
+}
+
+function formatBankCons(cons, nums) {
+  let s = cons;
+  nums.forEach((n,i)=>{ s=s.replace(`{n${i+1}}`,n.value); });
+  return s;
+}
+
+function openBankEditor(idx) {
+  const b = BANK[idx];
+  bankCurItem = JSON.parse(JSON.stringify(b)); // deep copy
+  document.getElementById('bank-ed-badge').textContent = b.ctx;
+  document.getElementById('bank-ed-cons').value = formatBankCons(b.cons, b.nums);
+  document.getElementById('bank-ed-corr').value = b.corr;
+  renderNumsIn('bank-ed-nums', bankCurItem.nums);
+  show('bank-editor');
+  document.getElementById('bank-editor').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function addBankToFiche() {
+  const cons = document.getElementById('bank-ed-cons').value.trim();
+  const corr = document.getElementById('bank-ed-corr').value.trim();
+  if(!cons) return;
+  basket.push({ type: (bankCurItem?.ctx||'🛒')+' Problème', consigne:cons, numbers:bankCurItem?.nums||[], correction:corr });
+  refreshBmini();
+  hide('bank-editor');
+  // Flash confirmation
+  const btn = document.querySelector('.bank-use-btn');
+  goTab(3); // go to export
+}
+
+/* ══════════════════════════════════════════════
+   TABLES DE MULTIPLICATION
+══════════════════════════════════════════════ */
+let tableSelected = 2;
+let tableMode = 'grid';
+let drillQueue = [], drillIdx = 0, drillCorrect = 0, drillStart = null;
+
+function initTables() {
+  // Build chips 1-10
+  const chips = document.getElementById('table-chips');
+  if(chips && !chips.children.length){
+    chips.innerHTML = Array.from({length:10},(_,i)=>`
+      <div class="chip${i+2===tableSelected?' active':''}" onclick="selectTable(${i+2},this)">${i+2}</div>`).join('');
+  }
+  renderTable();
+}
+
+function selectTable(n, el) {
+  tableSelected = n;
+  document.querySelectorAll('#table-chips .chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(tableMode==='grid') renderTable();
+}
+
+function renderTable() {
+  tableMode='grid';
+  hide('table-drill-view'); hide('drill-score');
+  show('table-grid-view');
+  const t = tableSelected;
+  let html = `<div class="table-grid-wrap"><table class="mult-table"><thead><tr><th class="diag">×</th>`;
+  for(let j=1;j<=10;j++) html+=`<th>${j}</th>`;
+  html+=`</tr></thead><tbody>`;
+  for(let i=1;i<=10;i++){
+    html+=`<tr><th class="${i===t?'hi':''}">${i}</th>`;
+    for(let j=1;j<=10;j++){
+      const cls = (i===t||j===t)?'hi':'result';
+      html+=`<td class="${cls}">${i*j}</td>`;
+    }
+    html+=`</tr>`;
+  }
+  html+=`</tbody></table></div>`;
+  document.getElementById('table-grid').innerHTML = html;
+}
+
+function startDrill() {
+  tableMode='drill';
+  hide('table-grid-view'); hide('drill-score');
+  show('table-drill-view');
+  // Build queue: all combinations for selected table, shuffled
+  drillQueue = [];
+  for(let i=1;i<=10;i++) drillQueue.push({a:tableSelected,b:i,ans:tableSelected*i});
+  // Shuffle
+  for(let i=drillQueue.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [drillQueue[i],drillQueue[j]]=[drillQueue[j],drillQueue[i]];
+  }
+  drillIdx=0; drillCorrect=0; drillStart=Date.now();
+  showDrillQuestion();
+}
+
+function showDrillQuestion() {
+  if(drillIdx>=drillQueue.length){ endDrill(); return; }
+  const q=drillQueue[drillIdx];
+  document.getElementById('drill-question').textContent=`${q.a} × ${q.b} = ?`;
+  document.getElementById('drill-answer').value='';
+  document.getElementById('drill-feedback').textContent='';
+  document.getElementById('drill-feedback').style.color='';
+  document.getElementById('drill-progress').textContent=`${drillIdx+1} / ${drillQueue.length}`;
+  document.getElementById('drill-bar').style.width=Math.round((drillIdx/drillQueue.length)*100)+'%';
+  setTimeout(()=>document.getElementById('drill-answer').focus(),80);
+}
+
+function checkDrill() {
+  const val=parseInt(document.getElementById('drill-answer').value);
+  const q=drillQueue[drillIdx];
+  const fb=document.getElementById('drill-feedback');
+  if(isNaN(val)){document.getElementById('drill-answer').focus();return;}
+  if(val===q.ans){
+    fb.textContent='✓ Bravo !'; fb.style.color='var(--gn)';
+    drillCorrect++;
+  } else {
+    fb.textContent=`✗ La réponse était ${q.ans}`; fb.style.color='var(--rd)';
+  }
+  drillIdx++;
+  setTimeout(showDrillQuestion, val===q.ans?600:1200);
+}
+
+function endDrill() {
+  const elapsed=Math.round((Date.now()-drillStart)/1000);
+  hide('table-drill-view');
+  show('drill-score');
+  const pct=Math.round(drillCorrect/drillQueue.length*100);
+  const stars=pct===100?'⭐⭐⭐':pct>=80?'⭐⭐':pct>=60?'⭐':'';
+  document.getElementById('drill-score-title').textContent=`${drillCorrect}/${drillQueue.length} bonnes réponses ${stars}`;
+  document.getElementById('drill-score-detail').textContent=`Table de ${tableSelected} · ${elapsed}s · ${pct}%`;
+}
+
+function stopDrill(){
+  hide('table-drill-view'); hide('drill-score');
+  tableMode='grid'; show('table-grid-view'); renderTable();
+}
+
+async function exportTableWord(){
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,BorderStyle,AlignmentType}=docx;
+  const t=tableSelected;
+  const ch=[];
+  ch.push(new Paragraph({children:[new TextRun({text:`Table de multiplication de ${t}`,bold:true,size:32,color:'5B3FBF'})],alignment:AlignmentType.CENTER,spacing:{after:300}}));
+  // Two-column layout of the table facts
+  const rows=[];
+  for(let i=1;i<=10;i++) rows.push(`${t} × ${i} = ${t*i}`);
+  // 5 rows × 2 columns
+  for(let r=0;r<5;r++){
+    ch.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},
+      borders:{top:{style:BorderStyle.NONE},bottom:{style:BorderStyle.SINGLE,size:4,color:'EEEEEE'},left:{style:BorderStyle.NONE},right:{style:BorderStyle.NONE},insideH:{style:BorderStyle.SINGLE,size:4,color:'EEEEEE'},insideV:{style:BorderStyle.NONE}},
+      rows:[new TableRow({children:[
+        new TableCell({children:[new Paragraph({children:[new TextRun({text:rows[r],size:28,font:'Courier New'})]})],width:{size:50,type:WidthType.PERCENTAGE},margins:{top:80,bottom:80,left:120,right:120}}),
+        new TableCell({children:[new Paragraph({children:[new TextRun({text:rows[r+5],size:28,font:'Courier New'})]})],width:{size:50,type:WidthType.PERCENTAGE},margins:{top:80,bottom:80,left:120,right:120}}),
+      ]})]
+    }));
+  }
+  // Exercice à trous au bas
+  ch.push(new Paragraph({text:'',spacing:{before:280,after:120}}));
+  ch.push(new Paragraph({children:[new TextRun({text:'Exercice : complète les trous',bold:true,size:24,color:'5B3FBF'})],spacing:{after:120}}));
+  const shuffled=[...Array(10).keys()].map(i=>i+1).sort(()=>Math.random()-.5).slice(0,6);
+  shuffled.forEach(i=>{
+    const showResult=Math.random()>.5;
+    ch.push(new Paragraph({children:[new TextRun({text:showResult?`${t} × ___ = ${t*i}`:`${t} × ${i} = ___`,size:26,font:'Courier New'})],spacing:{after:100}}));
+  });
+  const b64=await Packer.toBase64String(new Document({sections:[{children:ch}]}));
+  const a=document.createElement('a');
+  a.href=`data:${MIME_DOCX};base64,${b64}`; a.download=`table_${t}.docx`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ══════════════════════════════════════════════
+   ADAPTATION RAPIDE D'UN EXERCICE
+══════════════════════════════════════════════ */
+async function adaptExo(mode) {
+  const cons = document.getElementById('ed-cons')?.value.trim();
+  if(!cons){ alert('Scannez ou saisissez un exercice d\'abord.'); return; }
+  const badge = document.getElementById('ed-badge');
+  const orig = badge?.textContent||'';
+  if(badge) badge.textContent = '⏳ Adaptation…';
+  const modes = {
+    simplify: 'Simplifie cet exercice pour le rendre plus facile (nombres plus petits, consigne plus courte, contexte plus simple). Garde le même type d\'exercice.',
+    enrich:   'Enrichis cet exercice pour le rendre plus difficile (nombres plus grands, étapes supplémentaires, contexte plus complexe). Garde le même type.',
+    context:  'Garde exactement la même structure mathématique mais change le contexte/thème de l\'exercice (utilise un contexte belge concret : marché, sport, école, nature…).'
+  };
+  const sys = `Tu es experte en mathématiques primaire belge. Tu adaptes des exercices pédagogiques.`;
+  const prompt = `Exercice original : "${cons}"\n\nInstruction : ${modes[mode]}\n\nRéponds UNIQUEMENT avec la nouvelle consigne en français, rien d'autre.`;
+  try {
+    const newCons = await callAIText(prompt, sys);
+    if(document.getElementById('ed-cons')) document.getElementById('ed-cons').value = newCons.trim();
+  } catch(ex) { alert('Adaptation impossible : '+ex.message); }
+  if(badge) badge.textContent = orig;
+}
+
+/* ══════════════════════════════════════════════
+   FICHES 3 NIVEAUX
+══════════════════════════════════════════════ */
+let levels3 = null; // {easy, med, hard}
+
+async function scan3Levels() {
+  const cons = document.getElementById('ed-cons')?.value.trim();
+  if(!cons){ alert('Scannez ou saisissez un exercice d\'abord.'); return; }
+  await _generate3Levels(cons);
+}
+
+async function generate3Levels() {
+  const cons = document.getElementById('gen-cons')?.value.trim();
+  if(!cons){ alert('Générez un exercice d\'abord.'); return; }
+  await _generate3Levels(cons);
+}
+
+async function _generate3Levels(baseExo) {
+  // Go to export tab and show the levels card
+  goTab(3);
+  const card = document.getElementById('levels-card');
+  show('levels-card');
+  document.getElementById('levels-preview').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--sur2);border-radius:var(--rs);margin-bottom:12px">
+      <div class="spinner" style="width:18px;height:18px;border-width:2px;flex-shrink:0"></div>
+      <span style="font-size:13px;color:var(--mu)">Génération des 3 niveaux en cours…</span>
+    </div>`;
+  document.getElementById('levels-select').innerHTML = '';
+  document.getElementById('levels-dl-zone').innerHTML = '';
+  document.getElementById('levels-badge').textContent = '';
+
+  const sys = `Tu es experte en mathématiques primaire belge. Tu crées 3 versions d'un même exercice à 3 niveaux de difficulté différents.`;
+  const prompt = `Exercice de base : "${baseExo}"
+
+Crée 3 versions de cet exercice à 3 niveaux :
+- Niveau ⭐ FACILE : pour les élèves en difficulté (nombres plus petits, étapes réduites, contexte simplifié)
+- Niveau ⭐⭐ MOYEN : proche de l'original, légèrement adapté
+- Niveau ⭐⭐⭐ DIFFICILE : pour les élèves avancés (nombres plus grands, étapes supplémentaires, contexte enrichi)
+
+Réponds UNIQUEMENT en JSON sans backticks :
+{
+  "easy":  {"consigne":"texte complet niveau facile",  "correction":"réponse", "conseil":"conseil pédagogique court pour l'enseignante"},
+  "med":   {"consigne":"texte complet niveau moyen",   "correction":"réponse", "conseil":"conseil"},
+  "hard":  {"consigne":"texte complet niveau difficile","correction":"réponse", "conseil":"conseil"}
+}`;
+
+  try {
+    const txt = await callAIText(prompt, sys);
+    levels3 = parseJSON(txt);
+    renderLevelsCard(baseExo);
+  } catch(ex) {
+    document.getElementById('levels-preview').innerHTML =
+      `<div class="err" style="display:block">⚠ ${esc(ex.message)}</div>`;
   }
 }
 
-/* ═══════════ UTILS ═══════════ */
-function show(id){ const e=document.getElementById(id); if(e) e.style.display='block'; }
-function hide(id){ const e=document.getElementById(id); if(e) e.style.display='none'; }
-function showErr(id,msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function renderLevelsCard(baseExo) {
+  if(!levels3) return;
+  document.getElementById('levels-badge').textContent = '3 versions générées';
+
+  const defs = [
+    {key:'easy', stars:'⭐',    label:'Niveau facile',    diff:'Pour élèves en difficulté', tagCls:'easy', color:'var(--gn)'},
+    {key:'med',  stars:'⭐⭐',  label:'Niveau moyen',     diff:'Version standard',          tagCls:'med',  color:'var(--ac)'},
+    {key:'hard', stars:'⭐⭐⭐',label:'Niveau difficile', diff:'Pour élèves avancés',        tagCls:'hard', color:'var(--rd)'},
+  ];
+
+  // Preview cards
+  document.getElementById('levels-preview').innerHTML = `<div class="levels-grid">
+    ${defs.map(d => {
+      const lv = levels3[d.key];
+      return `<div class="level-card selected" id="lcard-${d.key}" onclick="toggleLevel('${d.key}')">
+        <div class="level-head">
+          <span class="level-stars">${d.stars}</span>
+          <div style="flex:1">
+            <div class="level-label">${d.label}</div>
+            <div class="level-diff">${d.diff}</div>
+          </div>
+          <div class="level-check" id="lcheck-${d.key}">✓</div>
+          <button onclick="event.stopPropagation();toggleLevelOpen('${d.key}')" style="background:none;border:none;color:var(--hi);cursor:pointer;font-size:18px;padding:0 0 0 8px">›</button>
+        </div>
+        <div class="level-body" id="lbody-${d.key}">
+          <span class="level-tag ${d.tagCls}">${d.label}</span>
+          <div style="margin-bottom:8px;line-height:1.6">${esc(lv?.consigne||'')}</div>
+          ${lv?.correction?`<div style="font-size:12px;color:var(--gn);margin-bottom:4px">→ ${esc(lv.correction)}</div>`:''}
+          ${lv?.conseil?`<div style="font-size:12px;color:var(--mu);font-style:italic">💡 ${esc(lv.conseil)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  // Selection state
+  const selected3 = {easy:true, med:true, hard:true};
+  window._levels3Selected = selected3;
+
+  // Export buttons
+  renderLevelsExport(defs);
+}
+
+function toggleLevel(key) {
+  const sel = window._levels3Selected;
+  sel[key] = !sel[key];
+  const card = document.getElementById('lcard-'+key);
+  const check = document.getElementById('lcheck-'+key);
+  card.classList.toggle('selected', sel[key]);
+  check.textContent = sel[key]?'✓':'';
+  renderLevelsExport();
+}
+
+function toggleLevelOpen(key) {
+  const body = document.getElementById('lbody-'+key);
+  const card = document.getElementById('lcard-'+key);
+  card.classList.toggle('open');
+  body.style.display = card.classList.contains('open')?'block':'none';
+}
+
+function renderLevelsExport() {
+  const sel = window._levels3Selected||{};
+  const count = Object.values(sel).filter(Boolean).length;
+  const zone = document.getElementById('levels-dl-zone');
+  if(!count){ zone.innerHTML='<p style="font-size:13px;color:var(--hi);text-align:center">Sélectionnez au moins un niveau.</p>'; return; }
+  zone.innerHTML = `
+    <div style="font-size:13px;color:var(--mu);margin-bottom:10px;text-align:center">${count} niveau${count>1?'x':''} sélectionné${count>1?'s':''} · Cochez les niveaux ci-dessus</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="levels-export-btn" style="background:var(--gn);color:white" onclick="exportLevelsWord()">⬇ Word (.docx)</button>
+      <button class="levels-export-btn" style="background:#C0392B;color:white" onclick="exportLevelsPDF()">⬇ PDF</button>
+    </div>
+    <div style="margin-top:8px">
+      <label class="xopt" style="margin-bottom:0">
+        <input type="checkbox" id="lvl-opt-corr" style="width:16px;height:16px;accent-color:var(--ac);padding:0;border:none;background:none;box-shadow:none">
+        <div class="xopt-txt"><strong>Inclure les réponses</strong><span>Version corrigé en bas de chaque niveau</span></div>
+      </label>
+    </div>`;
+}
+
+async function exportLevelsWord() {
+  if(!levels3) return;
+  const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,Table,TableRow,TableCell,WidthType}=docx;
+  const sel = window._levels3Selected||{};
+  const withCorr = document.getElementById('lvl-opt-corr')?.checked;
+  const defs = [
+    {key:'easy',stars:'⭐',    label:'Niveau facile',   color:'2D6A4F'},
+    {key:'med', stars:'⭐⭐',  label:'Niveau moyen',    color:'5B3FBF'},
+    {key:'hard',stars:'⭐⭐⭐',label:'Niveau difficile',color:'B03030'},
+  ];
+
+  const sections = [];
+  defs.filter(d=>sel[d.key]).forEach((d, i) => {
+    const lv = levels3[d.key];
+    const ch = [];
+    if(i>0) ch.push(new Paragraph({pageBreakBefore:true,text:''}));
+    // En-tête élève
+    ch.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},
+      borders:{top:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'},bottom:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'},left:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'},right:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'},insideH:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'},insideV:{style:BorderStyle.SINGLE,size:4,color:'DDDDDD'}},
+      rows:[new TableRow({children:[
+        new TableCell({children:[new Paragraph({children:[new TextRun({text:'Nom : ',bold:true,size:22}),new TextRun({text:'_______________________',size:22,color:'CCCCCC'})]})],width:{size:45,type:WidthType.PERCENTAGE}}),
+        new TableCell({children:[new Paragraph({children:[new TextRun({text:'Date : ',bold:true,size:22}),new TextRun({text:'____________',size:22,color:'CCCCCC'})]})],width:{size:30,type:WidthType.PERCENTAGE}}),
+        new TableCell({children:[new Paragraph({children:[new TextRun({text:d.stars+' '+d.label,bold:true,size:22,color:d.color})]})],width:{size:25,type:WidthType.PERCENTAGE}}),
+      ]})]
+    }));
+    ch.push(new Paragraph({text:'',spacing:{after:180}}));
+    ch.push(new Paragraph({children:[new TextRun({text:d.stars+' '+d.label,bold:true,size:30,color:d.color})],spacing:{before:60,after:240}}));
+    ch.push(new Paragraph({children:[new TextRun({text:lv?.consigne||'',size:26})],spacing:{after:160}}));
+    for(let r=0;r<4;r++) ch.push(new Paragraph({children:[new TextRun({text:'_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _',color:'CCCCCC',size:22})],spacing:{after:90}}));
+    if(withCorr && lv?.correction) ch.push(new Paragraph({children:[new TextRun({text:'→ '+lv.correction,size:22,color:'2D6A4F',italics:true})],spacing:{before:120,after:60}}));
+    sections.push(...ch);
+  });
+
+  const b64 = await Packer.toBase64String(new Document({sections:[{children:sections}]}));
+  const a = document.createElement('a');
+  a.href=`data:${MIME_DOCX};base64,${b64}`; a.download='fiche_3_niveaux.docx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+async function exportLevelsPDF() {
+  if(!levels3) return;
+  const sel = window._levels3Selected||{};
+  const withCorr = document.getElementById('lvl-opt-corr')?.checked;
+  const defs = [
+    {key:'easy',stars:'⭐',    label:'Niveau facile',   r:45,  g:106, b:79},
+    {key:'med', stars:'⭐⭐',  label:'Niveau moyen',    r:91,  g:63,  b:191},
+    {key:'hard',stars:'⭐⭐⭐',label:'Niveau difficile',r:176, g:48,  b:48},
+  ];
+  const {jsPDF} = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
+  let first = true;
+  defs.filter(d=>sel[d.key]).forEach(d => {
+    const lv = levels3[d.key];
+    if(!first) pdf.addPage();
+    first = false;
+    const {r,g,b} = d;
+    // En-tête
+    pdf.setFontSize(10); pdf.setTextColor(80,80,80);
+    pdf.text('Nom : ________________________  Date : ____________',14,14);
+    pdf.setFontSize(11); pdf.setTextColor(r,g,b); pdf.setFont('helvetica','bold');
+    pdf.text(d.stars+' '+d.label,160,14,{align:'right'});
+    // Ligne séparatrice
+    pdf.setDrawColor(r,g,b); pdf.setLineWidth(0.5); pdf.line(14,17,196,17);
+    // Titre
+    pdf.setFontSize(16); pdf.setTextColor(r,g,b); pdf.setFont('helvetica','bold');
+    pdf.text(d.stars+' '+d.label, 105, 28, {align:'center'});
+    // Consigne
+    pdf.setFontSize(12); pdf.setTextColor(30,30,30); pdf.setFont('helvetica','normal');
+    const lines = pdf.splitTextToSize(lv?.consigne||'', 175);
+    let y = 40;
+    lines.forEach(l => { pdf.text(l, 14, y); y+=7; });
+    y += 6;
+    // Lignes réponse
+    for(let i=0;i<5;i++){
+      pdf.setDrawColor(200,200,200); pdf.setLineWidth(0.3);
+      pdf.line(14, y, 196, y); y+=10;
+    }
+    // Corrigé si demandé
+    if(withCorr && lv?.correction){
+      y += 4;
+      pdf.setFontSize(11); pdf.setTextColor(45,106,79); pdf.setFont('helvetica','italic');
+      pdf.text('→ '+lv.correction, 14, y);
+    }
+  });
+  const name = 'fiche_3_niveaux.pdf';
+  const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+  if(isMobile){
+    const blob = pdf.output('blob');
+    const url = URL.createObjectURL(blob);
+    window.open(url,'_blank');
+  } else {
+    pdf.save(name);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   EXPORT PDF (fiche normale)
+══════════════════════════════════════════════ */
+async function generatePDF() {
+  if(!basket.length){ alert('Ajoutez au moins un exercice.'); return; }
+  const btn = document.getElementById('gen-pdf-btn');
+  btn.disabled = true; btn.textContent = '⏳ Génération…';
+  const {jsPDF} = window.jspdf;
+  const title   = document.getElementById('doc-title').value.trim()||"Fiche d'exercices";
+  const withHdr = document.getElementById('opt-hdr').checked;
+  const withLn  = document.getElementById('opt-lines').checked;
+  const withBar = document.getElementById('opt-bareme').checked;
+  const pts     = Math.max(1, Math.round(20/basket.length));
+
+  try {
+    const pdf = new jsPDF('p','mm','a4');
+    let y = 14;
+
+    // En-tête
+    if(withHdr){
+      pdf.setFontSize(10); pdf.setTextColor(60,60,60); pdf.setFont('helvetica','normal');
+      pdf.text('Nom : ___________________________', 14, y);
+      pdf.text('Date : ______________', 100, y);
+      pdf.text('Classe : _______', 160, y);
+      y += 10;
+    }
+
+    // Titre
+    pdf.setFontSize(16); pdf.setTextColor(91,63,191); pdf.setFont('helvetica','bold');
+    pdf.text(title, 105, y+6, {align:'center'});
+    pdf.setDrawColor(91,63,191); pdf.setLineWidth(0.4); pdf.line(14, y+10, 196, y+10);
+    y += 18;
+
+    if(withBar){
+      pdf.setFontSize(10); pdf.setTextColor(120,120,120); pdf.setFont('helvetica','normal');
+      pdf.text('Score : ……/20', 196, y, {align:'right'});
+      y += 7;
+    }
+
+    basket.forEach((exo, idx) => {
+      if(y > 250){ pdf.addPage(); y = 20; }
+      // Numéro + type
+      pdf.setFontSize(12); pdf.setTextColor(91,63,191); pdf.setFont('helvetica','bold');
+      pdf.text(`Exercice ${idx+1}`, 14, y);
+      pdf.setFontSize(10); pdf.setTextColor(140,140,140); pdf.setFont('helvetica','italic');
+      pdf.text(exo.type+(withBar?`  (${pts}pt${pts>1?'s':''})`:'')+'' , 50, y);
+      y += 7;
+
+      // Consigne
+      pdf.setFontSize(12); pdf.setTextColor(26,23,20); pdf.setFont('helvetica','normal');
+      const lines = pdf.splitTextToSize(exo.consigne, 175);
+      lines.forEach(l => {
+        if(y > 260){ pdf.addPage(); y = 20; }
+        pdf.text(l, 14, y); y += 6;
+      });
+      y += 4;
+
+      // Lignes réponse
+      if(withLn){
+        for(let i=0;i<3;i++){
+          if(y > 270){ pdf.addPage(); y = 20; }
+          pdf.setDrawColor(200,200,200); pdf.setLineWidth(0.25);
+          pdf.line(14, y, 196, y); y += 9;
+        }
+      }
+      y += 6;
+    });
+
+    const safe = title.replace(/[^a-zA-Z0-9\s-]/g,'').trim().replace(/\s+/g,'_')||'fiche';
+    const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+    if(isMobile){
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url,'_blank');
+    } else {
+      pdf.save(safe+'.pdf');
+    }
+  } catch(err) { alert('Erreur PDF : '+err.message); }
+  btn.disabled = false; btn.textContent = '⬇ PDF';
+}
+
+/* ══════════════════════════════════════════════
+   PWA
+══════════════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/exoscan/sw.js',{scope:'/exoscan/'})
+      .then(r=>console.log('SW:',r.scope)).catch(e=>console.log('SW:',e.message));
+  });
+}
+
+/* ══════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════ */
+function parseJSON(txt){
+  try{return JSON.parse(txt.replace(/```json|```/g,'').trim());}
+  catch{return{type:'Exercice',emoji:'✏️',consigne:txt.substring(0,300),numbers:[],correction:'',chapitre:'Autre'};}
+}
+function b64ToBlob(b64,mime){const s=atob(b64),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:mime});}
+function show(id){const e=document.getElementById(id);if(e)e.style.display='block';}
+function hide(id){const e=document.getElementById(id);if(e)e.style.display='none';}
+function showErr(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.style.display='block';}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 </script>
 </body>
 </html>

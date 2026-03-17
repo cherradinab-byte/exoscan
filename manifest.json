@@ -1,0 +1,19 @@
+{
+  "name": "ExoScan",
+  "short_name": "ExoScan",
+  "description": "Photo d'exercice → Fiche Word imprimable",
+  "start_url": "/exoscan/",
+  "scope": "/exoscan/",
+  "display": "standalone",
+  "background_color": "#F5F2EE",
+  "theme_color": "#5B3FBF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%235B3FBF'/%3E%3Ctext x='256' y='320' font-size='280' text-anchor='middle' fill='white'%3E📷%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
