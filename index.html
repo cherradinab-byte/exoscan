@@ -69,7 +69,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 .setup-box{max-height:92vh;overflow-y:auto}
 
 /* OVERLAY */
-#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .setup-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12);margin:auto}
 .setup-box h2{font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:8px}
 .sl{color:var(--ac);text-decoration:none;font-weight:500}.sl:hover{text-decoration:underline}
@@ -303,6 +303,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .bank-use-btn:hover{background:var(--acd)}
 
 @media(min-width:600px){#wrap{padding:0 22px 100px}.hdr h1{font-size:25px}}
+#overlay,#app{display:none}
 </style>
 </head>
 <body>
@@ -2878,8 +2879,7 @@ function b64ToBlob(b64,mime){const s=atob(b64),a=new Uint8Array(s.length);for(le
 function show(id){
   const e=document.getElementById(id);
   if(!e) return;
-  // Overlay needs display:flex, everything else display:block
-  e.style.display = id==='overlay' ? 'flex' : 'block';
+  e.style.display = (id==='overlay') ? 'flex' : 'block';
 }
 function hide(id){const e=document.getElementById(id);if(e)e.style.display='none';}
 function showErr(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.style.display='block';}}
