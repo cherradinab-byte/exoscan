@@ -66,11 +66,10 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 .mode-desc{font-size:11px;color:var(--mu)}
 .provider-detail{animation:fu .2s ease}
 .provider-detail input{margin-top:0}
-#overlay{overflow-y:auto;-webkit-overflow-scrolling:touch}
 .setup-box{max-height:92vh;overflow-y:auto}
 
 /* OVERLAY */
-#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+#overlay{position:fixed;inset:0;background:rgba(245,242,238,.97);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .setup-box{background:var(--sur);border-radius:var(--r);border:1px solid var(--bd);padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12);margin:auto}
 .setup-box h2{font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:8px}
 .sl{color:var(--ac);text-decoration:none;font-weight:500}.sl:hover{text-decoration:underline}
@@ -309,7 +308,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <body>
 
 <!-- SETUP OVERLAY -->
-<div id="overlay">
+<div id="overlay" style="display:none">
   <div class="setup-box">
     <h2>Bienvenue dans ExoScan</h2>
     <p style="font-size:14px;color:var(--mu);line-height:1.6;margin-bottom:16px">Choisissez votre mode de fonctionnement. Vous pouvez changer ou ajouter une clé à tout moment dans ⚙️ Réglages.</p>
@@ -960,15 +959,16 @@ let activeMode = localStorage.getItem(PROVSTORE)||'openrouter';
 window.addEventListener('DOMContentLoaded', () => {
   const key      = localStorage.getItem(KEYSTORE);
   const provider = localStorage.getItem(PROVSTORE);
-  // Show app if we have a key OR if offline mode was chosen
+  // Has key or chose offline → show app directly, overlay stays hidden (display:none in HTML)
   if (key || provider === 'offline') {
-    hide('overlay'); show('app');
+    show('app');
     initAI();
   } else {
-    // Always initialize mode display correctly on first load
+    // No setup done yet → show overlay (selectMode initializes the correct panel)
+    show('overlay');
     selectMode(provider || 'openrouter');
   }
-  // Enter key support for any key input
+  // Enter key support
   ['key-openrouter','key-anthropic','key-openai'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('keydown', e => { if(e.key==='Enter') saveKey(); });
@@ -1047,7 +1047,7 @@ function showSetup() {
   const el = document.getElementById(inputId);
   if(el && key) el.value = key;
   hide('key-err');
-  show('overlay');
+  document.getElementById('overlay').style.display = 'flex';
 }
 
 /* ══════════════════════════════════════════════
