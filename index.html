@@ -293,24 +293,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div id="app" style="display:none">
 
 <!-- AI OFFLINE LOADING SCREEN -->
-<div id="ai-loading-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:100;padding:20px;overflow-y:auto">
-  <div class="card" style="max-width:460px;margin:40px auto;text-align:center;padding:32px 24px">
-    <div style="width:56px;height:56px;background:var(--acl);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px">🔒</div>
-    <h2 style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:8px" id="ai-ls-title">Chargement de l'IA locale</h2>
-    <p style="font-size:13px;color:var(--mu);margin-bottom:16px;line-height:1.6" id="ai-ls-sub">Téléchargement en cours — connexion internet requise pour ce premier chargement uniquement (~400MB).</p>
-    <div style="background:var(--sur2);border-radius:8px;height:10px;overflow:hidden;margin-bottom:8px">
-      <div id="ai-ls-fill" style="height:100%;background:var(--ac);border-radius:8px;transition:width .3s;width:0%"></div>
+<div id="ai-loading-screen" style="display:none;position:fixed;top:0;left:0;right:0;background:var(--acl);border-bottom:2px solid var(--ac);z-index:100;padding:12px 16px;">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:13px;font-weight:600;color:var(--acd)" id="ai-ls-title">🔒 Chargement IA locale…</span>
+    <div style="flex:1;min-width:120px">
+      <div style="background:var(--ac);opacity:.25;border-radius:4px;height:6px;overflow:hidden">
+        <div id="ai-ls-fill" style="height:100%;background:var(--ac);opacity:1;border-radius:4px;transition:width .3s;width:0%"></div>
+      </div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:16px">
-      <span style="font-size:12px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%" id="ai-ls-file"></span>
-      <span style="font-size:13px;font-weight:600;color:var(--ac)" id="ai-ls-pct">0%</span>
-    </div>
-    <div style="background:var(--gnl);border:1px solid rgba(45,106,79,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--gn);text-align:left;line-height:1.8;margin-bottom:14px">
-      ✓ Ce téléchargement se fait <strong>une seule fois</strong><br>
-      ✓ Après ça, tout fonctionne <strong>100% hors-ligne</strong><br>
-      ✓ Restez connecté pendant ce chargement
-    </div>
-    <button class="btn btn-ghost btn-sm" onclick="skipLocalAI()">Passer en mode API →</button>
+    <span style="font-size:12px;font-weight:600;color:var(--acd)" id="ai-ls-pct">0%</span>
+    <span style="font-size:11px;color:var(--mu);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="ai-ls-file"></span>
+    <span id="ai-ls-sub" style="font-size:11px;color:var(--mu)">Vous pouvez naviguer librement pendant le chargement.</span>
+    <button class="btn btn-ghost btn-sm" onclick="skipLocalAI()" style="white-space:nowrap">Passer en mode API</button>
   </div>
 </div>
 
@@ -850,7 +844,7 @@ async function initAI(force=false) {
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
   initOCR();
   if (provider === 'offline') {
-    await initLocalAI(force);
+    initLocalAI(force); // non-blocking — user can navigate while model loads
     return;
   }
   const labels = {openrouter:'🌐 OpenRouter', anthropic:'🤖 Claude', openai:'✨ GPT-4o'};
@@ -2127,7 +2121,7 @@ function renderDico(search) {
     ).join('');
   }
 
-  const q = (search !== undefined ? search : document.getElementById('p9 input[type=search]')?.value || '').toLowerCase();
+  const q = (search !== undefined ? search : (document.getElementById('dico-search')?.value || '')).toLowerCase();
   let items = DICO_DATA;
   if (dicoFilter !== 'Tout') items = items.filter(d => d.cat === dicoFilter);
   if (q) items = items.filter(d => d.terme.toLowerCase().includes(q) || d.def.toLowerCase().includes(q));
