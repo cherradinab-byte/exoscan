@@ -1,4 +1,4 @@
-const CACHE = 'exoscan-v17';
+const CACHE = 'exoscan-v18';
 const ASSETS = [
   '/exoscan/',
   '/exoscan/index.html',
