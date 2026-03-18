@@ -293,20 +293,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div id="app" style="display:none">
 
 <!-- AI OFFLINE LOADING SCREEN -->
-<div id="ai-loading-screen" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--acl);border-bottom:2px solid var(--ac);z-index:49;padding:10px 14px;">
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <span style="font-size:13px;font-weight:600;color:var(--acd)" id="ai-ls-title">🔒 Chargement IA locale…</span>
-    <div style="flex:1;min-width:120px">
-      <div style="background:var(--ac);opacity:.25;border-radius:4px;height:6px;overflow:hidden">
-        <div id="ai-ls-fill" style="height:100%;background:var(--ac);opacity:1;border-radius:4px;transition:width .3s;width:0%"></div>
-      </div>
-    </div>
-    <span style="font-size:12px;font-weight:600;color:var(--acd)" id="ai-ls-pct">0%</span>
-    <span style="font-size:11px;color:var(--mu);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="ai-ls-file"></span>
-    <span id="ai-ls-sub" style="font-size:11px;color:var(--mu)">Vous pouvez naviguer librement pendant le chargement.</span>
-    <button class="btn btn-ghost btn-sm" onclick="skipLocalAI()" style="white-space:nowrap">Passer en mode API</button>
-  </div>
-</div>
+
 
 <div id="wrap">
 
@@ -337,6 +324,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <button class="key-btn" onclick="showSetup()">⚙</button>
     </div>
   </div>
+<div id="ai-loading-screen" style="display:none;background:var(--acl);border:1px solid var(--ac);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:13px;font-weight:600;color:var(--acd)" id="ai-ls-title">🔒 Chargement IA…</span>
+    <div style="flex:1;min-width:80px;background:rgba(91,63,191,.15);border-radius:4px;height:6px;overflow:hidden">
+      <div id="ai-ls-fill" style="height:100%;background:var(--ac);border-radius:4px;transition:width .3s;width:0%"></div>
+    </div>
+    <span style="font-size:12px;font-weight:600;color:var(--acd);min-width:36px;text-align:right" id="ai-ls-pct">0%</span>
+    <span style="font-size:11px;color:var(--mu);flex-basis:100%" id="ai-ls-sub">Vous pouvez naviguer librement pendant le chargement.</span>
+    <span style="font-size:11px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%" id="ai-ls-file"></span>
+    <button class="btn btn-ghost btn-sm" onclick="skipLocalAI()" style="margin-left:auto;white-space:nowrap;flex-shrink:0">Passer en mode API</button>
+  </div>
+</div>
 
   <!-- AI LOADING BAR -->
   <div id="ai-bar">
@@ -887,16 +886,7 @@ async function initLocalAI(force=false) {
   const isOffline = localStorage.getItem(PROVSTORE) === 'offline';
   const ls  = document.getElementById('ai-loading-screen');
   const bar = document.getElementById('ai-bar');
-  if (isOffline && ls) {
-    ls.style.display = 'block';
-    // Position banner below the header
-    const hdr = document.querySelector('.hdr');
-    const hdrH = hdr ? hdr.getBoundingClientRect().height + hdr.offsetTop : 56;
-    ls.style.top = hdrH + 'px';
-    // Push wrap content down so banner doesn't overlap
-    const wrap = document.getElementById('wrap');
-    if (wrap) wrap.style.paddingTop = '60px';
-  }
+  if (isOffline && ls) ls.style.display = 'block';
 
   const upd = (id, fn) => { const e = document.getElementById(id); if(e) fn(e); };
   const setLS = (title, sub) => {
@@ -920,14 +910,15 @@ async function initLocalAI(force=false) {
     updateAIPill('loading', '⏳ Chargement…');
 
     const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
-    env.allowLocalModels = false;
+    env.allowLocalModels  = false;
+    env.allowRemoteModels = true;
 
     // SmolVLM n'est pas supporté dans transformers.js 3.x (pipeline image-text-to-text absent)
     // Mode offline: OCR (Tesseract, déjà chargé) + Phi-3 Mini pour analyser le texte extrait
-    setLS('Chargement Phi-3 Mini (~230MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>Le texte des photos sera extrait par OCR, puis analysé par Phi-3.');
-    upd('ai-bar-label', e => e.textContent = 'Phi-3 Mini…');
+    setLS('Chargement IA locale (~270MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>OCR extrait le texte, SmolLM2 l\'analyse.');
+    upd('ai-bar-label', e => e.textContent = 'SmolLM2-135M…');
     // Phi-3-mini trop lourd pour iPad (>2GB mémoire). Utiliser Qwen2.5-0.5B (q4 ~400MB)
-    localLLM = await pipeline('text-generation', 'Xenova/Qwen2.5-0.5B-Instruct', {
+    localLLM = await pipeline('text-generation', 'onnx-community/SmolLM2-135M-Instruct', {
       dtype: 'q4',
       device: 'wasm',
       progress_callback: onProgress
@@ -936,10 +927,7 @@ async function initLocalAI(force=false) {
     vlmReady = false;
 
     if (bar) bar.style.display = 'none';
-    if (ls) { ls.style.display = 'none'; }
-    // Restore wrap padding
-    const wrap2 = document.getElementById('wrap');
-    if (wrap2) wrap2.style.paddingTop = '';
+    if (ls) ls.style.display = 'none';
     updateAIPill('local', device==='webgpu' ? '🟢 WebGPU' : '🟡 WASM');
     setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne hors-ligne.');
   } catch(e) {
