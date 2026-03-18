@@ -480,6 +480,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <button class="btn btn-ghost btn-sm" onclick="generatePDF()">⬇ PDF</button>
     </div>
   </div>
+</div>
 
 <div id="p4" style="display:none">
     <div class="card">
@@ -536,8 +537,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
 
-  <!-- PAGE 6 : DICO -->
-  <div 
+  <!-- PAGE 6 : GEOMETRIE -->
 <div id="p6" style="display:none">
   <div class="card">
     <div class="card-title">Géométrie <span id="geo-add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
@@ -1124,15 +1124,16 @@ async function analyzeImage(b64, mime) {
       result = parseJSON(out[0]?.generated_text?.at(-1)?.content || '');
     }
 
-    if (!result && ocrText && llmReady && localLLM) {
-      if (lmod) lmod.textContent = '🔒 OCR + Phi-3…';
-      const out = await localLLM([
-        {role:'system',content:'Analyse un exercice de maths primaire. Réponds en JSON uniquement.'},
-        {role:'user',content:'Texte : '+ocrText+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[{"label":"...","value":0}],"correction":"...","chapitre":"..."}'}
-      ], {max_new_tokens:400, temperature:0.2});
-      const rawGen = out[0]?.generated_text;
-      const rawTxt = Array.isArray(rawGen) ? rawGen.at(-1)?.content : rawGen;
-      result = parseJSON(rawTxt||'');
+    if (!result && llmReady && localLLM) {
+      if (lmod) lmod.textContent = '🔒 Analyse Phi-3…';
+      const ocrCtx = ocrText ? 'Texte de l image: ' + ocrText : 'Exercice de maths primaire (image).';
+      const phi3Out = await localLLM([
+        {role:'system', content:'Analyse cet exercice de maths primaire belge. Reponds UNIQUEMENT en JSON valide.'},
+        {role:'user', content:ocrCtx+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[{"label":"...","value":0}],"correction":"...","chapitre":"..."}'}
+      ], {max_new_tokens:400, temperature:0.3});
+      const rawGen = phi3Out[0]?.generated_text;
+      const rawTxt = Array.isArray(rawGen) ? rawGen.at(-1)?.content : (typeof rawGen === 'string' ? rawGen : '');
+      result = parseJSON(rawTxt || '');
     }
 
     if (ldg) ldg.style.display = 'none';
@@ -1140,8 +1141,7 @@ async function analyzeImage(b64, mime) {
     if (!result) {
       const provider = localStorage.getItem(PROVSTORE)||'openrouter';
       if (provider === 'offline') {
-        const ocrNote = ocrText ? 'OCR a extrait : "'+ocrText.slice(0,100)+'…"' : 'Aucun texte extrait par OCR.';
-        throw new Error('Mode hors-ligne : '+ocrNote+' Phi-3 ne peut analyser que du texte — les images visuelles (dés, figures) ne sont pas supportées sans API. Vérifiez que Phi-3 est chargé dans ⚙️ Réglages.');
+        throw new Error('Analyse impossible. Vérifiez dans ⚙️ Réglages que Phi-3 est chargé (pastille verte). Si oui, rechargez l\'IA locale.');
       }
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
