@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#3D2B8F"/>
+  <!-- Document -->
+  <rect x="100" y="80" width="220" height="280" rx="20" fill="white" opacity="0.9"/>
+  <rect x="124" y="130" width="100" height="18" rx="9" fill="#3D2B8F" opacity="0.45"/>
+  <rect x="124" y="164" width="140" height="14" rx="7" fill="#3D2B8F" opacity="0.35"/>
+  <rect x="124" y="194" width="110" height="14" rx="7" fill="#3D2B8F" opacity="0.35"/>
+  <rect x="124" y="224" width="130" height="14" rx="7" fill="#3D2B8F" opacity="0.35"/>
+  <rect x="124" y="254" width="90"  height="14" rx="7" fill="#3D2B8F" opacity="0.35"/>
+  <!-- Camera lens -->
+  <circle cx="352" cy="360" r="110" fill="#E8A838"/>
+  <circle cx="352" cy="360" r="80"  fill="#3D2B8F"/>
+  <circle cx="352" cy="360" r="54"  fill="none" stroke="#E8A838" stroke-width="14"/>
+  <circle cx="352" cy="360" r="20"  fill="#E8A838"/>
+  <!-- Aperture blades -->
+  <line x1="352" y1="286" x2="352" y2="310" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="416" y1="296" x2="404" y2="316" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="434" y1="360" x2="410" y2="360" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="352" y1="434" x2="352" y2="410" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="288" y1="424" x2="300" y2="404" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+  <line x1="270" y1="360" x2="294" y2="360" stroke="#E8A838" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+</svg>

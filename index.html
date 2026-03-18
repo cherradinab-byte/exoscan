@@ -293,7 +293,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div id="app" style="display:none">
 
 <!-- AI OFFLINE LOADING SCREEN -->
-<div id="ai-loading-screen" style="display:none;position:fixed;top:0;left:0;right:0;background:var(--acl);border-bottom:2px solid var(--ac);z-index:100;padding:12px 16px;">
+<div id="ai-loading-screen" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--acl);border-bottom:2px solid var(--ac);z-index:49;padding:10px 14px;">
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <span style="font-size:13px;font-weight:600;color:var(--acd)" id="ai-ls-title">🔒 Chargement IA locale…</span>
     <div style="flex:1;min-width:120px">
@@ -312,9 +312,25 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
   <!-- HEADER -->
   <div class="hdr">
-    <div>
-      <span style="font-family:'Lora',serif;font-size:22px;font-weight:600">ExoScan</span>
-      <span class="hdr-tag">Maths primaire</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;border-radius:10px">
+        <rect width="36" height="36" rx="9" fill="#3D2B8F"/>
+        <!-- Document/page -->
+        <rect x="7" y="5" width="16" height="21" rx="2" fill="white" opacity="0.15"/>
+        <rect x="7" y="5" width="14" height="19" rx="2" fill="white" opacity="0.9"/>
+        <rect x="9" y="9" width="8" height="1.5" rx="0.75" fill="#3D2B8F" opacity="0.5"/>
+        <rect x="9" y="12" width="10" height="1.5" rx="0.75" fill="#3D2B8F" opacity="0.5"/>
+        <rect x="9" y="15" width="7" height="1.5" rx="0.75" fill="#3D2B8F" opacity="0.5"/>
+        <!-- Camera lens badge -->
+        <circle cx="25" cy="26" r="8" fill="#E8A838"/>
+        <circle cx="25" cy="26" r="5.5" fill="#3D2B8F"/>
+        <circle cx="25" cy="26" r="3.5" fill="none" stroke="#E8A838" stroke-width="1.2"/>
+        <circle cx="25" cy="26" r="1.2" fill="#E8A838"/>
+      </svg>
+      <div>
+        <div style="font-family:'Lora',serif;font-size:18px;font-weight:600;line-height:1.1">ExoScan Pro</div>
+        <div style="font-size:10px;color:var(--mu);letter-spacing:.04em;font-weight:500">MATHS PRIMAIRE FWB</div>
+      </div>
     </div>
     <div class="hdr-right">
       <span class="ai-pill" id="ai-status" title="Mode IA actif">⚙ Init…</span>
@@ -871,7 +887,16 @@ async function initLocalAI(force=false) {
   const isOffline = localStorage.getItem(PROVSTORE) === 'offline';
   const ls  = document.getElementById('ai-loading-screen');
   const bar = document.getElementById('ai-bar');
-  if (isOffline && ls) ls.style.display = 'block';
+  if (isOffline && ls) {
+    ls.style.display = 'block';
+    // Position banner below the header
+    const hdr = document.querySelector('.hdr');
+    const hdrH = hdr ? hdr.getBoundingClientRect().height + hdr.offsetTop : 56;
+    ls.style.top = hdrH + 'px';
+    // Push wrap content down so banner doesn't overlap
+    const wrap = document.getElementById('wrap');
+    if (wrap) wrap.style.paddingTop = '60px';
+  }
 
   const upd = (id, fn) => { const e = document.getElementById(id); if(e) fn(e); };
   const setLS = (title, sub) => {
@@ -901,16 +926,20 @@ async function initLocalAI(force=false) {
     // Mode offline: OCR (Tesseract, déjà chargé) + Phi-3 Mini pour analyser le texte extrait
     setLS('Chargement Phi-3 Mini (~230MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>Le texte des photos sera extrait par OCR, puis analysé par Phi-3.');
     upd('ai-bar-label', e => e.textContent = 'Phi-3 Mini…');
-    localLLM = await pipeline('text-generation', 'Xenova/Phi-3-mini-4k-instruct', {
+    // Phi-3-mini trop lourd pour iPad (>2GB mémoire). Utiliser Qwen2.5-0.5B (q4 ~400MB)
+    localLLM = await pipeline('text-generation', 'Xenova/Qwen2.5-0.5B-Instruct', {
       dtype: 'q4',
-      device: 'wasm', // WebGPU instable pour text-generation, WASM plus fiable
+      device: 'wasm',
       progress_callback: onProgress
     });
     llmReady = true;
     vlmReady = false;
 
     if (bar) bar.style.display = 'none';
-    if (ls)  ls.style.display  = 'none';
+    if (ls) { ls.style.display = 'none'; }
+    // Restore wrap padding
+    const wrap2 = document.getElementById('wrap');
+    if (wrap2) wrap2.style.paddingTop = '';
     updateAIPill('local', device==='webgpu' ? '🟢 WebGPU' : '🟡 WASM');
     setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne hors-ligne.');
   } catch(e) {
@@ -1058,7 +1087,10 @@ const SCAN_PROMPT = `Tu es un expert en maths primaire belge (FWB). Analyse cet 
 - consigne en français, style manuel belge (Tip Top, Maths et Moustique)
 - numbers = toutes les valeurs numériques modifiables
 - correction = réponse complète
-- chapitre = un parmi : Numération, Addition, Soustraction, Multiplication, Division, Fractions, Géométrie, Mesures, Problèmes`;
+- chapitre = un parmi : Numération, Addition, Soustraction, Multiplication, Division, Fractions, Géométrie, Mesures, Problèmes
+- Si l'image vient d'un manuel scolaire (exercices numérotés, figures, tableaux) : extrait TOUS les exercices visibles dans "consigne"
+- Traduis tout en français, adapte les unités (miles→km, lbs→kg)
+- numbers = valeurs numériques modifiables dans l'exercice`;
 
 function handleFile(e) {
   const file = e.target.files[0];
@@ -1635,8 +1667,9 @@ async function generatePDF() {
         const mmMax = 80, ratio = Math.min(mmMax/vw, 60/vh);
         const mmW = Math.round(vw * ratio);
         const mmH = Math.round(vh * ratio);
-        const pxW = mmW * 4; // 4px/mm approx
-        const pxH = mmH * 4;
+        const dpr  = Math.max(window.devicePixelRatio || 1, 4); // min 4x for sharp SVG→PDF
+        const pxW  = Math.round(mmW * 3.78 * dpr); // 3.78px/mm at 96dpi × dpr
+        const pxH  = Math.round(mmH * 3.78 * dpr);
         if (y + mmH > 270) { doc.addPage(); y = 15; }
         const png = await svgToPng(exo.svgData, pxW, pxH);
         if (png) { doc.addImage(png, 'PNG', 15, y, mmW, mmH); y += mmH + 5; }
@@ -1672,15 +1705,37 @@ function exportVariantsWord() {
 }
 
 function appendDlLink(blob, mime, fname, container) {
+  // Remove previous links for same filename
+  (container || document.body).querySelectorAll('.dl-link').forEach(el => {
+    if (el.getAttribute('data-fname') === fname) el.remove();
+  });
   const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href = url; a.download = fname; a.className = 'btn btn-primary btn-sm dl-link';
-  a.textContent = '⬇ Télécharger '+fname;
-  a.style.display = 'inline-block'; a.style.marginTop = '10px';
-  if (container) container.appendChild(a);
-  else document.body.appendChild(a);
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const a = document.createElement('a');
+  a.href      = url;
+  a.download  = fname;
+  a.target    = '_blank';
+  a.rel       = 'noopener';
+  a.setAttribute('data-fname', fname);
+  a.className = 'btn btn-primary btn-sm dl-link';
+  a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-top:10px;';
+  if (isIOS) {
+    // iOS: show a prominent button — user taps to open, then uses share sheet
+    a.textContent = '⬇ Ouvrir ' + fname;
+    a.title = 'Tap → ouvre le fichier → icône Partager → Enregistrer dans Fichiers';
+    if (container) container.appendChild(a);
+    else (document.getElementById('export-btns') || document.body).appendChild(a);
+    // Auto-open in new tab
+    setTimeout(() => window.open(url, '_blank'), 100);
+  } else {
+    a.textContent = '⬇ ' + fname;
+    if (container) container.appendChild(a);
+    else (document.getElementById('export-btns') || document.body).appendChild(a);
+    try { a.click(); } catch(e) {}
+  }
+  // Keep URL alive 2 min
+  setTimeout(() => { try { URL.revokeObjectURL(url); } catch(e){} }, 120000);
 }
 
 function b64toFile(b64, mime, fname) {
