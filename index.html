@@ -373,7 +373,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <!-- Basket mini -->
     <div id="bmini" style="display:none" class="card">
-      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter →</button></span></div>
+      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(10)">Exporter →</button></span></div>
       <div id="bmini-list"></div>
       <div class="arow"><button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button></div>
     </div>
@@ -696,7 +696,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <button class="bnav-btn active" id="bn0" onclick="goTab(0)"><span class="ico">📷</span>Scan</button>
   <button class="bnav-btn" id="bn1" onclick="goTab(1)"><span class="ico">✨</span>Créer</button>
   <button class="bnav-btn" id="bn2" onclick="goTab(2)"><span class="ico">🗂</span>Biblio</button>
-  <button class="bnav-btn" id="bn3" onclick="goTab(3)"><span class="ico">📄</span>Export</button>
   <button class="bnav-btn" id="bn4" onclick="goTab(4)"><span class="ico">✅</span>Corr.</button>
   <button class="bnav-btn" id="bn5" onclick="goTab(5)"><span class="ico">📅</span>Plan</button>
   <button class="bnav-btn" id="bn6" onclick="goTab(6)"><span class="ico">📐</span>Géom.</button>
@@ -704,6 +703,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <button class="bnav-btn" id="bn8" onclick="goTab(8)"><span class="ico">✖</span>Tables</button>
   <button class="bnav-btn" id="bn9" onclick="goTab(9)"><span class="ico">📖</span>Dico</button>
   <button class="bnav-btn" id="bn10" onclick="goTab(10)"><span class="ico">⚙</span>Régl.</button>
+  <button class="bnav-btn" id="bn3" onclick="goTab(3)"><span class="ico">📄</span>Export</button>
 </div>
 
 </div><!-- /app -->
@@ -740,6 +740,29 @@ function show(id){
   const e = document.getElementById(id);
   if (!e) return;
   e.style.display = (id === 'overlay') ? 'flex' : 'block';
+}
+function showToast(msg, type) {
+  // type: 'ok' | 'err' | 'info' (default info)
+  const colors = {ok:'var(--gn)', err:'var(--rd)', info:'var(--ac)'};
+  const icons  = {ok:'✅', err:'❌', info:'ℹ️'};
+  const t = type || 'info';
+  let el = document.getElementById('app-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'app-toast';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+      'background:var(--sur);border:1px solid var(--bd);border-radius:12px;' +
+      'padding:12px 20px;font-size:13px;font-weight:500;z-index:999;' +
+      'box-shadow:0 4px 20px var(--sh);max-width:320px;text-align:center;' +
+      'transition:opacity .3s;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = (icons[t]||'ℹ️') + ' ' + msg;
+  el.style.color = colors[t] || 'var(--tx)';
+  el.style.borderColor = colors[t] || 'var(--bd)';
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '0'; }, t === 'err' ? 4000 : 2500);
 }
 function hide(id){ const e = document.getElementById(id); if(e) e.style.display='none'; }
 function showErr(id,msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
@@ -825,20 +848,27 @@ function closeSetup() {
 /* ══════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════ */
+// Nav button → page ID mapping (Export moved to last position)
+const NAV_MAP = [0,1,2,4,5,6,7,8,9,10,3]; // btn index → page index
+
 function goTab(n) {
+  const pageIdx = NAV_MAP[n] !== undefined ? NAV_MAP[n] : n;
   for (let i = 0; i < 11; i++) {
-    const p  = document.getElementById('p'+i);
+    const p  = document.getElementById('p'+NAV_MAP[i]);
     const bn = document.getElementById('bn'+i);
     if (p)  p.style.display  = i === n ? 'block' : 'none';
     if (bn) bn.className     = 'bnav-btn' + (i === n ? ' active' : '');
   }
-  if (n === 2) renderLib();
-  if (n === 3) { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; const lc = document.getElementById('levels-card'); }
-  if (n === 7) renderBank();
-  if (n === 8) initTables();
-  if (n === 9) renderDico();
+  if (n === 2)  renderLib();
+  if (n === 10) { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; }
+  if (n === 6)  renderBank();
+  if (n === 7)  initTables();
+  if (n === 8)  renderDico();
   window.scrollTo(0, 0);
 }
+
+// Helper: navigate to Export tab (button index 10)
+function goExport() { goTab(10); }
 
 /* ══════════════════════════════════════════════
    AI INIT
@@ -848,7 +878,7 @@ async function initAI(force=false) {
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
   initOCR();
   if (provider === 'offline') {
-    await initLocalAI(force);
+    initLocalAI(force); // non-blocking — app remains usable while model loads
     return;
   }
   const labels = {openrouter:'🌐 OpenRouter', anthropic:'🤖 Claude', openai:'✨ GPT-4o'};
@@ -875,7 +905,8 @@ async function initLocalAI(force=false) {
   const isOffline = localStorage.getItem(PROVSTORE) === 'offline';
   const ls  = document.getElementById('ai-loading-screen');
   const bar = document.getElementById('ai-bar');
-  if (isOffline && ls) ls.style.display = 'block';
+  // Don't block the app — show a subtle loading bar in p10 settings
+  // User can navigate freely while model loads
 
   const upd = (id, fn) => { const e = document.getElementById(id); if(e) fn(e); };
   const setLS = (title, sub) => {
@@ -899,6 +930,12 @@ async function initLocalAI(force=false) {
     try { if (navigator.gpu) { const a = await navigator.gpu.requestAdapter(); if(a) device = 'webgpu'; } } catch(e) {}
     if (device === 'wasm' && isOffline) setLS(null, 'WebGPU non disponible sur ce navigateur — mode WASM (~30-40s/analyse).<br>Pour de meilleures performances, utilisez Chrome ou Brave.');
     updateAIPill('loading', device === 'webgpu' ? '⏳ WebGPU…' : '⏳ WASM…');
+  // Show subtle loading bar in ai-bar
+  const abar = document.getElementById('ai-bar');
+  const albl = document.getElementById('ai-bar-label');
+  if (abar) abar.style.display = 'block';
+  if (albl) albl.textContent = 'Chargement Phi-3 Mini en arrière-plan…';
+  showToast('Chargement IA locale démarré (~230MB). Naviguez librement.', 'info');
 
     const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
     env.allowLocalModels = false;
@@ -919,6 +956,7 @@ async function initLocalAI(force=false) {
     if (ls)  ls.style.display  = 'none';
     updateAIPill('local', device==='webgpu' ? '🟢 WebGPU' : '🟡 WASM');
     setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne hors-ligne.');
+    showToast('IA locale prête ! Vous pouvez scanner des exercices.', 'ok');
   } catch(e) {
     if (bar) bar.style.display = 'none';
     if (ls && isOffline) {
@@ -1141,7 +1179,11 @@ async function analyzeImage(b64, mime) {
     if (!result) {
       const provider = localStorage.getItem(PROVSTORE)||'openrouter';
       if (provider === 'offline') {
-        throw new Error('Analyse impossible. Vérifiez dans ⚙️ Réglages que Phi-3 est chargé (pastille verte). Si oui, rechargez l\'IA locale.');
+        if (!llmReady) {
+          showToast('IA locale pas encore prête. Patientez ou allez dans ⚙️ Réglages.', 'err');
+          throw new Error('Phi-3 en cours de chargement — attendez la pastille verte dans ⚙️ Réglages, ou choisissez un mode API.');
+        }
+        throw new Error('Analyse impossible en mode hors-ligne. Assurez-vous que la photo contient du texte lisible.');
       }
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
@@ -1221,7 +1263,7 @@ async function adaptExo(type) {
       if (cons) cons.value = exo.consigne;
       renderNumsIn(exo.numbers || []);
     }
-  } catch(e) { alert('Erreur adaptation : '+e.message); }
+  } catch(e) { showToast('Erreur adaptation : '+e.message, 'err'); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1293,7 +1335,7 @@ Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices num�
       res.dataset.exo = JSON.stringify(exo);
     }
   } catch(e) {
-    alert('Erreur génération : '+e.message);
+    showToast('Erreur génération : '+e.message, 'err');
   } finally {
     if (ldg) ldg.style.display = 'none';
   }
@@ -1332,7 +1374,7 @@ Génère 3 versions adaptées. Réponds en JSON :
     const data = parseJSON(txt);
     if (data) renderLevelsCard(data, consigne, chapitre, type);
   } catch(e) {
-    alert('Erreur 3 niveaux : '+e.message);
+    showToast('Erreur 3 niveaux : '+e.message, 'err');
   } finally {
     if (ldg) ldg.style.display = 'none';
   }
@@ -1430,6 +1472,9 @@ async function exportLevelsPDF() {
 ══════════════════════════════════════════════ */
 function saveToLib(exo) {
   let lib = JSON.parse(localStorage.getItem(LIBSTORE) || '[]');
+  // Deduplication: skip if same consigne already exists (trim whitespace)
+  const norm = (s) => (s||'').trim().toLowerCase().slice(0, 80);
+  if (lib.some(e => norm(e.consigne) === norm(exo.consigne))) return;
   exo.id = Date.now();
   lib.unshift(exo);
   if (lib.length > 200) lib = lib.slice(0, 200);
@@ -1502,10 +1547,10 @@ function clearLib() {
 ══════════════════════════════════════════════ */
 function refreshBmini() {
   const bm = document.getElementById('bmini');
-  const bc = document.getElementById('bmini-count');
+  const bc = document.getElementById('bcount');
   if (bc) bc.textContent = basket.length;
   if (bm) bm.style.display = basket.length > 0 ? 'block' : 'none';
-  const bl = document.getElementById('basket-list');
+  const bl = document.getElementById('bmini-list');
   if (bl) bl.innerHTML = basket.map((e,i) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
       <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(e.consigne.slice(0,40))}${e.consigne.length>40?'…':''}</span>
@@ -1537,7 +1582,8 @@ function resetExport() {
 }
 
 async function generateWord() {
-  if (basket.length === 0) { alert('Fiche vide !'); return; }
+  if (basket.length === 0) { showToast('Fiche vide — ajoutez des exercices depuis Scan ou Créer.', 'err'); return; }
+  if (typeof docx === 'undefined' || !docx.Packer) { showToast('Bibliothèque Word non chargée — attendez quelques secondes', 'err'); return; }
   const {Document,Paragraph,TextRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType,Packer} = docx;
 
   const withHead = document.getElementById('opt-header')?.checked;
@@ -1570,13 +1616,19 @@ async function generateWord() {
     ch.push(new Paragraph({text:'', spacing:{after:40}}));
   });
 
-  const doc = new Document({sections:[{children:ch}]});
-  const blob = await Packer.toBlob(doc);
-  appendDlLink(blob, MIME_DOCX, 'fiche-maths.docx', document.getElementById('export-btns'));
+  try {
+    const doc = new Document({sections:[{children:ch}]});
+    const blob = await Packer.toBlob(doc);
+    appendDlLink(blob, MIME_DOCX, 'fiche-maths.docx', document.getElementById('export-btns'));
+    showToast('✅ Fiche Word téléchargée !', 'ok');
+  } catch(e) {
+    showToast('❌ Erreur Word : ' + e.message, 'err');
+    console.error('generateWord error:', e);
+  }
 }
 
 async function generatePDF() {
-  if (basket.length === 0) { alert('Fiche vide !'); return; }
+  if (basket.length === 0) { showToast('Fiche vide — ajoutez des exercices depuis Scan ou Créer.', 'err'); return; }
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({unit:'mm', format:'a4'});
   const withHead = document.getElementById('opt-header')?.checked;
@@ -1648,8 +1700,8 @@ async function generatePDF() {
         const mmMax = 80, ratio = Math.min(mmMax/vw, 60/vh);
         const mmW = Math.round(vw * ratio);
         const mmH = Math.round(vh * ratio);
-        const pxW = mmW * 4; // 4px/mm approx
-        const pxH = mmH * 4;
+        const pxW = mmW * 10; // 10px/mm for sharp rendering
+        const pxH = mmH * 10;
         if (y + mmH > 270) { doc.addPage(); y = 15; }
         const png = await svgToPng(exo.svgData, pxW, pxH);
         if (png) { doc.addImage(png, 'PNG', 15, y, mmW, mmH); y += mmH + 5; }
@@ -1674,14 +1726,15 @@ async function generatePDF() {
     y += 5;
   }
   doc.save('fiche-maths.pdf');
+  showToast('Fiche PDF générée ✓', 'ok');
 }
 
 function generateVariants() {
-  alert('Fonctionnalité variantes : ajout prochain.');
+  showToast('Variantes anti-copie : fonctionnalité à venir.', 'info');
 }
 
 function exportVariantsWord() {
-  alert('Export variantes Word : ajout prochain.');
+  showToast('Export variantes : fonctionnalité à venir.', 'info');
 }
 
 function appendDlLink(blob, mime, fname, container) {
@@ -1712,7 +1765,7 @@ function loadCorrImg(which) {
 async function runCorrection() {
   const inp1 = document.getElementById('corr-inp-1');
   const inp2 = document.getElementById('corr-inp-2');
-  if (!inp1?.files[0] || !inp2?.files[0]) { alert('Ajoutez les deux photos.'); return; }
+  if (!inp1?.files[0] || !inp2?.files[0]) { showToast('Ajoutez les deux photos (corrigé + copie).', 'err'); return; }
 
   const toB64 = file => new Promise((res,rej) => {
     const r = new FileReader();
@@ -1763,7 +1816,7 @@ Réponds en JSON : {"score":"X/Y","items":[{"q":"Question 1","ok":true,"note":".
       ).join('');
       document.getElementById('corr-feedback').textContent = res.feedback || '';
     }
-  } catch(e) { alert('Erreur correction : '+e.message); }
+  } catch(e) { showToast('Erreur correction : '+e.message, 'err'); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1813,7 +1866,7 @@ Réponds en JSON : {"titre":"...","seances":[{"num":1,"titre":"...","duree":"50m
         </div>`
       ).join('');
     }
-  } catch(e) { alert('Erreur planning : '+e.message); }
+  } catch(e) { showToast('Erreur planning : '+e.message, 'err'); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1886,7 +1939,7 @@ function addGeoToFiche() {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
-  alert('Figure ajoutée à la fiche !');
+  showToast('Figure ajoutée à la fiche !', 'ok');
 }
 
 /* ══════════════════════════════════════════════
@@ -2171,7 +2224,7 @@ function saveGhToken() {
 
 async function syncSave() {
   const token  = localStorage.getItem(GHSTORE);
-  if (!token) { alert('Enregistrez d\'abord votre token GitHub.'); return; }
+  if (!token) { showToast('Enregistrez d\'abord votre token GitHub.', 'err'); return; }
   const lib    = localStorage.getItem(LIBSTORE) || '[]';
   const gistId = localStorage.getItem(GISTSTORE);
   setSyncDot('pulse','Sauvegarde…');
@@ -2189,7 +2242,7 @@ async function syncSave() {
 async function syncLoad() {
   const token  = localStorage.getItem(GHSTORE);
   const gistId = localStorage.getItem(GISTSTORE);
-  if (!token || !gistId) { alert('Token ou Gist ID manquant.'); return; }
+  if (!token || !gistId) { showToast('Token ou Gist ID manquant.', 'err'); return; }
   setSyncDot('pulse','Restauration…');
   try {
     const r = await fetch('https://api.github.com/gists/'+gistId, {headers:{'Authorization':'Bearer '+token}});
@@ -2246,54 +2299,4 @@ function bankSetFilter(key, val, el) {
 
 </script>
 </body>
-</html<div id="p3" style="display:none">
-  <div class="card">
-    <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
-    <div id="fiche-preview"></div>
-    <div class="arow" style="margin-top:8px">
-      <button class="btn btn-ghost btn-sm" onclick="goTab(0)">+ Scanner</button>
-      <button class="btn btn-ghost btn-sm" onclick="goTab(1)">+ Créer</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--rd)" onclick="clearBasket()">Vider</button>
-    </div>
-  </div>
-
-  <!-- 3 niveaux -->
-  <div class="card" id="levels-card" style="display:none">
-    <div class="card-title">Fiches 3 niveaux</div>
-    <div id="levels-ldg" class="ldg" style="display:none"><div class="spin"></div><span>Génération…</span></div>
-    <div id="levels-body"></div>
-    <div id="levels-export-row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="exportLevelsWord()">⬇ Word 3 niveaux</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportLevelsPDF()">⬇ PDF 3 niveaux</button>
-    </div>
-  </div>
-
-  <!-- Variantes -->
-  <div class="card" id="var-card" style="display:none">
-    <div class="card-title">Variantes anti-copie</div>
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-      <label class="flbl" style="margin:0;white-space:nowrap">Versions :</label>
-      <select id="var-count" style="width:100px"><option value="2">A/B</option><option value="3">A/B/C</option><option value="4" selected>A/B/C/D</option></select>
-      <button class="btn btn-p btn-sm" onclick="generateVariants()">Générer</button>
-    </div>
-    <div id="var-result"></div>
-  </div>
-
-  <!-- Export options -->
-  <div class="card">
-    <div class="card-title">Options d'export</div>
-    <label class="flbl">Titre de la fiche</label>
-    <input type="text" id="fiche-title" class="inp" placeholder="Fiche de mathématiques" style="margin-bottom:12px">
-    <label class="xopt"><input type="checkbox" id="opt-header" checked><div class="xopt-txt"><strong>En-tête élève</strong><span>Nom · Date · Classe</span></div></label>
-    <label class="xopt"><input type="checkbox" id="opt-lines" checked><div class="xopt-txt"><strong>Lignes de réponse</strong><span>Pointillés sous chaque exercice</span></div></label>
-    <label class="xopt"><input type="checkbox" id="opt-bar"><div class="xopt-txt"><strong>Barème</strong><span>Points par exercice /20</span></div></label>
-    <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>Avec les réponses</span></div></label>
-    <label class="xopt"><input type="checkbox" id="opt-belge"><div class="xopt-txt"><strong>Style manuel belge</strong><span>Mise en page Maths et Moustique</span></div></label>
-    <div id="export-btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-g btn-sm" onclick="generateWord()">⬇ Télécharger Word (.docx)</button>
-      <button class="btn btn-ghost btn-sm" id="gen-pdf-btn" onclick="generatePDF()">⬇ Télécharger PDF</button>
-    </div>
-  </div>
-</div>
-
->
+</html>
