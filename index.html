@@ -915,11 +915,10 @@ async function initLocalAI(force=false) {
 
     // SmolVLM n'est pas supporté dans transformers.js 3.x (pipeline image-text-to-text absent)
     // Mode offline: OCR (Tesseract, déjà chargé) + Phi-3 Mini pour analyser le texte extrait
-    setLS('Chargement IA locale (~270MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>OCR extrait le texte, SmolLM2 l\'analyse.');
-    upd('ai-bar-label', e => e.textContent = 'SmolLM2-135M…');
-    // Phi-3-mini trop lourd pour iPad (>2GB mémoire). Utiliser Qwen2.5-0.5B (q4 ~400MB)
-    localLLM = await pipeline('text-generation', 'onnx-community/SmolLM2-135M-Instruct', {
-      dtype: 'q4',
+    setLS('Chargement IA locale (~150MB)…', 'Téléchargement unique. Après ça, 100% hors-ligne.<br>OCR extrait le texte, LaMini l\'analyse.');
+    upd('ai-bar-label', e => e.textContent = 'LaMini-Flan-T5…');
+    // LaMini-Flan-T5-77M: 77M params, ~150MB, no HF auth, text2text
+    localLLM = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-77M', {
       device: 'wasm',
       progress_callback: onProgress
     });
@@ -1141,12 +1140,13 @@ async function analyzeImage(b64, mime) {
     if (!result && llmReady && localLLM) {
       if (lmod) lmod.textContent = '🔒 Phi-3…';
       const ocrCtx = ocrText ? 'Texte: '+ocrText : 'Exercice de maths primaire.';
-      const phi3R = await localLLM([
-        {role:'system', content:'Tu es assistant maths primaire belge. Reponds UNIQUEMENT en JSON.'},
-        {role:'user', content:ocrCtx+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[],"correction":"...","chapitre":"..."}'}
-      ], {max_new_tokens:400, temperature:0.3});
-      const rg = phi3R[0]?.generated_text;
-      const rt = Array.isArray(rg) ? rg.at(-1)?.content : (typeof rg==='string'?rg:'');
+      const phi3R = await localLLM(
+        ocrCtx + '\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[],"correction":"...","chapitre":"..."}',
+        {max_new_tokens:300}
+      );
+      const rt = phi3R[0]?.generated_text || '';
+      result = parseJSON(rt);
+      
       result = parseJSON(rt||'');
     }
 
@@ -1290,9 +1290,8 @@ Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices num�
       if (provider !== 'offline' && localStorage.getItem(KEYSTORE)) {
         txt = await callAIText(prompt);
       } else if (llmReady && localLLM) {
-        const out = await localLLM([{role:'user',content:prompt}], {max_new_tokens:600, temperature:0.7});
-        const genOut = out[0]?.generated_text;
-        txt = Array.isArray(genOut) ? genOut.at(-1)?.content : genOut;
+        const out = await localLLM(prompt, {max_new_tokens:600});
+        txt = out[0]?.generated_text || '';
       }
     } else {
       txt = await callAIText(prompt);
