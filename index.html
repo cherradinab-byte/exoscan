@@ -233,9 +233,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <body>
 <div id="overlay" style="display:none">
   <div class="setup-box">
-    <div id="overlay-close-btn" style="display:none;text-align:right;margin-bottom:-8px;margin-top:-4px">
-      <button class="btn btn-ghost btn-sm" onclick="closeSetup()" style="font-size:18px;padding:0 6px;line-height:1.4">×</button>
-    </div>
+    <div id="overlay-close-btn" style="display:none;text-align:right;margin-bottom:-4px"><button class="btn btn-ghost btn-sm" onclick="closeSetup()" style="font-size:20px;padding:0 8px;line-height:1.3">×</button></div>
     <div style="text-align:center;margin-bottom:20px">
       <div style="width:52px;height:52px;background:var(--acl);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">📷</div>
       <h2 style="font-family:'Lora',serif;font-size:20px;font-weight:600;margin-bottom:4px">ExoScan Pro</h2>
@@ -373,14 +371,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <!-- Basket mini -->
     <div id="bmini" style="display:none" class="card">
-      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(10)">Exporter →</button></span></div>
+      <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter →</button></span></div>
       <div id="bmini-list"></div>
       <div class="arow"><button class="btn btn-ghost btn-sm" onclick="clearBasket()">Vider la fiche</button></div>
     </div>
   </div>
 
   <!-- PAGE 1 : CRÉER -->
-  <div id="p1" style="display:none">
+  
+<div id="p1" style="display:none">
     <div class="card">
       <div class="card-title">Générer un exercice</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -428,17 +427,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 2 : BIBLIOTHÈQUE -->
-  <div id="p2" style="display:none">
+  
+<div id="p2" style="display:none">
     <div class="card">
-      <div class="card-title">Bibliothèque <span id="lib-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mu);font-size:12px"></span><span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
-      <div class="search-wrap"><span class="search-ico">🔍</span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
+      <div class="card-title">Bibliothèque <span class="right"><button class="btn btn-ghost btn-sm" onclick="clearLib()">Effacer tout</button></span></div>
+      <div class="search-wrap"><span class="search-ico"></span><input type="text" id="lib-search" placeholder="Rechercher…" oninput="renderLib()"></div>
       <div class="chips" id="lib-chips"></div>
       <div id="lib-list"></div>
     </div>
   </div>
 
   <!-- PAGE 3 : EXPORT -->
-  <div id="p3" style="display:none">
+  
+<div id="p3" style="display:none">
   <div class="card">
     <div class="card-title">Fiche · <span id="fcount">0</span> exercice(s)</div>
     <div id="fiche-preview" style="min-height:40px"></div>
@@ -481,7 +482,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
 </div>
-
 <div id="p4" style="display:none">
     <div class="card">
       <div class="card-title">Corriger une copie d'élève</div>
@@ -514,7 +514,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 5 : PLANNING -->
-  <div id="p5" style="display:none">
+  
+<div id="p5" style="display:none">
     <div class="card">
       <div class="card-title">Planifier une séquence</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -537,7 +538,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
 
-  <!-- PAGE 6 : GEOMETRIE -->
+  <!-- PAGE 6 : DICO -->
+  
 <div id="p6" style="display:none">
   <div class="card">
     <div class="card-title">Géométrie <span id="geo-add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
@@ -637,17 +639,19 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 
   <!-- PAGE 9: DICTIONNAIRE -->
-  <div id="p9" style="display:none">
+  
+<div id="p9" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:12px">📖 Dictionnaire mathématique</h3>
-      <input class="inp" type="search" id="dico-search" placeholder="Rechercher un terme…" oninput="renderDico(this.value)" style="margin-bottom:10px">
+      <input class="inp" type="search" placeholder="Rechercher un terme…" oninput="renderDico(this.value)" style="margin-bottom:10px">
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="dico-cats"></div>
       <div id="dico-list"></div>
     </div>
   </div>
 
   <!-- PAGE 10: REGLAGES -->
-  <div id="p10" style="display:none">
+  
+<div id="p10" style="display:none">
     <div class="card">
       <h3 style="font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:14px">⚙️ Réglages</h3>
 
@@ -693,17 +697,17 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <!-- BOTTOM NAV -->
 <div class="bnav">
-  <button class="bnav-btn active" id="bn0" onclick="goTab(0)"><span class="ico">📷</span>Scan</button>
-  <button class="bnav-btn" id="bn1" onclick="goTab(1)"><span class="ico">✨</span>Créer</button>
-  <button class="bnav-btn" id="bn2" onclick="goTab(2)"><span class="ico">🗂</span>Biblio</button>
-  <button class="bnav-btn" id="bn4" onclick="goTab(4)"><span class="ico">✅</span>Corr.</button>
-  <button class="bnav-btn" id="bn5" onclick="goTab(5)"><span class="ico">📅</span>Plan</button>
-  <button class="bnav-btn" id="bn6" onclick="goTab(6)"><span class="ico">📐</span>Géom.</button>
-  <button class="bnav-btn" id="bn7" onclick="goTab(7)"><span class="ico">🛒</span>Banque</button>
-  <button class="bnav-btn" id="bn8" onclick="goTab(8)"><span class="ico">✖</span>Tables</button>
-  <button class="bnav-btn" id="bn9" onclick="goTab(9)"><span class="ico">📖</span>Dico</button>
-  <button class="bnav-btn" id="bn10" onclick="goTab(10)"><span class="ico">⚙</span>Régl.</button>
-  <button class="bnav-btn" id="bn3" onclick="goTab(3)"><span class="ico">📄</span>Export</button>
+  <button class="bnav-btn active" id="bn0"  onclick="goTab(0)"><span class="ico">📷</span>Scan</button>
+  <button class="bnav-btn"        id="bn1"  onclick="goTab(1)"><span class="ico">✨</span>Créer</button>
+  <button class="bnav-btn"        id="bn2"  onclick="goTab(2)"><span class="ico">🗂</span>Biblio</button>
+  <button class="bnav-btn"        id="bn3"  onclick="goTab(3)"><span class="ico">📄</span>Export</button>
+  <button class="bnav-btn"        id="bn4"  onclick="goTab(4)"><span class="ico">✅</span>Corr.</button>
+  <button class="bnav-btn"        id="bn5"  onclick="goTab(5)"><span class="ico">📅</span>Plan</button>
+  <button class="bnav-btn"        id="bn6"  onclick="goTab(6)"><span class="ico">📐</span>Géom.</button>
+  <button class="bnav-btn"        id="bn7"  onclick="goTab(7)"><span class="ico">🛒</span>Banque</button>
+  <button class="bnav-btn"        id="bn8"  onclick="goTab(8)"><span class="ico">✖</span>Tables</button>
+  <button class="bnav-btn"        id="bn9"  onclick="goTab(9)"><span class="ico">📖</span>Dico</button>
+  <button class="bnav-btn"        id="bn10" onclick="goTab(10)"><span class="ico">⚙</span>Régl.</button>
 </div>
 
 </div><!-- /app -->
@@ -740,29 +744,6 @@ function show(id){
   const e = document.getElementById(id);
   if (!e) return;
   e.style.display = (id === 'overlay') ? 'flex' : 'block';
-}
-function showToast(msg, type) {
-  // type: 'ok' | 'err' | 'info' (default info)
-  const colors = {ok:'var(--gn)', err:'var(--rd)', info:'var(--ac)'};
-  const icons  = {ok:'✅', err:'❌', info:'ℹ️'};
-  const t = type || 'info';
-  let el = document.getElementById('app-toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'app-toast';
-    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
-      'background:var(--sur);border:1px solid var(--bd);border-radius:12px;' +
-      'padding:12px 20px;font-size:13px;font-weight:500;z-index:999;' +
-      'box-shadow:0 4px 20px var(--sh);max-width:320px;text-align:center;' +
-      'transition:opacity .3s;pointer-events:none;';
-    document.body.appendChild(el);
-  }
-  el.innerHTML = (icons[t]||'ℹ️') + ' ' + msg;
-  el.style.color = colors[t] || 'var(--tx)';
-  el.style.borderColor = colors[t] || 'var(--bd)';
-  el.style.opacity = '1';
-  clearTimeout(el._timer);
-  el._timer = setTimeout(() => { el.style.opacity = '0'; }, t === 'err' ? 4000 : 2500);
 }
 function hide(id){ const e = document.getElementById(id); if(e) e.style.display='none'; }
 function showErr(id,msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display='block';} }
@@ -831,16 +812,14 @@ function saveKey() {
 function showSetup() {
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
   selectMode(provider);
-  const el = document.getElementById('key-' + provider);
   const key = localStorage.getItem(KEYSTORE);
+  const el  = document.getElementById('key-' + provider);
   if (el && key) el.value = key;
   hide('key-err');
-  // Show close button only if already configured (can cancel)
-  const closeBtn = document.getElementById('overlay-close-btn');
-  if (closeBtn) closeBtn.style.display = (key || provider === 'offline') ? 'block' : 'none';
+  const cb = document.getElementById('overlay-close-btn');
+  if (cb) cb.style.display = (key || provider === 'offline') ? 'block' : 'none';
   document.getElementById('overlay').style.display = 'flex';
 }
-
 function closeSetup() {
   document.getElementById('overlay').style.display = 'none';
 }
@@ -848,27 +827,20 @@ function closeSetup() {
 /* ══════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════ */
-// Nav button → page ID mapping (Export moved to last position)
-const NAV_MAP = [0,1,2,4,5,6,7,8,9,10,3]; // btn index → page index
-
 function goTab(n) {
-  const pageIdx = NAV_MAP[n] !== undefined ? NAV_MAP[n] : n;
   for (let i = 0; i < 11; i++) {
-    const p  = document.getElementById('p'+NAV_MAP[i]);
-    const bn = document.getElementById('bn'+i);
-    if (p)  p.style.display  = i === n ? 'block' : 'none';
-    if (bn) bn.className     = 'bnav-btn' + (i === n ? ' active' : '');
+    const p  = document.getElementById('p' + i);
+    const bn = document.getElementById('bn' + i);
+    if (p)  p.style.display = i === n ? 'block' : 'none';
+    if (bn) bn.className    = 'bnav-btn' + (i === n ? ' active' : '');
   }
   if (n === 2)  renderLib();
-  if (n === 10) { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; }
-  if (n === 6)  renderBank();
-  if (n === 7)  initTables();
-  if (n === 8)  renderDico();
+  if (n === 3)  { renderFiche(); const vc = document.getElementById('var-card'); if(vc) vc.style.display = basket.length > 1 ? 'block' : 'none'; }
+  if (n === 7)  renderBank();
+  if (n === 8)  initTables();
+  if (n === 9)  renderDico();
   window.scrollTo(0, 0);
 }
-
-// Helper: navigate to Export tab (button index 10)
-function goExport() { goTab(10); }
 
 /* ══════════════════════════════════════════════
    AI INIT
@@ -878,7 +850,7 @@ async function initAI(force=false) {
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
   initOCR();
   if (provider === 'offline') {
-    initLocalAI(force); // non-blocking — app remains usable while model loads
+    await initLocalAI(force);
     return;
   }
   const labels = {openrouter:'🌐 OpenRouter', anthropic:'🤖 Claude', openai:'✨ GPT-4o'};
@@ -905,8 +877,7 @@ async function initLocalAI(force=false) {
   const isOffline = localStorage.getItem(PROVSTORE) === 'offline';
   const ls  = document.getElementById('ai-loading-screen');
   const bar = document.getElementById('ai-bar');
-  // Don't block the app — show a subtle loading bar in p10 settings
-  // User can navigate freely while model loads
+  if (isOffline && ls) ls.style.display = 'block';
 
   const upd = (id, fn) => { const e = document.getElementById(id); if(e) fn(e); };
   const setLS = (title, sub) => {
@@ -926,16 +897,8 @@ async function initLocalAI(force=false) {
   };
 
   try {
-    let device = 'wasm';
-    try { if (navigator.gpu) { const a = await navigator.gpu.requestAdapter(); if(a) device = 'webgpu'; } } catch(e) {}
-    if (device === 'wasm' && isOffline) setLS(null, 'WebGPU non disponible sur ce navigateur — mode WASM (~30-40s/analyse).<br>Pour de meilleures performances, utilisez Chrome ou Brave.');
-    updateAIPill('loading', device === 'webgpu' ? '⏳ WebGPU…' : '⏳ WASM…');
-  // Show subtle loading bar in ai-bar
-  const abar = document.getElementById('ai-bar');
-  const albl = document.getElementById('ai-bar-label');
-  if (abar) abar.style.display = 'block';
-  if (albl) albl.textContent = 'Chargement Phi-3 Mini en arrière-plan…';
-  showToast('Chargement IA locale démarré (~230MB). Naviguez librement.', 'info');
+    const device = 'wasm'; // WebGPU désactivé — bloque le navigateur sur mobile/iPad
+    updateAIPill('loading', '⏳ Chargement…');
 
     const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.4.0/dist/transformers.min.js');
     env.allowLocalModels = false;
@@ -956,7 +919,6 @@ async function initLocalAI(force=false) {
     if (ls)  ls.style.display  = 'none';
     updateAIPill('local', device==='webgpu' ? '🟢 WebGPU' : '🟡 WASM');
     setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne hors-ligne.');
-    showToast('IA locale prête ! Vous pouvez scanner des exercices.', 'ok');
   } catch(e) {
     if (bar) bar.style.display = 'none';
     if (ls && isOffline) {
@@ -978,7 +940,7 @@ async function initOCR() {
 
 function updateAIPill(cls, txt) {
   const p = document.getElementById('ai-status');
-  if (p) { p.className = 'ai-pill '+cls; p.textContent = txt; }
+  if (p) { p.className = 'ai-pill '+cls; p.textContent = txt; p.onclick=()=>goTab(10); p.style.cursor='pointer'; p.title='Réglages'; }
 }
 function setAIModeInfo(txt) { const e = document.getElementById('ai-mode-info'); if(e) e.textContent = txt; }
 
@@ -1163,15 +1125,15 @@ async function analyzeImage(b64, mime) {
     }
 
     if (!result && llmReady && localLLM) {
-      if (lmod) lmod.textContent = '🔒 Analyse Phi-3…';
-      const ocrCtx = ocrText ? 'Texte de l image: ' + ocrText : 'Exercice de maths primaire (image).';
-      const phi3Out = await localLLM([
-        {role:'system', content:'Analyse cet exercice de maths primaire belge. Reponds UNIQUEMENT en JSON valide.'},
-        {role:'user', content:ocrCtx+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[{"label":"...","value":0}],"correction":"...","chapitre":"..."}'}
+      if (lmod) lmod.textContent = '🔒 Phi-3…';
+      const ocrCtx = ocrText ? 'Texte: '+ocrText : 'Exercice de maths primaire.';
+      const phi3R = await localLLM([
+        {role:'system', content:'Tu es assistant maths primaire belge. Reponds UNIQUEMENT en JSON.'},
+        {role:'user', content:ocrCtx+'\nJSON: {"type":"...","emoji":"...","consigne":"...","numbers":[],"correction":"...","chapitre":"..."}'}
       ], {max_new_tokens:400, temperature:0.3});
-      const rawGen = phi3Out[0]?.generated_text;
-      const rawTxt = Array.isArray(rawGen) ? rawGen.at(-1)?.content : (typeof rawGen === 'string' ? rawGen : '');
-      result = parseJSON(rawTxt || '');
+      const rg = phi3R[0]?.generated_text;
+      const rt = Array.isArray(rg) ? rg.at(-1)?.content : (typeof rg==='string'?rg:'');
+      result = parseJSON(rt||'');
     }
 
     if (ldg) ldg.style.display = 'none';
@@ -1179,11 +1141,7 @@ async function analyzeImage(b64, mime) {
     if (!result) {
       const provider = localStorage.getItem(PROVSTORE)||'openrouter';
       if (provider === 'offline') {
-        if (!llmReady) {
-          showToast('IA locale pas encore prête. Patientez ou allez dans ⚙️ Réglages.', 'err');
-          throw new Error('Phi-3 en cours de chargement — attendez la pastille verte dans ⚙️ Réglages, ou choisissez un mode API.');
-        }
-        throw new Error('Analyse impossible en mode hors-ligne. Assurez-vous que la photo contient du texte lisible.');
+        throw new Error('Analyse impossible. En mode hors-ligne : OCR doit extraire du texte de la photo, puis Phi-3 l\'analyse. Assurez-vous que la photo contient du texte lisible et que l\'IA locale est chargée (⚙️ Réglages).');
       }
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
@@ -1263,7 +1221,7 @@ async function adaptExo(type) {
       if (cons) cons.value = exo.consigne;
       renderNumsIn(exo.numbers || []);
     }
-  } catch(e) { showToast('Erreur adaptation : '+e.message, 'err'); }
+  } catch(e) { alert('Erreur adaptation : '+e.message); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1296,7 +1254,7 @@ function addToFiche() {
    GENERATE (p1)
 ══════════════════════════════════════════════ */
 async function generateExo() {
-  const niveau = document.getElementById('gen-niveau')?.value || '3e primaire';
+  const niveau = document.getElementById('gen-level')?.value || '3e primaire';
   const type   = document.getElementById('gen-type')?.value   || 'Addition';
   const diff   = document.getElementById('gen-diff')?.value   || 'normal';
   const nb     = document.getElementById('gen-nb')?.value     || '5';
@@ -1335,7 +1293,7 @@ Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices num�
       res.dataset.exo = JSON.stringify(exo);
     }
   } catch(e) {
-    showToast('Erreur génération : '+e.message, 'err');
+    alert('Erreur génération : '+e.message);
   } finally {
     if (ldg) ldg.style.display = 'none';
   }
@@ -1374,7 +1332,7 @@ Génère 3 versions adaptées. Réponds en JSON :
     const data = parseJSON(txt);
     if (data) renderLevelsCard(data, consigne, chapitre, type);
   } catch(e) {
-    showToast('Erreur 3 niveaux : '+e.message, 'err');
+    alert('Erreur 3 niveaux : '+e.message);
   } finally {
     if (ldg) ldg.style.display = 'none';
   }
@@ -1472,9 +1430,6 @@ async function exportLevelsPDF() {
 ══════════════════════════════════════════════ */
 function saveToLib(exo) {
   let lib = JSON.parse(localStorage.getItem(LIBSTORE) || '[]');
-  // Deduplication: skip if same consigne already exists (trim whitespace)
-  const norm = (s) => (s||'').trim().toLowerCase().slice(0, 80);
-  if (lib.some(e => norm(e.consigne) === norm(exo.consigne))) return;
   exo.id = Date.now();
   lib.unshift(exo);
   if (lib.length > 200) lib = lib.slice(0, 200);
@@ -1547,10 +1502,10 @@ function clearLib() {
 ══════════════════════════════════════════════ */
 function refreshBmini() {
   const bm = document.getElementById('bmini');
-  const bc = document.getElementById('bcount');
+  const bc = document.getElementById('bmini-count');
   if (bc) bc.textContent = basket.length;
   if (bm) bm.style.display = basket.length > 0 ? 'block' : 'none';
-  const bl = document.getElementById('bmini-list');
+  const bl = document.getElementById('basket-list');
   if (bl) bl.innerHTML = basket.map((e,i) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
       <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(e.consigne.slice(0,40))}${e.consigne.length>40?'…':''}</span>
@@ -1562,19 +1517,12 @@ function refreshBmini() {
 function clearBasket() { basket = []; refreshBmini(); }
 
 function renderFiche() {
+  const fc = document.getElementById('fcount'); if(fc) fc.textContent = basket.length;
   const el = document.getElementById('fiche-preview');
-  const fc = document.getElementById('fcount');
-  if (fc) fc.textContent = basket.length;
   if (!el) return;
   el.innerHTML = basket.length === 0
     ? '<p style="text-align:center;color:var(--mu);padding:20px">Fiche vide — ajoutez des exercices depuis Scan ou Créer</p>'
-    : basket.map((e,i) => `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd)">
-        <div style="flex:1">
-          <strong style="color:var(--ac);font-size:13px">${i+1}. ${esc(e.type)}</strong>
-          <p style="font-size:12px;margin-top:3px;line-height:1.5;color:var(--tx)">${esc(e.consigne.slice(0,120))}${e.consigne.length>120?'…':''}</p>
-        </div>
-        <button class="btn btn-ghost btn-sm" style="color:var(--rd);flex-shrink:0" onclick="basket.splice(${i},1);renderFiche();refreshBmini()">✕</button>
-      </div>`).join('');
+    : basket.map((e,i) => `<div style="margin-bottom:14px"><strong style="color:var(--ac)">${i+1}. ${esc(e.emoji||'')} ${esc(e.type)}</strong><p style="font-size:13px;margin-top:4px;line-height:1.6">${esc(e.consigne)}</p></div>`).join('');
 }
 
 function resetExport() {
@@ -1582,8 +1530,7 @@ function resetExport() {
 }
 
 async function generateWord() {
-  if (basket.length === 0) { showToast('Fiche vide — ajoutez des exercices depuis Scan ou Créer.', 'err'); return; }
-  if (typeof docx === 'undefined' || !docx.Packer) { showToast('Bibliothèque Word non chargée — attendez quelques secondes', 'err'); return; }
+  if (basket.length === 0) { alert('Fiche vide !'); return; }
   const {Document,Paragraph,TextRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType,Packer} = docx;
 
   const withHead = document.getElementById('opt-header')?.checked;
@@ -1616,19 +1563,13 @@ async function generateWord() {
     ch.push(new Paragraph({text:'', spacing:{after:40}}));
   });
 
-  try {
-    const doc = new Document({sections:[{children:ch}]});
-    const blob = await Packer.toBlob(doc);
-    appendDlLink(blob, MIME_DOCX, 'fiche-maths.docx', document.getElementById('export-btns'));
-    showToast('✅ Fiche Word téléchargée !', 'ok');
-  } catch(e) {
-    showToast('❌ Erreur Word : ' + e.message, 'err');
-    console.error('generateWord error:', e);
-  }
+  const doc = new Document({sections:[{children:ch}]});
+  const blob = await Packer.toBlob(doc);
+  appendDlLink(blob, MIME_DOCX, 'fiche-maths.docx', document.getElementById('export-btns'));
 }
 
 async function generatePDF() {
-  if (basket.length === 0) { showToast('Fiche vide — ajoutez des exercices depuis Scan ou Créer.', 'err'); return; }
+  if (basket.length === 0) { alert('Fiche vide !'); return; }
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({unit:'mm', format:'a4'});
   const withHead = document.getElementById('opt-header')?.checked;
@@ -1700,8 +1641,8 @@ async function generatePDF() {
         const mmMax = 80, ratio = Math.min(mmMax/vw, 60/vh);
         const mmW = Math.round(vw * ratio);
         const mmH = Math.round(vh * ratio);
-        const pxW = mmW * 10; // 10px/mm for sharp rendering
-        const pxH = mmH * 10;
+        const pxW = mmW * 4; // 4px/mm approx
+        const pxH = mmH * 4;
         if (y + mmH > 270) { doc.addPage(); y = 15; }
         const png = await svgToPng(exo.svgData, pxW, pxH);
         if (png) { doc.addImage(png, 'PNG', 15, y, mmW, mmH); y += mmH + 5; }
@@ -1726,15 +1667,14 @@ async function generatePDF() {
     y += 5;
   }
   doc.save('fiche-maths.pdf');
-  showToast('Fiche PDF générée ✓', 'ok');
 }
 
 function generateVariants() {
-  showToast('Variantes anti-copie : fonctionnalité à venir.', 'info');
+  alert('Fonctionnalité variantes : ajout prochain.');
 }
 
 function exportVariantsWord() {
-  showToast('Export variantes : fonctionnalité à venir.', 'info');
+  alert('Export variantes Word : ajout prochain.');
 }
 
 function appendDlLink(blob, mime, fname, container) {
@@ -1765,7 +1705,7 @@ function loadCorrImg(which) {
 async function runCorrection() {
   const inp1 = document.getElementById('corr-inp-1');
   const inp2 = document.getElementById('corr-inp-2');
-  if (!inp1?.files[0] || !inp2?.files[0]) { showToast('Ajoutez les deux photos (corrigé + copie).', 'err'); return; }
+  if (!inp1?.files[0] || !inp2?.files[0]) { alert('Ajoutez les deux photos.'); return; }
 
   const toB64 = file => new Promise((res,rej) => {
     const r = new FileReader();
@@ -1816,7 +1756,7 @@ Réponds en JSON : {"score":"X/Y","items":[{"q":"Question 1","ok":true,"note":".
       ).join('');
       document.getElementById('corr-feedback').textContent = res.feedback || '';
     }
-  } catch(e) { showToast('Erreur correction : '+e.message, 'err'); }
+  } catch(e) { alert('Erreur correction : '+e.message); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1866,7 +1806,7 @@ Réponds en JSON : {"titre":"...","seances":[{"num":1,"titre":"...","duree":"50m
         </div>`
       ).join('');
     }
-  } catch(e) { showToast('Erreur planning : '+e.message, 'err'); }
+  } catch(e) { alert('Erreur planning : '+e.message); }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
@@ -1939,7 +1879,7 @@ function addGeoToFiche() {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
-  showToast('Figure ajoutée à la fiche !', 'ok');
+  alert('Figure ajoutée à la fiche !');
 }
 
 /* ══════════════════════════════════════════════
@@ -2187,7 +2127,7 @@ function renderDico(search) {
     ).join('');
   }
 
-  const q = (search !== undefined ? search : (document.getElementById('dico-search')?.value || '')).toLowerCase();
+  const q = (search !== undefined ? search : document.getElementById('p9 input[type=search]')?.value || '').toLowerCase();
   let items = DICO_DATA;
   if (dicoFilter !== 'Tout') items = items.filter(d => d.cat === dicoFilter);
   if (q) items = items.filter(d => d.terme.toLowerCase().includes(q) || d.def.toLowerCase().includes(q));
@@ -2224,7 +2164,7 @@ function saveGhToken() {
 
 async function syncSave() {
   const token  = localStorage.getItem(GHSTORE);
-  if (!token) { showToast('Enregistrez d\'abord votre token GitHub.', 'err'); return; }
+  if (!token) { alert('Enregistrez d\'abord votre token GitHub.'); return; }
   const lib    = localStorage.getItem(LIBSTORE) || '[]';
   const gistId = localStorage.getItem(GISTSTORE);
   setSyncDot('pulse','Sauvegarde…');
@@ -2242,7 +2182,7 @@ async function syncSave() {
 async function syncLoad() {
   const token  = localStorage.getItem(GHSTORE);
   const gistId = localStorage.getItem(GISTSTORE);
-  if (!token || !gistId) { showToast('Token ou Gist ID manquant.', 'err'); return; }
+  if (!token || !gistId) { alert('Token ou Gist ID manquant.'); return; }
   setSyncDot('pulse','Restauration…');
   try {
     const r = await fetch('https://api.github.com/gists/'+gistId, {headers:{'Authorization':'Bearer '+token}});
@@ -2288,11 +2228,9 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
 function bankSetFilter(key, val, el) {
   bankFilter[key] = val;
-  const parent = el.parentElement;
-  parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   renderBank();
 }
