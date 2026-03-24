@@ -372,7 +372,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <!-- Inline editor (shown after scan) -->
     <div id="inline-ed" style="display:none" class="card">
-      <div class="card-title">Exercice analysé — modifiable</div>
+      <div class="card-title">Exercice analysé — modifiable <span id="add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
+      <div id="adapt-ldg" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin-bottom:8px"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;flex-shrink:0"></div> Adaptation en cours…</div>
       <div id="ed-badge" class="tbadge">✏️ Exercice</div>
       <label class="flbl">Consigne</label>
       <textarea id="ed-cons"></textarea>
@@ -590,7 +591,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-fill-row"><input type="checkbox" id="geo-fill" onchange="renderGeoPreview()"> Remplissage</label>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-dims" checked onchange="renderGeoPreview()"> Afficher mesures</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-hide-row" style="display:none"><input type="checkbox" id="geo-hide-val" onchange="renderGeoPreview()"> Cacher valeurs (exercice)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-hide-row"><input type="checkbox" id="geo-hide-val" onchange="renderGeoPreview()"> Cacher valeurs (exercice)</label>
     </div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:12px;min-height:120px;display:flex;align-items:center;justify-content:center">
       <svg id="geo-svg" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:220px"></svg>
