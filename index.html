@@ -227,6 +227,21 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sync-dot.err{background:var(--rd)}
 .sync-dot.pulse{animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TEXTBOOK EXERCISE CARDS */
+.exo-card{background:var(--sur);border:1px solid var(--bd2);border-radius:var(--rs);padding:14px 16px;margin-bottom:12px}
+.exo-card-hdr{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.exo-num{width:26px;height:26px;border:2px solid var(--ac);color:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.exo-type-lbl{font-size:12px;font-weight:600;color:var(--mu);letter-spacing:.03em}
+.exo-chapitre{font-size:11px;color:var(--hi)}
+.exo-del{margin-left:auto;background:none;border:none;color:var(--hi);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:4px;line-height:1}
+.exo-del:hover{color:var(--rd);background:var(--rdl)}
+.exo-body{font-size:14px;line-height:1.75;color:var(--tx)}
+.exo-preamble{font-size:13px;line-height:1.6;color:var(--mu);margin-bottom:8px}
+.sub-exo-list{display:flex;flex-direction:column;gap:6px}
+.sub-exo-item{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--bd);padding:8px 0;font-size:14px;line-height:1.7}
+.sub-exo-num{min-width:20px;font-size:12px;font-weight:700;color:var(--ac);flex-shrink:0;padding-top:2px}
+.sub-exo-text{flex:1}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -716,6 +731,10 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <code style="background:rgba(0,0,0,.07);padding:1px 4px;border-radius:3px">${location.origin}</code>
         comme origine autorisée, puis copiez le Client ID ci-dessous.
         <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--ac)">Ouvrir Google Console →</a>
+        <br><br>
+        <strong>Erreur 403 "access_denied" ?</strong> Votre application est en mode test.
+        Allez dans <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" style="color:var(--ac)">Écran de consentement OAuth →</a>,
+        section <em>Utilisateurs test</em>, et ajoutez votre adresse Gmail (ex: cherradi.nab@gmail.com).
       </div>
       <label class="flbl">Google OAuth Client ID</label>
       <input id="gdrive-client-id" class="inp" type="text" placeholder="123456789-abc….apps.googleusercontent.com" style="margin-bottom:8px">
@@ -785,6 +804,7 @@ let localVLM = null, vlmReady = false;
 let localLLM = null, llmReady = false;
 let activeMode = 'openrouter';
 let drillTable = 5, drillIdx = 0, drillCorrect = 0, drillTotal = 10, drillQuestions = [];
+let _lastScanImage = null; // holds base64 dataURL of the most-recently scanned image
 
 /* ══════════════════════════════════════════════
    UI HELPERS
@@ -816,6 +836,54 @@ function pdfSafe(str) {
     .replace(/[^\x00-\xFF]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/* ══════════════════════════════════════════════
+   DOCX LOADER
+══════════════════════════════════════════════ */
+async function ensureDocx() {
+  if (window.docx) return;
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/docx@8.5.0/build/index.umd.js';
+    s.onload = res;
+    s.onerror = () => rej(new Error('Bibliothèque Word non disponible. Vérifiez votre connexion.'));
+    document.head.appendChild(s);
+  });
+  if (!window.docx) throw new Error('Bibliothèque Word non chargée.');
+}
+
+/* ══════════════════════════════════════════════
+   EXERCISE DISPLAY HELPERS
+══════════════════════════════════════════════ */
+function parseInlineMd(text) {
+  return esc(text)
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // strip ** markers — plain text only
+    .replace(/\n/g, '<br>');
+}
+function stripMd(text) {
+  return (text||'').replace(/\*\*/g, '');
+}
+
+function renderExoConsigne(consigne) {
+  const boldEx = /\*\*(?:Exercice|Exercise)\s*(\d+)\*\*\s*:?\s*/gi;
+  const matches = [...consigne.matchAll(boldEx)];
+  if (matches.length < 2) {
+    return `<div class="exo-body">${parseInlineMd(consigne)}</div>`;
+  }
+  let html = '';
+  const preamble = consigne.slice(0, matches[0].index).trim();
+  if (preamble) html += `<p class="exo-preamble">${parseInlineMd(preamble)}</p>`;
+  html += '<div class="sub-exo-list">';
+  for (let i = 0; i < matches.length; i++) {
+    const num = matches[i][1];
+    const start = matches[i].index + matches[i][0].length;
+    const end = i + 1 < matches.length ? matches[i+1].index : consigne.length;
+    const content = consigne.slice(start, end).trim();
+    html += `<div class="sub-exo-item"><span class="sub-exo-num">${num}</span><span class="sub-exo-text">${parseInlineMd(content)}</span></div>`;
+  }
+  html += '</div>';
+  return html;
 }
 
 /* ══════════════════════════════════════════════
@@ -1286,6 +1354,7 @@ async function analyzeImage(b64, mime) {
       }
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
+    _lastScanImage = 'data:'+mime+';base64,'+b64;
     showInlineEditor(result);
   } catch(e) {
     if (ldg) ldg.style.display = 'none';
@@ -1385,6 +1454,7 @@ function addToFiche() {
     const inp = document.getElementById('ed-nums')?.querySelectorAll('input')[i];
     if (inp) n.value = Number(inp.value);
   });
+  if (_lastScanImage) { exo._imageData = _lastScanImage; _lastScanImage = null; }
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
@@ -1541,6 +1611,7 @@ async function exportLevelsWord() {
   const meta = JSON.parse(card.dataset.meta   || '{}');
   const sel  = [...document.querySelectorAll('.level-item.selected')].map(el => el.dataset.key);
   const keys = sel.length ? sel : ['facile','moyen','difficile'];
+  await ensureDocx();
   const {Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer} = docx;
   const ch = [new Paragraph({text: 'Fiche 3 niveaux — '+meta.type, heading: HeadingLevel.HEADING_1})];
   const labels = {facile:'⭐ Facile', moyen:'⭐⭐ Moyen', difficile:'⭐⭐⭐ Difficile'};
@@ -1593,9 +1664,10 @@ async function exportLevelsPDF() {
 function saveToLib(exo) {
   let lib = JSON.parse(localStorage.getItem(LIBSTORE) || '[]');
   exo.id = Date.now();
-  lib.unshift(exo);
+  const {_imageData, ...toSave} = exo; // strip image blob before serialising
+  lib.unshift(toSave);
   if (lib.length > 200) lib = lib.slice(0, 200);
-  localStorage.setItem(LIBSTORE, JSON.stringify(lib));
+  try { localStorage.setItem(LIBSTORE, JSON.stringify(lib)); } catch(e) { console.warn('localStorage full, skipping save'); }
 }
 
 function renderLib(filter, search) {
@@ -1624,7 +1696,7 @@ function renderLib(filter, search) {
           <div>
             <span style="font-size:13px;font-weight:600">${esc(e.emoji||'📝')} ${esc(e.type)}</span>
             <span class="chip" style="margin-left:6px;font-size:10px">${esc(e.chapitre||'')}</span>
-            <p style="font-size:12px;color:var(--mu);margin-top:4px;line-height:1.5">${esc(e.consigne.slice(0,100))}${e.consigne.length>100?'…':''}</p>
+            <p style="font-size:12px;color:var(--mu);margin-top:4px;line-height:1.5">${esc(stripMd(e.consigne).slice(0,100))}${e.consigne.length>100?'…':''}</p>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button class="btn btn-ghost btn-sm" onclick="loadFromLib(${e.id})">Charger</button>
@@ -1670,7 +1742,7 @@ function refreshBmini() {
   const bl = document.getElementById('bmini-list');
   if (bl) bl.innerHTML = basket.map((e,i) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
-      <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(e.consigne.slice(0,40))}${e.consigne.length>40?'…':''}</span>
+      <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(stripMd(e.consigne).slice(0,40))}${e.consigne.length>40?'…':''}</span>
       <button class="btn btn-ghost btn-sm" onclick="basket.splice(${i},1);refreshBmini();renderFiche()" style="color:var(--rd);padding:2px 6px">✕</button>
     </div>`
   ).join('');
@@ -1684,7 +1756,19 @@ function renderFiche() {
   if (!el) return;
   el.innerHTML = basket.length === 0
     ? '<p style="text-align:center;color:var(--mu);padding:20px">Fiche vide — ajoutez des exercices depuis Scan ou Créer</p>'
-    : basket.map((e,i) => `<div style="margin-bottom:14px"><strong style="color:var(--ac)">${i+1}. ${esc(e.emoji||'')} ${esc(e.type)}</strong><p style="font-size:13px;margin-top:4px;line-height:1.6">${esc(e.consigne)}</p></div>`).join('');
+    : basket.map((e, i) => `
+      <div class="exo-card">
+        <div class="exo-card-hdr">
+          <div class="exo-num">${i+1}</div>
+          <div>
+            <div class="exo-type-lbl">${esc(e.emoji||'')} ${esc(e.type||'Exercice')}</div>
+            ${e.chapitre ? `<div class="exo-chapitre">${esc(e.chapitre)}</div>` : ''}
+          </div>
+          <button class="exo-del" onclick="basket.splice(${i},1);refreshBmini();renderFiche()" title="Retirer">×</button>
+        </div>
+        ${renderExoConsigne(e.consigne||'')}
+      </div>`
+    ).join('');
 }
 
 function resetExport() {
@@ -1706,6 +1790,7 @@ async function exportToGDrive() {
 
 /* Extract Word blob generation from generateWord, keeping it reusable */
 async function generateWordBlob() {
+  await ensureDocx();
   const {Document,Paragraph,TextRun,HeadingLevel,AlignmentType,ShadingType,Packer} = docx;
 
   const withHead = document.getElementById('opt-header')?.checked;
@@ -1743,6 +1828,23 @@ async function generateWordBlob() {
 async function generateWord() {
   // Kept for backward compat — now delegates to exportToGDrive
   await exportToGDrive();
+}
+
+function resizeImageForPDF(dataUrl, maxPx) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let {width:w, height:h} = img;
+      const ratio = Math.min(maxPx/w, maxPx/h, 1);
+      w = Math.round(w*ratio); h = Math.round(h*ratio);
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve({dataUrl: cv.toDataURL('image/jpeg', 0.75), w, h});
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
 }
 
 async function generatePDF() {
@@ -1803,7 +1905,7 @@ async function generatePDF() {
     doc.setTextColor(0,0,0);
     const consigneTxt = exo.svgData
       ? pdfSafe(exo.type || 'Figure geometrique')
-      : pdfSafe(exo.consigne);
+      : pdfSafe(exo.consigne).replace(/\*\*/g, '');
     const lines = doc.splitTextToSize(consigneTxt, 180);
     doc.text(lines, 15, y); y += lines.length * 6 + 3;
 
@@ -1827,6 +1929,22 @@ async function generatePDF() {
       } catch(svgErr) { console.warn('SVG render:', svgErr); }
     }
 
+    // Scanned photo (if the exercise came from image scanning)
+    if (exo._imageData) {
+      try {
+        const maxMm = 100; // max width in mm
+        const res = await resizeImageForPDF(exo._imageData, 1200);
+        if (res) {
+          const aspect = res.h / res.w;
+          const mmW = maxMm;
+          const mmH = Math.round(maxMm * aspect);
+          if (y + mmH > 270) { doc.addPage(); y = 15; }
+          doc.addImage(res.dataUrl, 'JPEG', 15, y, mmW, mmH);
+          y += mmH + 5;
+        }
+      } catch(imgErr) { console.warn('Image embed:', imgErr); }
+    }
+
     // Correction ou lignes
     if (corrMode && exo.correction) {
       doc.setFont('helvetica','italic'); doc.setFontSize(10);
@@ -1844,7 +1962,8 @@ async function generatePDF() {
     }
     y += 5;
   }
-  doc.save('fiche-maths.pdf');
+  const pdfTitle = (document.getElementById('fiche-title')?.value || 'fiche-maths').replace(/[^a-z0-9\s\-]/gi,'').trim() || 'fiche-maths';
+  doc.save(pdfTitle + '.pdf');
 }
 
 function generateVariants() {
@@ -2468,19 +2587,24 @@ function endDrill() {
 }
 
 async function exportTableWord() {
-  const {Document,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,Packer} = docx;
-  const n = drillTable;
-  const ch = [
-    new Paragraph({children:[new TextRun({text:`Table de ${n} — Fiche d'exercices`,bold:true,size:28,color:'5B3FBF'})], spacing:{after:200}}),
-    new Paragraph({children:[new TextRun({text:`Complète la table de ${n} :`,size:24})], spacing:{after:120}}),
-  ];
-  for(let i=1;i<=10;i++) {
-    const show = Math.random() > 0.4;
-    ch.push(new Paragraph({children:[new TextRun({text:`${i} × ${n} = ${show?String(i*n):'…………'}`,size:24})], spacing:{after:60}}));
+  try {
+    await ensureDocx();
+    const {Document,Paragraph,TextRun,Packer} = docx;
+    const n = drillTable;
+    const ch = [
+      new Paragraph({children:[new TextRun({text:`Table de ${n} — Fiche d'exercices`,bold:true,size:28,color:'5B3FBF'})], spacing:{after:200}}),
+      new Paragraph({children:[new TextRun({text:`Complète la table de ${n} :`,size:24})], spacing:{after:120}}),
+    ];
+    for(let i=1;i<=10;i++) {
+      const show = Math.random() > 0.4;
+      ch.push(new Paragraph({children:[new TextRun({text:`${i} × ${n} = ${show?String(i*n):'…………'}`,size:24})], spacing:{after:60}}));
+    }
+    const doc = new Document({sections:[{children:ch}]});
+    const blob = await Packer.toBlob(doc);
+    await uploadOrDownload(blob, MIME_DOCX, `table-de-${n}.docx`, document.getElementById('table-export-row'));
+  } catch(e) {
+    alert('Erreur export : ' + e.message);
   }
-  const doc = new Document({sections:[{children:ch}]});
-  const blob = await Packer.toBlob(doc);
-  await uploadOrDownload(blob, MIME_DOCX, `table-de-${n}.docx`, document.getElementById('table-export-row'));
 }
 
 /* ══════════════════════════════════════════════
