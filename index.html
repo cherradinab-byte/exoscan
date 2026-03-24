@@ -229,18 +229,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* TEXTBOOK EXERCISE CARDS */
-.exo-card{background:#fff;border:1px solid var(--bd);border-left:4px solid var(--ac);border-radius:var(--rs);padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.exo-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.exo-num{width:32px;height:32px;background:var(--ac);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
-.exo-type-lbl{font-size:12px;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:.05em}
+.exo-card{background:var(--sur);border:1px solid var(--bd2);border-radius:var(--rs);padding:14px 16px;margin-bottom:12px}
+.exo-card-hdr{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.exo-num{width:26px;height:26px;border:2px solid var(--ac);color:var(--ac);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.exo-type-lbl{font-size:12px;font-weight:600;color:var(--mu);letter-spacing:.03em}
 .exo-chapitre{font-size:11px;color:var(--hi)}
-.exo-del{margin-left:auto;background:none;border:none;color:var(--hi);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;line-height:1}
+.exo-del{margin-left:auto;background:none;border:none;color:var(--hi);cursor:pointer;font-size:17px;padding:2px 5px;border-radius:4px;line-height:1}
 .exo-del:hover{color:var(--rd);background:var(--rdl)}
-.exo-body{font-size:15px;line-height:1.75;color:var(--tx)}
-.exo-preamble{font-size:13px;line-height:1.6;color:var(--mu);margin-bottom:10px;font-style:italic}
-.sub-exo-list{display:flex;flex-direction:column;gap:8px}
-.sub-exo-item{display:flex;gap:10px;align-items:flex-start;background:var(--sur2);border-radius:var(--rs);padding:10px 12px;font-size:14px;line-height:1.7}
-.sub-exo-num{min-width:24px;height:24px;background:var(--acl);color:var(--acd);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+.exo-body{font-size:14px;line-height:1.75;color:var(--tx)}
+.exo-preamble{font-size:13px;line-height:1.6;color:var(--mu);margin-bottom:8px}
+.sub-exo-list{display:flex;flex-direction:column;gap:6px}
+.sub-exo-item{display:flex;gap:10px;align-items:flex-start;border-top:1px solid var(--bd);padding:8px 0;font-size:14px;line-height:1.7}
+.sub-exo-num{min-width:20px;font-size:12px;font-weight:700;color:var(--ac);flex-shrink:0;padding-top:2px}
 .sub-exo-text{flex:1}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -858,8 +858,11 @@ async function ensureDocx() {
 ══════════════════════════════════════════════ */
 function parseInlineMd(text) {
   return esc(text)
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // strip ** markers — plain text only
     .replace(/\n/g, '<br>');
+}
+function stripMd(text) {
+  return (text||'').replace(/\*\*/g, '');
 }
 
 function renderExoConsigne(consigne) {
@@ -1693,7 +1696,7 @@ function renderLib(filter, search) {
           <div>
             <span style="font-size:13px;font-weight:600">${esc(e.emoji||'📝')} ${esc(e.type)}</span>
             <span class="chip" style="margin-left:6px;font-size:10px">${esc(e.chapitre||'')}</span>
-            <p style="font-size:12px;color:var(--mu);margin-top:4px;line-height:1.5">${esc(e.consigne.slice(0,100))}${e.consigne.length>100?'…':''}</p>
+            <p style="font-size:12px;color:var(--mu);margin-top:4px;line-height:1.5">${esc(stripMd(e.consigne).slice(0,100))}${e.consigne.length>100?'…':''}</p>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button class="btn btn-ghost btn-sm" onclick="loadFromLib(${e.id})">Charger</button>
@@ -1739,7 +1742,7 @@ function refreshBmini() {
   const bl = document.getElementById('bmini-list');
   if (bl) bl.innerHTML = basket.map((e,i) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
-      <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(e.consigne.slice(0,40))}${e.consigne.length>40?'…':''}</span>
+      <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(stripMd(e.consigne).slice(0,40))}${e.consigne.length>40?'…':''}</span>
       <button class="btn btn-ghost btn-sm" onclick="basket.splice(${i},1);refreshBmini();renderFiche()" style="color:var(--rd);padding:2px 6px">✕</button>
     </div>`
   ).join('');
