@@ -372,7 +372,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <!-- Inline editor (shown after scan) -->
     <div id="inline-ed" style="display:none" class="card">
-      <div class="card-title">Exercice analysé — modifiable</div>
+      <div class="card-title">Exercice analysé — modifiable <span id="add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
+      <div id="adapt-ldg" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--mu);margin-bottom:8px"><div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;flex-shrink:0"></div> Adaptation en cours…</div>
       <div id="ed-badge" class="tbadge">✏️ Exercice</div>
       <label class="flbl">Consigne</label>
       <textarea id="ed-cons"></textarea>
@@ -590,7 +591,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
       <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-fill-row"><input type="checkbox" id="geo-fill" onchange="renderGeoPreview()"> Remplissage</label>
       <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-dims" checked onchange="renderGeoPreview()"> Afficher mesures</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-hide-row" style="display:none"><input type="checkbox" id="geo-hide-val" onchange="renderGeoPreview()"> Cacher valeurs (exercice)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-hide-row"><input type="checkbox" id="geo-hide-val" onchange="renderGeoPreview()"> Cacher valeurs (exercice)</label>
     </div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:12px;min-height:120px;display:flex;align-items:center;justify-content:center">
       <svg id="geo-svg" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:220px"></svg>
@@ -2455,29 +2456,29 @@ function renderGeoPreview() {
 
   if (type === 'ligne') {
     const lw = w * S;
-    vbW = lw + PX*2; vbH = 52;
-    const y = 18;
+    vbW = lw + PX*2; vbH = 80;
+    const y = 32;
     shape = `
-      <line x1="${PX}" y1="${y}" x2="${PX+lw}" y2="${y}" stroke="${fw}" stroke-width="2"/>
-      <line x1="${PX}"    y1="${y-9}" x2="${PX}"    y2="${y+9}" stroke="${fw}" stroke-width="2"/>
-      <line x1="${PX+lw}" y1="${y-9}" x2="${PX+lw}" y2="${y+9}" stroke="${fw}" stroke-width="2"/>
-      ${dims ? `<text x="${PX+lw/2}" y="${y+26}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
+      <line x1="${PX}" y1="${y}" x2="${PX+lw}" y2="${y}" stroke="${fw}" stroke-width="2.5"/>
+      <line x1="${PX}"    y1="${y-12}" x2="${PX}"    y2="${y+12}" stroke="${fw}" stroke-width="2.5"/>
+      <line x1="${PX+lw}" y1="${y-12}" x2="${PX+lw}" y2="${y+12}" stroke="${fw}" stroke-width="2.5"/>
+      ${dims ? `<text x="${PX+lw/2}" y="${y+32}" text-anchor="middle" font-size="14" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
 
   } else if (type === 'rectangle') {
     const rw = w*S, rh = h*S;
-    vbW = rw+PX*2+30; vbH = rh+PY*2+26;
+    vbW = rw+PX*2+44; vbH = rh+PY*2+44; // +44 ensures labels never clip
     shape = `
       <rect x="${PX}" y="${PY}" width="${rw}" height="${rh}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
       ${dims ? `
-      <text x="${PX+rw/2}" y="${PY+rh+20}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)}</text>
-      <text x="${PX-18}" y="${PY+rh/2}" text-anchor="middle" font-size="12" ${ff} fill="${fw}" transform="rotate(-90,${PX-18},${PY+rh/2})">${val(h)}</text>` : ''}`;
+      <text x="${PX+rw/2}" y="${PY+rh+24}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)}</text>
+      <text x="${PX-20}" y="${PY+rh/2}" text-anchor="middle" font-size="13" ${ff} fill="${fw}" transform="rotate(-90,${PX-20},${PY+rh/2})">${val(h)}</text>` : ''}`;
 
   } else if (type === 'carre') {
     const s = w*S;
-    vbW = s+PX*2+20; vbH = s+PY*2+26;
+    vbW = s+PX*2+44; vbH = s+PY*2+44;
     shape = `
       <rect x="${PX}" y="${PY}" width="${s}" height="${s}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
-      ${dims ? `<text x="${PX+s/2}" y="${PY+s+20}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
+      ${dims ? `<text x="${PX+s/2}" y="${PY+s+24}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
 
   } else if (type === 'triangle') {
     const tw = w*S, th = h*S;
@@ -2487,32 +2488,34 @@ function renderGeoPreview() {
     const cx = PX+tw,   cy = PY+th;
     // side lengths in cm
     const sideLen = Math.round(Math.sqrt((w/2)**2 + h**2)*10)/10;
-    // label positions along left/right sides
+    // label midpoints offset outward from each slope
     const lMidX = (ax+bx)/2, lMidY = (ay+by)/2;
     const rMidX = (ax+cx)/2, rMidY = (ay+cy)/2;
     const lAngle = Math.atan2(by-ay,bx-ax)*180/Math.PI;
     const rAngle = Math.atan2(cy-ay,cx-ax)*180/Math.PI;
-    vbW = tw+PX*2+20; vbH = th+PY*2+28;
+    vbW = tw+PX*2+50; vbH = th+PY*2+44; // +50W for side labels, +44H for base label
     shape = `
       <polygon points="${ax},${ay} ${bx},${by} ${cx},${cy}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
       ${dims ? `
-      <text x="${PX+tw/2}" y="${PY+th+22}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)} (base)</text>
-      <text x="${lMidX-14}" y="${lMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${lAngle},${lMidX-14},${lMidY})">${val(sideLen)}</text>
-      <text x="${rMidX+14}" y="${rMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${rAngle},${rMidX+14},${rMidY})">${val(sideLen)}</text>
+      <text x="${PX+tw/2}" y="${PY+th+26}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)} (base)</text>
+      <text x="${lMidX-16}" y="${lMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${lAngle},${lMidX-16},${lMidY})">${val(sideLen)}</text>
+      <text x="${rMidX+16}" y="${rMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${rAngle},${rMidX+16},${rMidY})">${val(sideLen)}</text>
       ` : ''}`;
 
   } else if (type === 'cercle') {
     const r = w*S;
-    vbW = r*2+PX*2; vbH = r*2+PY*2+10;
+    vbW = r*2+PX*2+20; vbH = r*2+PY*2+44; // +44 for diameter label below circle
     const cx = PX+r, cy = PY+r;
+    // diameter line sits below center at 60% of radius
+    const dy = cy + r*0.6;
     shape = `
       <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
       ${dims ? `
       <circle cx="${cx}" cy="${cy}" r="3" fill="${fw}"/>
       <line x1="${cx}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="${fw}" stroke-width="1.5" stroke-dasharray="5,3"/>
-      <text x="${cx+r/2}" y="${cy-8}" text-anchor="middle" font-size="12" ${ff} fill="${fw}" font-weight="600">r = ${val(w)}</text>
-      <line x1="${cx-r}" y1="${cy+r*0.55}" x2="${cx+r}" y2="${cy+r*0.55}" stroke="${fw}" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.55"/>
-      <text x="${cx}" y="${cy+r*0.55-7}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">d = ${val(w*2)}</text>
+      <text x="${cx+r/2}" y="${cy-10}" text-anchor="middle" font-size="13" ${ff} fill="${fw}" font-weight="600">r = ${val(w)}</text>
+      <line x1="${cx-r}" y1="${dy}" x2="${cx+r}" y2="${dy}" stroke="${fw}" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.6"/>
+      <text x="${cx}" y="${dy+18}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">d = ${val(w*2)}</text>
       ` : ''}`;
   }
 
