@@ -383,6 +383,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <button class="btn btn-p" onclick="addToFiche()">Ajouter à la fiche →</button>
       </div>
     </div>
+    <!-- Multi-exercise scan result -->
+    <div id="multi-ed" style="display:none" class="card">
+      <div class="card-title" id="multi-ed-title">Exercices détectés</div>
+      <div id="multi-ed-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px"></div>
+      <div class="arow"><div class="sp"></div><button class="btn btn-p" onclick="addAllScannedToFiche()">Tout ajouter à la fiche →</button></div>
+    </div>
     <!-- Basket mini -->
     <div id="bmini" style="display:none" class="card">
       <div class="card-title">Fiche en cours · <span id="bcount">0</span> exercice(s) <span class="right"><button class="btn btn-ghost btn-sm" onclick="goTab(3)">Exporter →</button></span></div>
@@ -567,26 +573,27 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="card-title">Géométrie <span id="geo-add-ok" class="badge" style="display:none">Ajouté ✓</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div><label class="flbl">Forme</label>
-        <select class="inp" id="geo-type" onchange="renderGeoPreview()">
+        <select class="inp" id="geo-type" onchange="renderGeoPreview();geoUpdateUI()">
+          <option value="ligne">Ligne à mesurer</option>
           <option value="rectangle">Rectangle</option>
           <option value="carre">Carré</option>
           <option value="triangle">Triangle</option>
           <option value="cercle">Cercle</option>
-          <option value="pentagone">Pentagone</option>
         </select></div>
       <div><label class="flbl">Couleur</label>
-        <input type="color" class="inp" id="geo-color" value="#5B3FBF" onchange="renderGeoPreview()" style="height:38px;padding:2px 4px"></div>
-      <div><label class="flbl">Largeur (cm)</label>
+        <input type="color" class="inp" id="geo-color" value="#1a1a1a" onchange="renderGeoPreview()" style="height:38px;padding:2px 4px"></div>
+      <div id="geo-field-w"><label class="flbl" id="geo-lbl-w">Longueur (cm)</label>
         <input type="number" class="inp" id="geo-w" value="6" min="1" max="20" step="0.5" oninput="renderGeoPreview()"></div>
-      <div><label class="flbl">Hauteur (cm)</label>
+      <div id="geo-field-h" style="display:none"><label class="flbl" id="geo-lbl-h">Hauteur (cm)</label>
         <input type="number" class="inp" id="geo-h" value="4" min="1" max="20" step="0.5" oninput="renderGeoPreview()"></div>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-fill" onchange="renderGeoPreview()"> Remplissage</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-dims" checked onchange="renderGeoPreview()"> Dimensions</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-fill-row"><input type="checkbox" id="geo-fill" onchange="renderGeoPreview()"> Remplissage</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="geo-dims" checked onchange="renderGeoPreview()"> Afficher mesures</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px" id="geo-hide-row" style="display:none"><input type="checkbox" id="geo-hide-val" onchange="renderGeoPreview()"> Cacher valeurs (exercice)</label>
     </div>
     <div style="background:var(--sur2);border-radius:var(--rs);padding:12px;margin-bottom:12px;min-height:120px;display:flex;align-items:center;justify-content:center">
-      <svg id="geo-svg" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:200px"></svg>
+      <svg id="geo-svg" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;max-height:220px"></svg>
     </div>
     <button class="btn btn-primary btn-sm" onclick="addGeoToFiche()">+ Ajouter à la fiche</button>
   </div>
@@ -1264,15 +1271,21 @@ async function callOpenRouterVision(b64, mime, prompt) {
 /* ══════════════════════════════════════════════
    SCAN (p0)
 ══════════════════════════════════════════════ */
-const SCAN_PROMPT = `Tu es un expert en maths primaire belge (FWB). Analyse cet exercice et réponds UNIQUEMENT en JSON valide :
+const SCAN_PROMPT = `Tu es un expert en maths primaire belge (FWB). Analyse cette image et réponds UNIQUEMENT en JSON valide, sans markdown.
+
+Si UN SEUL exercice visible — retourne un objet unique :
 {"type":"Addition","emoji":"➕","consigne":"Calcule :","numbers":[{"label":"Premier nombre","value":12}],"correction":"12 + 8 = 20","chapitre":"Addition"}
+
+Si PLUSIEURS exercices visibles — retourne un TABLEAU (un objet par exercice) :
+[{"type":"Addition","emoji":"➕","consigne":"...","numbers":[...],"correction":"...","chapitre":"..."},{"type":"Soustraction","emoji":"➖","consigne":"...","numbers":[...],"correction":"...","chapitre":"..."}]
+
+Règles :
+- Chaque exercice numéroté sur l'image = un objet distinct dans le tableau
 - consigne en français, style manuel belge (Tip Top, Maths et Moustique)
-- numbers = toutes les valeurs numériques modifiables
+- numbers = valeurs numériques modifiables
 - correction = réponse complète
 - chapitre = un parmi : Numération, Addition, Soustraction, Multiplication, Division, Fractions, Géométrie, Mesures, Problèmes
-- Si l'image vient d'un manuel scolaire (exercices numérotés, figures, tableaux) : extrait TOUS les exercices visibles dans "consigne"
-- Traduis tout en français, adapte les unités (miles→km, lbs→kg)
-- numbers = valeurs numériques modifiables dans l'exercice`;
+- Traduis tout en français, adapte les unités (miles→km, lbs→kg)`;
 
 function handleFile(e) {
   const file = e.target.files[0];
@@ -1355,7 +1368,13 @@ async function analyzeImage(b64, mime) {
       throw new Error('Aucune méthode d\'analyse disponible. Vérifiez votre connexion et votre clé API.');
     }
     _lastScanImage = 'data:'+mime+';base64,'+b64;
-    showInlineEditor(result);
+    if (Array.isArray(result)) {
+      hide('inline-ed');
+      showMultiScanResult(result);
+    } else {
+      hide('multi-ed');
+      showInlineEditor(result);
+    }
   } catch(e) {
     if (ldg) ldg.style.display = 'none';
     showErr('scan-err', e.message);
@@ -1372,6 +1391,40 @@ function showInlineEditor(exo) {
   if (cons) cons.value = exo.consigne || '';
   renderNumsIn(exo.numbers || []);
   box.dataset.exo = JSON.stringify(exo);
+}
+
+function showMultiScanResult(exos) {
+  const box = document.getElementById('multi-ed');
+  const list = document.getElementById('multi-ed-list');
+  const title = document.getElementById('multi-ed-title');
+  if (!box || !list) return;
+  if (title) title.textContent = `${exos.length} exercice${exos.length>1?'s':''} détecté${exos.length>1?'s':''}`;
+  list.innerHTML = exos.map((e, i) => `
+    <div style="border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:18px;flex-shrink:0">${esc(e.emoji||'📝')}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--mu);margin-bottom:3px">${esc(e.type||'Exercice')} · ${esc(e.chapitre||'')}</div>
+        <p style="font-size:13px;line-height:1.5;margin-bottom:6px;color:var(--tx)">${esc(stripMd(e.consigne||'').slice(0,130))}${(e.consigne||'').length>130?'…':''}</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="addScannedToFiche(${i})">+ Ajouter</button>
+    </div>`).join('');
+  box.dataset.multiExo = JSON.stringify(exos);
+  box.style.display = 'block';
+}
+
+function addScannedToFiche(i) {
+  const box = document.getElementById('multi-ed');
+  if (!box) return;
+  const exos = JSON.parse(box.dataset.multiExo || '[]');
+  if (exos[i]) { basket.push(exos[i]); saveToLib(exos[i]); refreshBmini(); renderFiche(); }
+}
+
+function addAllScannedToFiche() {
+  const box = document.getElementById('multi-ed');
+  if (!box) return;
+  const exos = JSON.parse(box.dataset.multiExo || '[]');
+  exos.forEach(e => { basket.push(e); saveToLib(e); });
+  refreshBmini(); renderFiche();
 }
 
 function renderNumsIn(nums) {
@@ -2359,49 +2412,134 @@ async function exportPlan() {
 }
 
 /* ══════════════════════════════════════════════
-   GEOMETRIE (p6) — minimal functional version
+   GEOMETRIE (p6)
 ══════════════════════════════════════════════ */
+function geoUpdateUI() {
+  const type = document.getElementById('geo-type')?.value || 'ligne';
+  const lblW = document.getElementById('geo-lbl-w');
+  const lblH = document.getElementById('geo-lbl-h');
+  const fieldH = document.getElementById('geo-field-h');
+  const fillRow = document.getElementById('geo-fill-row');
+  const hideRow = document.getElementById('geo-hide-row');
+  const labels = {
+    ligne:     {w:'Longueur (cm)', h:''},
+    rectangle: {w:'Largeur (cm)',  h:'Hauteur (cm)'},
+    carre:     {w:'Côté (cm)',     h:''},
+    triangle:  {w:'Base (cm)',     h:'Hauteur (cm)'},
+    cercle:    {w:'Rayon (cm)',    h:''},
+  };
+  const lab = labels[type] || {w:'Largeur (cm)', h:'Hauteur (cm)'};
+  if (lblW) lblW.textContent = lab.w;
+  if (lblH) lblH.textContent = lab.h;
+  if (fieldH) fieldH.style.display = ['rectangle','triangle'].includes(type) ? 'block' : 'none';
+  if (fillRow) fillRow.style.display = type === 'ligne' ? 'none' : 'flex';
+  if (hideRow) hideRow.style.display = ['ligne','cercle','triangle','rectangle','carre'].includes(type) ? 'flex' : 'none';
+}
+
 function renderGeoPreview() {
-  const type  = document.getElementById('geo-type')?.value || 'rectangle';
+  const type  = document.getElementById('geo-type')?.value || 'ligne';
   const w     = parseFloat(document.getElementById('geo-w')?.value  || 6);
   const h     = parseFloat(document.getElementById('geo-h')?.value  || 4);
-  const color = document.getElementById('geo-color')?.value || '#5B3FBF';
+  const col   = document.getElementById('geo-color')?.value || '#1a1a1a';
   const fill  = document.getElementById('geo-fill')?.checked;
+  const dims  = document.getElementById('geo-dims')?.checked !== false;
+  const hide  = document.getElementById('geo-hide-val')?.checked;
   const svg   = document.getElementById('geo-svg');
   if (!svg) return;
 
-  const S = 60, PX = 20, PY = 20;
-  let shape = '';
-  if (type === 'rectangle' || type === 'carre') {
-    const rw = w * S, rh = h * S;
-    shape = `<rect x="${PX}" y="${PY}" width="${rw}" height="${rh}" stroke="${color}" stroke-width="2" fill="${fill?color+'33':'none'}"/>
-    <text x="${PX+rw/2}" y="${PY+rh+16}" text-anchor="middle" font-size="12" fill="${color}">${w} cm</text>
-    <text x="${PX-14}" y="${PY+rh/2}" text-anchor="middle" font-size="12" fill="${color}" transform="rotate(-90,${PX-14},${PY+rh/2})">${h} cm</text>`;
-    svg.setAttribute('viewBox', `0 0 ${rw+PX*2+20} ${rh+PY*2+20}`);
-  } else if (type === 'cercle') {
-    const r = w * S / 2;
-    shape = `<circle cx="${PX+r}" cy="${PY+r}" r="${r}" stroke="${color}" stroke-width="2" fill="${fill?color+'33':'none'}"/>
-    <text x="${PX+r}" y="${PY+r*2+16}" text-anchor="middle" font-size="12" fill="${color}">r = ${w/2} cm</text>`;
-    svg.setAttribute('viewBox', `0 0 ${r*2+PX*2} ${r*2+PY*2+20}`);
+  const S = 55, PX = 28, PY = 28;
+  const ff = `font-family="sans-serif"`;
+  const val = (v, unit='cm') => hide ? '?' : `${v} ${unit}`;
+  const fw = col; // stroke/text color
+  let shape = '', vbW = 200, vbH = 150;
+
+  if (type === 'ligne') {
+    const lw = w * S;
+    vbW = lw + PX*2; vbH = 52;
+    const y = 18;
+    shape = `
+      <line x1="${PX}" y1="${y}" x2="${PX+lw}" y2="${y}" stroke="${fw}" stroke-width="2"/>
+      <line x1="${PX}"    y1="${y-9}" x2="${PX}"    y2="${y+9}" stroke="${fw}" stroke-width="2"/>
+      <line x1="${PX+lw}" y1="${y-9}" x2="${PX+lw}" y2="${y+9}" stroke="${fw}" stroke-width="2"/>
+      ${dims ? `<text x="${PX+lw/2}" y="${y+26}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
+
+  } else if (type === 'rectangle') {
+    const rw = w*S, rh = h*S;
+    vbW = rw+PX*2+30; vbH = rh+PY*2+26;
+    shape = `
+      <rect x="${PX}" y="${PY}" width="${rw}" height="${rh}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
+      ${dims ? `
+      <text x="${PX+rw/2}" y="${PY+rh+20}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)}</text>
+      <text x="${PX-18}" y="${PY+rh/2}" text-anchor="middle" font-size="12" ${ff} fill="${fw}" transform="rotate(-90,${PX-18},${PY+rh/2})">${val(h)}</text>` : ''}`;
+
+  } else if (type === 'carre') {
+    const s = w*S;
+    vbW = s+PX*2+20; vbH = s+PY*2+26;
+    shape = `
+      <rect x="${PX}" y="${PY}" width="${s}" height="${s}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
+      ${dims ? `<text x="${PX+s/2}" y="${PY+s+20}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
+
   } else if (type === 'triangle') {
-    const tw = w * S, th = h * S;
-    shape = `<polygon points="${PX},${PY+th} ${PX+tw/2},${PY} ${PX+tw},${PY+th}" stroke="${color}" stroke-width="2" fill="${fill?color+'33':'none'}"/>`;
-    svg.setAttribute('viewBox', `0 0 ${tw+PX*2} ${th+PY*2}`);
-  } else {
-    shape = `<rect x="${PX}" y="${PY}" width="${w*S}" height="${h*S}" stroke="${color}" stroke-width="2" fill="${fill?color+'33':'none'}"/>`;
-    svg.setAttribute('viewBox', `0 0 ${w*S+PX*2} ${h*S+PY*2}`);
+    const tw = w*S, th = h*S;
+    // isoceles: apex at top-center, base at bottom
+    const ax = PX+tw/2, ay = PY;
+    const bx = PX,      by = PY+th;
+    const cx = PX+tw,   cy = PY+th;
+    // side lengths in cm
+    const sideLen = Math.round(Math.sqrt((w/2)**2 + h**2)*10)/10;
+    // label positions along left/right sides
+    const lMidX = (ax+bx)/2, lMidY = (ay+by)/2;
+    const rMidX = (ax+cx)/2, rMidY = (ay+cy)/2;
+    const lAngle = Math.atan2(by-ay,bx-ax)*180/Math.PI;
+    const rAngle = Math.atan2(cy-ay,cx-ax)*180/Math.PI;
+    vbW = tw+PX*2+20; vbH = th+PY*2+28;
+    shape = `
+      <polygon points="${ax},${ay} ${bx},${by} ${cx},${cy}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
+      ${dims ? `
+      <text x="${PX+tw/2}" y="${PY+th+22}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">${val(w)} (base)</text>
+      <text x="${lMidX-14}" y="${lMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${lAngle},${lMidX-14},${lMidY})">${val(sideLen)}</text>
+      <text x="${rMidX+14}" y="${rMidY}" text-anchor="middle" font-size="11" ${ff} fill="${fw}" transform="rotate(${rAngle},${rMidX+14},${rMidY})">${val(sideLen)}</text>
+      ` : ''}`;
+
+  } else if (type === 'cercle') {
+    const r = w*S;
+    vbW = r*2+PX*2; vbH = r*2+PY*2+10;
+    const cx = PX+r, cy = PY+r;
+    shape = `
+      <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${fw}" stroke-width="2" fill="${fill?fw+'22':'none'}"/>
+      ${dims ? `
+      <circle cx="${cx}" cy="${cy}" r="3" fill="${fw}"/>
+      <line x1="${cx}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="${fw}" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="${cx+r/2}" y="${cy-8}" text-anchor="middle" font-size="12" ${ff} fill="${fw}" font-weight="600">r = ${val(w)}</text>
+      <line x1="${cx-r}" y1="${cy+r*0.55}" x2="${cx+r}" y2="${cy+r*0.55}" stroke="${fw}" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.55"/>
+      <text x="${cx}" y="${cy+r*0.55-7}" text-anchor="middle" font-size="12" ${ff} fill="${fw}">d = ${val(w*2)}</text>
+      ` : ''}`;
   }
+
   svg.innerHTML = shape;
+  svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
 }
 
 function addGeoToFiche() {
   const svg = document.getElementById('geo-svg');
   if (!svg) return;
-  const type = document.getElementById('geo-type')?.value || 'figure';
+  const type = document.getElementById('geo-type')?.value || 'ligne';
+  const w = parseFloat(document.getElementById('geo-w')?.value || 6);
+  const h = parseFloat(document.getElementById('geo-h')?.value || 4);
+  const hide = document.getElementById('geo-hide-val')?.checked;
+  const typeLabels = {ligne:'Ligne à mesurer',rectangle:'Rectangle',carre:'Carré',triangle:'Triangle',cercle:'Cercle'};
+  const sideLen = Math.round(Math.sqrt((w/2)**2+h**2)*10)/10;
+  const consignes = {
+    ligne:     hide ? 'Mesure cette ligne avec ta règle et note la longueur.' : `Ligne de ${w} cm — mesure et vérifie.`,
+    rectangle: `Rectangle : largeur ${w} cm, hauteur ${h} cm`,
+    carre:     `Carré de côté ${w} cm`,
+    triangle:  `Triangle isocèle : base ${w} cm, hauteur ${h} cm, côtés ${sideLen} cm`,
+    cercle:    `Cercle : rayon ${w} cm, diamètre ${w*2} cm`,
+  };
   const exo = {
     type: 'Géométrie',
     emoji: '📐',
-    consigne: 'Figure géométrique : ' + type + '\n[Voir figure ci-jointe]',
+    consigne: consignes[type] || `${typeLabels[type]||type}`,
     numbers: [],
     correction: 'Voir figure',
     chapitre: 'Géométrie',
@@ -2410,7 +2548,9 @@ function addGeoToFiche() {
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
-  alert('Figure ajoutée à la fiche !');
+  renderFiche();
+  const ok = document.getElementById('geo-add-ok');
+  if (ok) { ok.style.display='inline'; setTimeout(()=>ok.style.display='none', 2000); }
 }
 
 /* ══════════════════════════════════════════════
@@ -2778,6 +2918,10 @@ window.addEventListener('DOMContentLoaded', () => {
   showAnth();
   // Re-check when user changes provider
   document.querySelectorAll('.mode-card').forEach(c => c.addEventListener('click', showAnth));
+
+  // Init geometry panel defaults
+  geoUpdateUI();
+  renderGeoPreview();
 });
 
 
