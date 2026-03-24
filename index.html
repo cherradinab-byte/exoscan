@@ -337,16 +337,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 </div>
 
-  <!-- AI LOADING BAR -->
-  <div id="ai-bar">
-    <div style="display:flex;justify-content:space-between">
-      <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA locale…</span>
-      <span style="font-size:12px;color:var(--mu)" id="ai-pct">0%</span>
-    </div>
-    <div class="ai-track"><div class="ai-fill" id="ai-fill"></div></div>
-    <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">Téléchargement du modèle SmolVLM (~400MB une seule fois)…</p>
-  </div>
-
   <!-- PAGE 0 : SCAN -->
   <div id="p0">
     <div class="card">
@@ -486,8 +476,14 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <label class="xopt"><input type="checkbox" id="opt-corr"><div class="xopt-txt"><strong>Version corrigé</strong><span>Avec les réponses</span></div></label>
     <label class="xopt"><input type="checkbox" id="opt-belge"><div class="xopt-txt"><strong>Style manuel belge</strong><span>Mise en page Maths et Moustique</span></div></label>
     <div id="export-btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-g btn-sm" onclick="generateWord()">⬇ Word (.docx)</button>
+      <button class="btn btn-g btn-sm" onclick="exportToGDrive()">
+        <svg width="14" height="14" viewBox="0 0 87.3 78" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+        Google Doc
+      </button>
       <button class="btn btn-ghost btn-sm" onclick="generatePDF()">⬇ PDF</button>
+    </div>
+    <div id="gdrive-hint" style="display:none;margin-top:8px" class="note">
+      Google Drive non connecté. <button class="btn btn-ghost btn-sm" onclick="goTab(10)" style="margin-left:4px">Configurer →</button>
     </div>
   </div>
 </div>
@@ -517,8 +513,10 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
     <div id="corr-result" style="display:none" class="card">
       <div class="card-title" id="corr-result-title">Résultat</div>
+      <div style="font-size:22px;font-weight:700;color:var(--ac);margin-bottom:10px" id="corr-score"></div>
       <div id="corr-items"></div>
-      <div class="arow"><button class="btn btn-ghost btn-sm" onclick="resetCorr()">Nouvelle correction</button></div>
+      <div id="corr-feedback" style="font-size:13px;color:var(--gn);margin-top:10px;padding:10px 12px;background:var(--gnl);border-radius:var(--rs);border:1px solid rgba(45,106,79,.2)"></div>
+      <div class="arow" style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="resetCorr()">Nouvelle correction</button></div>
     </div>
   </div>
 
@@ -542,7 +540,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="err" id="plan-err"></div>
     </div>
     <div id="plan-result" style="display:none" class="card">
-      <div class="card-title">Séquence <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">⬇ Word</button></span></div>
+      <div class="card-title">Séquence <span class="right"><button class="btn btn-ghost btn-sm" onclick="exportPlan()">📄 Exporter</button></span></div>
       <div id="plan-list"></div>
     </div>
   </div>
@@ -618,9 +616,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <div id="table-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <div id="mult-table" style="overflow-x:auto;margin-bottom:14px"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="table-export-row">
         <button class="btn btn-primary btn-sm" onclick="startDrill()">⚡ Entraînement</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportTableWord()">⬇ Fiche Word</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportTableWord()">📄 Exporter fiche</button>
       </div>
     </div>
     <div id="drill-card" class="card" style="display:none">
@@ -666,16 +664,31 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
       <div class="info-box" style="margin-bottom:14px">
         <strong>Mode IA actif :</strong>
-        <span id="ai-status" class="ai-pill">…</span><br>
+        <span id="ai-status-settings" class="ai-pill">…</span><br>
         <span id="ai-mode-info" style="font-size:12px;color:var(--mu)"></span>
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
         <button class="btn btn-ghost btn-sm" onclick="testApi()">🔍 Tester API</button>
-        <button class="btn btn-ghost btn-sm" onclick="initLocalAI(true)">🔄 Recharger IA locale</button>
         <button class="btn btn-ghost btn-sm" onclick="showSetup()">🔑 Changer clé / mode</button>
       </div>
 
+      <!-- Anthropic model selector -->
+      <div id="anth-model-row" style="display:none;margin-bottom:14px">
+        <label class="flbl">Modèle Claude (économie vs qualité)</label>
+        <select id="anth-model-sel" onchange="saveAnthModel(this.value)" style="margin-bottom:4px">
+          <option value="claude-haiku-4-5-20251001">Claude Haiku — rapide &amp; économique ✅ (recommandé)</option>
+          <option value="claude-sonnet-4-6">Claude Sonnet — meilleur, plus cher</option>
+        </select>
+        <p style="font-size:11px;color:var(--mu)">Haiku ≈ 10× moins cher que Sonnet pour des résultats très satisfaisants.</p>
+      </div>
+
+      <!-- Local AI / Offline section -->
+      <hr style="border:none;border-top:1px solid var(--bd);margin:14px 0">
+      <h4 style="font-size:14px;font-weight:600;margin-bottom:6px">🔒 IA locale (hors-ligne)</h4>
+      <div class="note" style="margin-bottom:10px">
+        <strong>Téléchargement optionnel.</strong> Le mode API (recommandé) fonctionne sans rien télécharger. L'IA locale (~150MB) n'est utile qu'en mode <em>Hors-ligne</em>.
+      </div>
       <div id="ai-bar" style="display:none;margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;color:var(--acd);font-weight:500" id="ai-bar-label">Chargement IA…</span>
@@ -683,6 +696,33 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         </div>
         <div class="ai-track" style="margin-top:6px"><div class="ai-fill" id="ai-fill"></div></div>
         <p style="font-size:12px;color:var(--mu);margin-top:5px" id="ai-msg">Préparation…</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-ghost btn-sm" id="btn-dl-localai" onclick="confirmDownloadLocalAI()">⬇ Télécharger IA locale (~150MB)</button>
+        <button class="btn btn-ghost btn-sm" id="btn-dl-ocr" onclick="confirmDownloadOCR()">⬇ Activer OCR Tesseract (~40MB)</button>
+      </div>
+
+      <!-- Google Drive section -->
+      <hr style="border:none;border-top:1px solid var(--bd);margin:14px 0">
+      <h4 style="font-size:14px;font-weight:600;margin-bottom:6px">☁ Export Google Drive</h4>
+      <p style="font-size:12px;color:var(--mu);margin-bottom:8px">Exportez vos fiches directement comme Google Docs dans votre Drive.</p>
+      <div class="sync-row" id="gdrive-status-row">
+        <div class="sync-dot" id="gdrive-dot"></div>
+        <span id="gdrive-msg" style="font-size:13px">Non connecté</span>
+      </div>
+      <div class="info-box" id="gdrive-setup-hint" style="margin-bottom:8px;font-size:12px">
+        <strong>Configuration requise :</strong> Créez un projet Google Cloud, activez l'API Drive,
+        créez des identifiants OAuth 2.0 (type "Application Web"), ajoutez
+        <code style="background:rgba(0,0,0,.07);padding:1px 4px;border-radius:3px">${location.origin}</code>
+        comme origine autorisée, puis copiez le Client ID ci-dessous.
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--ac)">Ouvrir Google Console →</a>
+      </div>
+      <label class="flbl">Google OAuth Client ID</label>
+      <input id="gdrive-client-id" class="inp" type="text" placeholder="123456789-abc….apps.googleusercontent.com" style="margin-bottom:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="saveGClientId()">💾 Enregistrer Client ID</button>
+        <button class="btn btn-p btn-sm" id="gdrive-connect-btn" onclick="connectGoogleDrive()">Connecter Google Drive</button>
+        <button class="btn btn-ghost btn-sm" id="gdrive-disconnect-btn" onclick="disconnectGoogleDrive()" style="display:none">Déconnecter</button>
       </div>
 
       <hr style="border:none;border-top:1px solid var(--bd);margin:14px 0">
@@ -857,21 +897,58 @@ function goTab(n) {
 async function initAI(force=false) {
   updateAIPill('loading','⏳ Init…');
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
-  initOCR();
+
   if (provider === 'offline') {
-    initLocalAI(force); // non-blocking — user can navigate while model loads
+    // Offline mode: user explicitly chose it — load local models (no OCR auto-download)
+    initLocalAI(force); // non-blocking
     return;
   }
+
+  // API modes: verify connectivity only — NO auto-download of local models
   const labels = {openrouter:'🌐 OpenRouter', anthropic:'🤖 Claude', openai:'✨ GPT-4o'};
   const apiOk = await testApiSilent();
   if (apiOk) {
     updateAIPill('api', labels[provider] || '🌐 API');
     setAIModeInfo('Mode ' + (labels[provider]||provider) + ' actif.');
   } else {
-    updateAIPill('loading','⚠ API…');
-    setAIModeInfo('API inaccessible. Chargement IA locale…');
+    updateAIPill('loading','⚠ Clé invalide');
+    setAIModeInfo('API inaccessible. Vérifiez votre clé dans ⚙ Réglages.');
   }
-  initLocalAI(force);
+  // OCR and local AI are NOT auto-loaded for API modes.
+  // User can manually activate them from Settings if needed.
+}
+
+function confirmDownloadLocalAI() {
+  const ok = confirm(
+    '⬇ Télécharger l\'IA locale ?\n\n' +
+    '• Taille : ~150MB (téléchargement unique)\n' +
+    '• Utile uniquement en mode "Hors-ligne"\n' +
+    '• En mode API (recommandé), ce téléchargement n\'est pas nécessaire\n\n' +
+    'Continuer ?'
+  );
+  if (ok) {
+    document.getElementById('btn-dl-localai').disabled = true;
+    document.getElementById('btn-dl-localai').textContent = '⏳ Téléchargement…';
+    initLocalAI(true);
+  }
+}
+
+function confirmDownloadOCR() {
+  const ok = confirm(
+    '⬇ Activer l\'OCR Tesseract ?\n\n' +
+    '• Taille : ~40MB (téléchargement unique)\n' +
+    '• Améliore la reconnaissance de texte sur les images\n' +
+    '• Optionnel : les modèles vision API fonctionnent sans OCR\n\n' +
+    'Continuer ?'
+  );
+  if (ok) {
+    document.getElementById('btn-dl-ocr').disabled = true;
+    document.getElementById('btn-dl-ocr').textContent = '⏳ Initialisation…';
+    initOCR().then(() => {
+      const btn = document.getElementById('btn-dl-ocr');
+      if (btn) btn.textContent = ocrReady ? '✅ OCR actif' : '❌ Échec OCR';
+    });
+  }
 }
 
 function skipLocalAI() {
@@ -929,13 +1006,17 @@ async function initLocalAI(force=false) {
     if (ls) ls.style.display = 'none';
     updateAIPill('local', device==='webgpu' ? '🟢 WebGPU' : '🟡 WASM');
     setAIModeInfo('IA locale prête ('+device.toUpperCase()+'). Fonctionne hors-ligne.');
+    const btn = document.getElementById('btn-dl-localai');
+    if (btn) { btn.textContent = '✅ IA locale active'; btn.disabled = true; }
   } catch(e) {
     if (bar) bar.style.display = 'none';
     if (ls && isOffline) {
       ls.style.display = 'block';
-      setLS('Chargement échoué', '<strong style="color:var(--rd)">Erreur : '+e.message+'</strong><br><br>Assurez-vous d\'être connecté à internet pour ce premier téléchargement (~400MB). Ensuite tout fonctionnera hors-ligne.');
+      setLS('Chargement échoué', '<strong style="color:var(--rd)">Erreur : '+e.message+'</strong><br><br>Assurez-vous d\'être connecté à internet pour ce premier téléchargement (~150MB). Ensuite tout fonctionnera hors-ligne.');
     }
     if (!vlmReady) { updateAIPill('api','⚠ IA KO'); setAIModeInfo('Erreur IA locale : '+e.message); }
+    const btn = document.getElementById('btn-dl-localai');
+    if (btn) { btn.textContent = '⬇ Télécharger IA locale (~150MB)'; btn.disabled = false; }
     console.error('initLocalAI:', e);
   }
 }
@@ -945,12 +1026,20 @@ async function initOCR() {
     const {createWorker} = await import('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.esm.min.js');
     ocrEngine = await createWorker(['fra','eng'], 1, {logger: m => {}});
     ocrReady = true;
-  } catch(e) { console.log('OCR non dispo:', e.message); }
+    const btn = document.getElementById('btn-dl-ocr');
+    if (btn) { btn.textContent = '✅ OCR actif'; btn.disabled = true; }
+  } catch(e) {
+    console.log('OCR non dispo:', e.message);
+    const btn = document.getElementById('btn-dl-ocr');
+    if (btn) { btn.textContent = '⬇ Activer OCR Tesseract (~40MB)'; btn.disabled = false; }
+  }
 }
 
 function updateAIPill(cls, txt) {
-  const p = document.getElementById('ai-status');
-  if (p) { p.className = 'ai-pill '+cls; p.textContent = txt; p.onclick=()=>goTab(10); p.style.cursor='pointer'; p.title='Réglages'; }
+  ['ai-status','ai-status-settings'].forEach(id => {
+    const p = document.getElementById(id);
+    if (p) { p.className = 'ai-pill '+cls; p.textContent = txt; p.onclick=()=>goTab(10); p.style.cursor='pointer'; p.title='Réglages'; }
+  });
 }
 function setAIModeInfo(txt) { const e = document.getElementById('ai-mode-info'); if(e) e.textContent = txt; }
 
@@ -966,7 +1055,7 @@ async function testApiSilent() {
     if (provider === 'anthropic') {
       r = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST', headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:5,messages:[{role:'user',content:'hi'}]})
+        body: JSON.stringify({model: getAnthModel(), max_tokens:5, messages:[{role:'user',content:'hi'}]})
       });
     } else if (provider === 'openai') {
       r = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -990,32 +1079,70 @@ async function testApi() {
   setAIModeInfo(ok ? 'Connexion API réussie.' : 'Impossible de joindre l\'API. Vérifiez votre clé.');
 }
 
+function getAnthModel() {
+  return localStorage.getItem('exoscan_anth_model') || 'claude-haiku-4-5-20251001';
+}
+function saveAnthModel(val) {
+  localStorage.setItem('exoscan_anth_model', val);
+  setAIModeInfo('Modèle Claude mis à jour : ' + val.split('-')[1]);
+}
+
 async function callAIText(prompt, system) {
   const provider = localStorage.getItem(PROVSTORE) || 'openrouter';
   const key = localStorage.getItem(KEYSTORE);
-  if (!key || provider === 'offline') throw new Error('Pas de clé API');
+  if (!key || provider === 'offline') throw new Error('Pas de clé API. Configurez votre clé dans ⚙ Réglages.');
   let r, d;
   if (provider === 'anthropic') {
+    // Use user-selected model (default: Haiku = cheaper)
     r = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,system:system||'Tu es un assistant pour enseignantes de mathématiques primaire en Belgique.',messages:[{role:'user',content:prompt}]})
+      body: JSON.stringify({
+        model: getAnthModel(),
+        max_tokens: 1024,
+        system: system || 'Tu es un assistant pédagogique pour enseignantes de mathématiques primaire (FWB, Belgique). Réponds toujours en JSON valide sauf indication contraire.',
+        messages:[{role:'user',content:prompt}]
+      })
     });
     d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || 'Erreur Anthropic ' + r.status);
     return d?.content?.[0]?.text || '';
   } else if (provider === 'openai') {
     r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({model:'gpt-4o-mini',max_tokens:1200,messages:[{role:'system',content:system||'Assistant maths primaire Belgique.'},{role:'user',content:prompt}]})
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1024,
+        messages:[
+          {role:'system', content: system || 'Assistant maths primaire Belgique FWB. Réponds en JSON valide.'},
+          {role:'user',   content: prompt}
+        ]
+      })
     });
     d = await r.json();
+    if (!r.ok) throw new Error(d?.error?.message || 'Erreur OpenAI ' + r.status);
     return d?.choices?.[0]?.message?.content || '';
   } else {
-    r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
-      body: JSON.stringify({model:OR_MODELS[0].id,max_tokens:1200,messages:[{role:'system',content:system||'Assistant maths primaire Belgique.'},{role:'user',content:prompt}]})
-    });
-    d = await r.json();
-    return d?.choices?.[0]?.message?.content || '';
+    // OpenRouter — try free models in order
+    for (const m of OR_MODELS) {
+      try {
+        r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':'https://cherradinab-byte.github.io','X-Title':'ExoScan'},
+          body: JSON.stringify({
+            model: m.id,
+            max_tokens: 1024,
+            messages:[
+              {role:'system', content: system || 'Assistant maths primaire Belgique FWB. Réponds en JSON valide.'},
+              {role:'user',   content: prompt}
+            ]
+          })
+        });
+        if (!r.ok && (r.status===401||r.status===403)) throw new Error('auth');
+        d = await r.json();
+        const txt = d?.choices?.[0]?.message?.content || '';
+        if (txt) return txt;
+      } catch(ex) { if (ex.message==='auth') throw new Error('Clé OpenRouter invalide'); }
+    }
+    throw new Error('Tous les modèles OpenRouter ont échoué');
   }
 }
 
@@ -1027,7 +1154,7 @@ async function callOpenRouterVision(b64, mime, prompt) {
   if (provider === 'anthropic') {
     r = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model:'claude-sonnet-4-6',max_tokens:900,messages:[{role:'user',content:[
+      body: JSON.stringify({model: getAnthModel(), max_tokens:900, messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:mime,data:b64}},
         {type:'text',text:prompt}
       ]}]})
@@ -1038,8 +1165,8 @@ async function callOpenRouterVision(b64, mime, prompt) {
   } else if (provider === 'openai') {
     r = await fetch('https://api.openai.com/v1/chat/completions', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body: JSON.stringify({model:'gpt-4o-mini',max_tokens:900,messages:[{role:'user',content:[
-        {type:'image_url',image_url:{url:'data:'+mime+';base64,'+b64}},
+      body: JSON.stringify({model:'gpt-4o-mini', max_tokens:900, messages:[{role:'user',content:[
+        {type:'image_url',image_url:{url:'data:'+mime+';base64,'+b64, detail:'low'}},
         {type:'text',text:prompt}
       ]}]})
     });
@@ -1170,16 +1297,16 @@ function showInlineEditor(exo) {
   const box = document.getElementById('inline-ed');
   if (!box) return;
   box.style.display = 'block';
-  const head = document.getElementById('exo-head');
+  const head = document.getElementById('ed-badge');
   if (head) head.textContent = (exo.emoji||'📝')+' '+exo.type;
-  const cons = document.getElementById('exo-cons');
+  const cons = document.getElementById('ed-cons');
   if (cons) cons.value = exo.consigne || '';
   renderNumsIn(exo.numbers || []);
   box.dataset.exo = JSON.stringify(exo);
 }
 
 function renderNumsIn(nums) {
-  const grid = document.getElementById('ngrid');
+  const grid = document.getElementById('ed-nums');
   if (!grid) return;
   grid.innerHTML = nums.map((n,i) =>
     `<div style="display:flex;flex-direction:column;gap:4px">
@@ -1208,9 +1335,11 @@ function randomNums() {
     const range = Math.pow(10, mag);
     n.value = Math.floor(Math.random() * range) + 1;
   });
+  // also update consigne with new values
   box.dataset.exo = JSON.stringify(exo);
   renderNumsIn(exo.numbers || []);
 }
+
 
 async function adaptExo(type) {
   const box = document.getElementById('inline-ed');
@@ -1231,7 +1360,7 @@ async function adaptExo(type) {
       if (res.numbers)  exo.numbers  = res.numbers;
       if (res.correction) exo.correction = res.correction;
       box.dataset.exo = JSON.stringify(exo);
-      const cons = document.getElementById('exo-cons');
+      const cons = document.getElementById('ed-cons');
       if (cons) cons.value = exo.consigne;
       renderNumsIn(exo.numbers || []);
     }
@@ -1250,10 +1379,10 @@ function addToFiche() {
   const box = document.getElementById('inline-ed');
   if (!box) return;
   const exo = JSON.parse(box.dataset.exo || '{}');
-  const cons = document.getElementById('exo-cons');
+  const cons = document.getElementById('ed-cons');
   if (cons) exo.consigne = cons.value;
   (exo.numbers||[]).forEach((n,i) => {
-    const inp = document.getElementById('ngrid')?.querySelectorAll('input')[i];
+    const inp = document.getElementById('ed-nums')?.querySelectorAll('input')[i];
     if (inp) n.value = Number(inp.value);
   });
   basket.push(exo);
@@ -1262,6 +1391,9 @@ function addToFiche() {
   renderFiche();
   const msg = document.getElementById('add-ok');
   if (msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000); }
+  // Visual feedback
+  const btn = document.querySelector('#inline-ed .btn-p');
+  if (btn) { const t=btn.textContent; btn.textContent='✅ Ajouté !'; setTimeout(()=>btn.textContent=t,1500); }
 }
 
 /* ══════════════════════════════════════════════
@@ -1271,57 +1403,74 @@ async function generateExo() {
   const niveau = document.getElementById('gen-level')?.value || '3e primaire';
   const type   = document.getElementById('gen-type')?.value   || 'Addition';
   const diff   = document.getElementById('gen-diff')?.value   || 'normal';
-  const nb     = document.getElementById('gen-nb')?.value     || '5';
-  const theme  = document.getElementById('gen-theme')?.value  || '';
+  const nb     = document.getElementById('gen-count')?.value  || '5';
+  const theme  = document.getElementById('gen-ctx')?.value    || '';
 
   const ldg = document.getElementById('gen-ldg');
+  const err = document.getElementById('gen-err');
   const res  = document.getElementById('gen-result');
   if (ldg) ldg.style.display = 'flex';
   if (res) res.style.display = 'none';
+  if (err) err.style.display = 'none';
 
   const prompt = `Génère ${nb} exercices de ${type} pour ${niveau} (difficulté : ${diff})${theme?' sur le thème : '+theme:''}.
 Style manuels belges (Tip Top Maths, Maths et Moustique). Langage simple, contexte concret belge.
-Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices numérotés...","correction":"...","chapitre":"..."}`;
+Réponds en JSON : {"type":"${type}","emoji":"...","consigne":"...exercices numérotés...","numbers":[{"label":"Valeur 1","value":0}],"correction":"...","chapitre":"..."}`;
 
   try {
     let txt;
-    if (vlmReady || llmReady) {
-      const provider = localStorage.getItem(PROVSTORE);
-      if (provider !== 'offline' && localStorage.getItem(KEYSTORE)) {
-        txt = await callAIText(prompt);
-      } else if (llmReady && localLLM) {
-        const out = await localLLM(prompt, {max_new_tokens:600});
-        txt = out[0]?.generated_text || '';
-      }
+    if (llmReady && localStorage.getItem(PROVSTORE) === 'offline') {
+      const out = await localLLM(prompt, {max_new_tokens:600});
+      txt = out[0]?.generated_text || '';
     } else {
       txt = await callAIText(prompt);
     }
-    const exo = parseJSON(txt) || {type, emoji:'📝', consigne:txt, correction:'', chapitre:type};
+    const exo = parseJSON(txt) || {type, emoji:'📝', consigne:txt, numbers:[], correction:'', chapitre:type};
     if (res) {
       res.style.display = 'block';
-      const head = document.getElementById('gen-head');
-      const body = document.getElementById('gen-body');
-      if (head) head.textContent = (exo.emoji||'📝')+' '+exo.type;
-      if (body) body.textContent = exo.consigne;
+      const badge = document.getElementById('gen-badge');
+      const cons  = document.getElementById('gen-cons');
+      const nums  = document.getElementById('gen-nums');
+      if (badge) badge.textContent = (exo.emoji||'📝')+' '+exo.type;
+      if (cons)  cons.value = exo.consigne || '';
+      if (nums)  nums.innerHTML = (exo.numbers||[]).map((n,i) =>
+        `<div class="nitem"><span class="nlbl">${esc(n.label||'Valeur '+(i+1))}</span>
+         <input type="number" value="${n.value}" onchange="updateGenNum(${i},this.value)"></div>`
+      ).join('');
       res.dataset.exo = JSON.stringify(exo);
     }
   } catch(e) {
-    alert('Erreur génération : '+e.message);
+    if (err) { err.textContent = 'Erreur : '+e.message; err.style.display='block'; }
+    else alert('Erreur génération : '+e.message);
   } finally {
     if (ldg) ldg.style.display = 'none';
   }
+}
+
+function updateGenNum(idx, val) {
+  const res = document.getElementById('gen-result');
+  if (!res) return;
+  const exo = JSON.parse(res.dataset.exo || '{}');
+  if (exo.numbers && exo.numbers[idx]) { exo.numbers[idx].value = Number(val); res.dataset.exo = JSON.stringify(exo); }
 }
 
 function addGenToFiche() {
   const res = document.getElementById('gen-result');
   if (!res) return;
   const exo = JSON.parse(res.dataset.exo || '{}');
+  // Read latest edits from textarea and numbers
+  const cons = document.getElementById('gen-cons');
+  if (cons) exo.consigne = cons.value;
+  (exo.numbers||[]).forEach((n,i) => {
+    const inp = document.getElementById('gen-nums')?.querySelectorAll('input')[i];
+    if (inp) n.value = Number(inp.value);
+  });
   basket.push(exo);
   saveToLib(exo);
   refreshBmini();
   renderFiche();
-  const msg = document.getElementById('gen-add-ok');
-  if (msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none',2000); }
+  const btn = document.querySelector('#gen-result .btn-p');
+  if (btn) { const t=btn.textContent; btn.textContent='✅ Ajouté !'; setTimeout(()=>btn.textContent=t,1500); }
 }
 
 async function generate3Levels() {
@@ -1405,7 +1554,7 @@ async function exportLevelsWord() {
   });
   const doc = new Document({sections:[{children:ch}]});
   const blob = await Packer.toBlob(doc);
-  appendDlLink(blob, MIME_DOCX, 'fiche-3-niveaux.docx', document.getElementById('levels-export-row'));
+  await uploadOrDownload(blob, MIME_DOCX, 'fiche-3-niveaux.docx', document.getElementById('levels-export-row'));
 }
 
 async function exportLevelsPDF() {
@@ -1515,14 +1664,14 @@ function clearLib() {
 ══════════════════════════════════════════════ */
 function refreshBmini() {
   const bm = document.getElementById('bmini');
-  const bc = document.getElementById('bmini-count');
+  const bc = document.getElementById('bcount');
   if (bc) bc.textContent = basket.length;
   if (bm) bm.style.display = basket.length > 0 ? 'block' : 'none';
-  const bl = document.getElementById('basket-list');
+  const bl = document.getElementById('bmini-list');
   if (bl) bl.innerHTML = basket.map((e,i) =>
     `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
       <span style="font-size:12px">${esc(e.emoji||'📝')} ${esc(e.consigne.slice(0,40))}${e.consigne.length>40?'…':''}</span>
-      <button class="btn btn-ghost btn-sm" onclick="basket.splice(${i},1);refreshBmini()" style="color:var(--rd);padding:2px 6px">✕</button>
+      <button class="btn btn-ghost btn-sm" onclick="basket.splice(${i},1);refreshBmini();renderFiche()" style="color:var(--rd);padding:2px 6px">✕</button>
     </div>`
   ).join('');
 }
@@ -1542,9 +1691,22 @@ function resetExport() {
   document.querySelectorAll('.dl-link').forEach(el => el.remove());
 }
 
-async function generateWord() {
+/* Export to Google Drive (or local fallback) */
+async function exportToGDrive() {
   if (basket.length === 0) { alert('Fiche vide !'); return; }
-  const {Document,Paragraph,TextRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType,Packer} = docx;
+  try {
+    const blob = await generateWordBlob();
+    const title = document.getElementById('fiche-title')?.value || 'fiche-maths';
+    const safe  = title.replace(/[^a-z0-9\s\-]/gi,'').trim() || 'fiche-maths';
+    await uploadOrDownload(blob, MIME_DOCX, safe + '.docx', document.getElementById('export-btns'));
+  } catch(e) {
+    alert('Erreur export : ' + e.message);
+  }
+}
+
+/* Extract Word blob generation from generateWord, keeping it reusable */
+async function generateWordBlob() {
+  const {Document,Paragraph,TextRun,HeadingLevel,AlignmentType,ShadingType,Packer} = docx;
 
   const withHead = document.getElementById('opt-header')?.checked;
   const withBar  = document.getElementById('opt-bar')?.checked;
@@ -1553,7 +1715,6 @@ async function generateWord() {
   const belge    = document.getElementById('opt-belge')?.checked;
   const title    = document.getElementById('fiche-title')?.value || 'Fiche de mathématiques';
   const pts      = Math.round(20 / basket.length);
-
   const ch = [];
 
   if (belge) {
@@ -1576,9 +1737,12 @@ async function generateWord() {
     ch.push(new Paragraph({text:'', spacing:{after:40}}));
   });
 
-  const doc = new Document({sections:[{children:ch}]});
-  const blob = await Packer.toBlob(doc);
-  appendDlLink(blob, MIME_DOCX, 'fiche-maths.docx', document.getElementById('export-btns'));
+  return Packer.toBlob(new Document({sections:[{children:ch}]}));
+}
+
+async function generateWord() {
+  // Kept for backward compat — now delegates to exportToGDrive
+  await exportToGDrive();
 }
 
 async function generatePDF() {
@@ -1691,6 +1855,148 @@ function exportVariantsWord() {
   alert('Export variantes Word : ajout prochain.');
 }
 
+/* ══════════════════════════════════════════════
+   GOOGLE DRIVE INTEGRATION
+══════════════════════════════════════════════ */
+const GID_STORE       = 'exoscan_gclient_id';
+const GDRIVE_TOK      = 'exoscan_gdrive_token';
+const GDRIVE_EXP      = 'exoscan_gdrive_exp';
+
+function getGDriveToken() {
+  const tok = localStorage.getItem(GDRIVE_TOK);
+  const exp = parseInt(localStorage.getItem(GDRIVE_EXP) || '0');
+  return (tok && Date.now() < exp - 60000) ? tok : null;
+}
+
+async function ensureGIS() {
+  if (window.google?.accounts?.oauth2) return;
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = res;
+    s.onerror = () => rej(new Error('Impossible de charger Google Identity Services. Vérifiez votre connexion.'));
+    document.head.appendChild(s);
+  });
+}
+
+function saveGClientId() {
+  const v = document.getElementById('gdrive-client-id')?.value.trim();
+  if (!v) return;
+  localStorage.setItem(GID_STORE, v);
+  updateGDriveStatus(false);
+  alert('Client ID enregistré. Cliquez sur "Connecter Google Drive".');
+}
+
+async function connectGoogleDrive() {
+  const clientId = localStorage.getItem(GID_STORE) || document.getElementById('gdrive-client-id')?.value.trim();
+  if (!clientId) {
+    alert('Configurez d\'abord votre Google Client ID dans Réglages → Export Google Drive.');
+    return;
+  }
+  localStorage.setItem(GID_STORE, clientId);
+  try {
+    await ensureGIS();
+  } catch(e) {
+    alert('Erreur Google: ' + e.message);
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: resp => {
+      if (resp.error) { alert('Erreur d\'authentification : ' + resp.error); return; }
+      localStorage.setItem(GDRIVE_TOK, resp.access_token);
+      localStorage.setItem(GDRIVE_EXP, String(Date.now() + resp.expires_in * 1000));
+      updateGDriveStatus(true);
+    },
+    error_callback: err => alert('Erreur Google OAuth : ' + (err.message || err.type))
+  });
+  client.requestAccessToken({prompt: ''});
+}
+
+function disconnectGoogleDrive() {
+  localStorage.removeItem(GDRIVE_TOK);
+  localStorage.removeItem(GDRIVE_EXP);
+  updateGDriveStatus(false);
+}
+
+function updateGDriveStatus(connected) {
+  const dot  = document.getElementById('gdrive-dot');
+  const msg  = document.getElementById('gdrive-msg');
+  const cbtn = document.getElementById('gdrive-connect-btn');
+  const dbtn = document.getElementById('gdrive-disconnect-btn');
+  if (dot) dot.className = 'sync-dot ' + (connected ? 'ok' : 'err');
+  if (msg) msg.textContent = connected ? '✅ Connecté à Google Drive' : 'Non connecté';
+  if (cbtn) cbtn.style.display = connected ? 'none' : 'inline-flex';
+  if (dbtn) dbtn.style.display = connected ? 'inline-flex' : 'none';
+  const hint = document.getElementById('gdrive-setup-hint');
+  if (hint) hint.style.display = connected ? 'none' : 'block';
+}
+
+async function uploadToGDrive(blob, filename) {
+  const token = getGDriveToken();
+  if (!token) throw new Error('gdrive_not_connected');
+
+  const docName = filename.replace(/\.(docx|doc)$/i, '');
+  const metadata = {
+    name: docName,
+    mimeType: 'application/vnd.google-apps.document'
+  };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+  form.append('file', blob);
+
+  const r = await fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
+    { method: 'POST', headers: {'Authorization': 'Bearer ' + token}, body: form }
+  );
+  if (r.status === 401) {
+    // Token expired
+    localStorage.removeItem(GDRIVE_TOK);
+    updateGDriveStatus(false);
+    throw new Error('gdrive_expired');
+  }
+  if (!r.ok) {
+    const err = await r.json().catch(()=>({}));
+    throw new Error(err?.error?.message || 'Erreur Google Drive ' + r.status);
+  }
+  const file = await r.json();
+  window.open(file.webViewLink, '_blank');
+  return file;
+}
+
+/* Unified export: upload to Google Drive if connected, else local download */
+async function uploadOrDownload(blob, mime, fname, container) {
+  const token = getGDriveToken();
+  if (token) {
+    try {
+      const file = await uploadToGDrive(blob, fname);
+      // Show a success notification
+      const hint = document.getElementById('gdrive-hint');
+      if (hint) hint.style.display = 'none';
+      // Brief visual feedback
+      if (container) {
+        const ok = document.createElement('span');
+        ok.style.cssText = 'font-size:13px;color:var(--gn);margin-left:8px;font-weight:600';
+        ok.textContent = '✅ Ouvert dans Google Drive';
+        container.appendChild(ok);
+        setTimeout(() => ok.remove(), 4000);
+      }
+      return;
+    } catch(e) {
+      if (e.message === 'gdrive_not_connected' || e.message === 'gdrive_expired') {
+        // Fall through to local download
+      } else {
+        alert('Erreur Google Drive : ' + e.message + '\n\nTéléchargement local en cours…');
+      }
+    }
+  }
+  // Fallback: local download
+  const hint = document.getElementById('gdrive-hint');
+  if (hint) hint.style.display = 'block';
+  appendDlLink(blob, mime, fname, container);
+}
+
 function appendDlLink(blob, mime, fname, container) {
   // Remove previous links for same filename
   (container || document.body).querySelectorAll('.dl-link').forEach(el => {
@@ -1733,14 +2039,40 @@ function b64toFile(b64, mime, fname) {
 /* ══════════════════════════════════════════════
    CORRECTION (p4)
 ══════════════════════════════════════════════ */
-function loadCorrImg(which) {
-  const inp = document.getElementById('corr-inp-' + which);
-  if (inp) inp.click();
+function loadCorrImg(event, which) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  const prevEl  = document.getElementById('corr-prev-' + which);
+  const panelEl = document.getElementById('corr-' + which + '-panel');
+  const reader  = new FileReader();
+  reader.onload = e => {
+    if (!prevEl) {
+      // Create preview img inside panel
+      const img = document.createElement('img');
+      img.id = 'corr-prev-' + which;
+      img.style.cssText = 'width:100%;max-height:100px;object-fit:contain;border-radius:4px;margin-top:6px';
+      img.src = e.target.result;
+      if (panelEl) panelEl.appendChild(img);
+    } else {
+      prevEl.src = e.target.result;
+      prevEl.style.display = 'block';
+    }
+    if (panelEl) panelEl.classList.add('has-img');
+    checkBothLoaded();
+  };
+  reader.readAsDataURL(file);
+}
+
+function checkBothLoaded() {
+  const ref  = document.getElementById('corr-ref-input')?.files?.[0];
+  const copy = document.getElementById('corr-copy-input')?.files?.[0];
+  const btn  = document.getElementById('corr-btn');
+  if (btn) btn.disabled = !(ref && copy);
 }
 
 async function runCorrection() {
-  const inp1 = document.getElementById('corr-inp-1');
-  const inp2 = document.getElementById('corr-inp-2');
+  const inp1 = document.getElementById('corr-ref-input');
+  const inp2 = document.getElementById('corr-copy-input');
   if (!inp1?.files[0] || !inp2?.files[0]) { alert('Ajoutez les deux photos.'); return; }
 
   const toB64 = file => new Promise((res,rej) => {
@@ -1751,9 +2083,11 @@ async function runCorrection() {
   });
 
   const ldg = document.getElementById('corr-ldg');
-  const out  = document.getElementById('corr-out');
+  const out  = document.getElementById('corr-result');
+  const err  = document.getElementById('corr-err');
   if (ldg) ldg.style.display = 'flex';
   if (out) out.style.display = 'none';
+  if (err) err.style.display = 'none';
 
   try {
     const [{b64:b1,mime:m1},{b64:b2,mime:m2}] = await Promise.all([toB64(inp1.files[0]), toB64(inp2.files[0])]);
@@ -1763,92 +2097,134 @@ Réponds en JSON : {"score":"X/Y","items":[{"q":"Question 1","ok":true,"note":".
 
     let txt;
     const provider = localStorage.getItem(PROVSTORE)||'openrouter';
-    if (provider === 'anthropic') {
-      const key = localStorage.getItem(KEYSTORE);
+    const key = localStorage.getItem(KEYSTORE);
+    if (provider === 'anthropic' && key) {
+      // Anthropic supports multi-image in one call
+      const anthModel = localStorage.getItem('exoscan_anth_model') || 'claude-haiku-4-5-20251001';
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST', headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body: JSON.stringify({model:'claude-sonnet-4-6',max_tokens:900,messages:[{role:'user',content:[
+        body: JSON.stringify({model:anthModel,max_tokens:900,messages:[{role:'user',content:[
           {type:'image',source:{type:'base64',media_type:m1,data:b1}},
           {type:'image',source:{type:'base64',media_type:m2,data:b2}},
           {type:'text',text:prompt}
         ]}]})
       });
       const d = await r.json();
+      if (!r.ok) throw new Error(d?.error?.message || r.status);
       txt = d?.content?.[0]?.text;
+    } else if (provider === 'openai' && key) {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body: JSON.stringify({model:'gpt-4o-mini',max_tokens:900,messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:'data:'+m1+';base64,'+b1,detail:'low'}},
+          {type:'image_url',image_url:{url:'data:'+m2+';base64,'+b2,detail:'low'}},
+          {type:'text',text:prompt}
+        ]}]})
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.error?.message || r.status);
+      txt = d?.choices?.[0]?.message?.content;
     } else {
-      txt = await callOpenRouterVision(b2, m2, prompt);
+      // OpenRouter — send both images
+      txt = await callOpenRouterVision(b2, m2,
+        `Corrigé (image 1, déjà analysée): référence. Copie élève (image 2 ci-dessous).\n${prompt}`);
     }
     const res = parseJSON(txt);
-    if (!res) throw new Error('Réponse invalide');
+    if (!res) throw new Error('Réponse IA invalide — réessayez');
 
     if (out) {
       out.style.display = 'block';
-      document.getElementById('corr-score').textContent = res.score || '?';
-      document.getElementById('corr-items').innerHTML = (res.items||[]).map(it =>
+      const scoreEl = document.getElementById('corr-score');
+      const itemsEl = document.getElementById('corr-items');
+      const fbEl    = document.getElementById('corr-feedback');
+      const titleEl = document.getElementById('corr-result-title');
+      if (titleEl) titleEl.textContent = 'Résultat : ' + (res.score||'?');
+      if (scoreEl) scoreEl.textContent = res.score || '?';
+      if (itemsEl) itemsEl.innerHTML = (res.items||[]).map(it =>
         `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px">
-          <span style="font-size:16px">${it.ok?'✅':'❌'}</span>
+          <span style="font-size:16px;flex-shrink:0">${it.ok?'✅':'❌'}</span>
           <span style="font-size:13px"><strong>${esc(it.q)}</strong> — ${esc(it.note||'')}</span>
         </div>`
       ).join('');
-      document.getElementById('corr-feedback').textContent = res.feedback || '';
+      if (fbEl) fbEl.textContent = res.feedback || '';
     }
-  } catch(e) { alert('Erreur correction : '+e.message); }
+  } catch(e) {
+    if (err) { err.textContent = e.message; err.style.display = 'block'; }
+    else alert('Erreur correction : '+e.message);
+  }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
 function resetCorr() {
-  ['corr-inp-1','corr-inp-2'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['corr-prev-1','corr-prev-2'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
-  const out = document.getElementById('corr-out');
+  ['corr-ref-input','corr-copy-input'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['ref','copy'].forEach(w => {
+    const prev = document.getElementById('corr-prev-' + w);
+    if (prev) prev.style.display = 'none';
+    const panel = document.getElementById('corr-' + w + '-panel');
+    if (panel) panel.classList.remove('has-img');
+  });
+  const out = document.getElementById('corr-result');
   if (out) out.style.display = 'none';
+  const btn = document.getElementById('corr-btn');
+  if (btn) btn.disabled = true;
 }
 
 /* ══════════════════════════════════════════════
    PLANNING (p5)
 ══════════════════════════════════════════════ */
 async function generatePlan() {
-  const theme  = document.getElementById('plan-theme')?.value  || 'Addition';
-  const niveau = document.getElementById('plan-niveau')?.value || '3e primaire';
-  const duree  = document.getElementById('plan-duree')?.value  || '5';
-  const obj    = document.getElementById('plan-obj')?.value    || '';
+  const theme  = document.getElementById('plan-topic')?.value || 'Addition';
+  const niveau = document.getElementById('plan-level')?.value || '3e primaire';
+  const duree  = document.getElementById('plan-dur')?.value   || '2 semaines';
+  const obj    = document.getElementById('plan-obj')?.value   || '';
 
   const ldg = document.getElementById('plan-ldg');
-  const out  = document.getElementById('plan-out');
+  const err = document.getElementById('plan-err');
+  const out  = document.getElementById('plan-result');
   if (ldg) ldg.style.display = 'flex';
   if (out) out.style.display = 'none';
+  if (err) err.style.display = 'none';
 
-  const prompt = `Génère une séquence d'apprentissage de ${duree} séances sur "${theme}" pour ${niveau}${obj?', objectif : '+obj:''}.
+  const prompt = `Génère une séquence d'apprentissage de ${duree} sur "${theme}" pour ${niveau}${obj?', objectif : '+obj:''}.
 Style pédagogie belge FWB. Pour chaque séance : titre, durée, objectif, activités (mise en situation, exercices, synthèse), matériel.
 Réponds en JSON : {"titre":"...","seances":[{"num":1,"titre":"...","duree":"50min","objectif":"...","activites":["..."],"materiel":"..."}]}`;
 
   try {
     const txt = await callAIText(prompt);
     const data = parseJSON(txt);
-    if (!data) throw new Error('Réponse invalide');
+    if (!data) throw new Error('Réponse IA invalide — réessayez');
 
     if (out) {
       out.style.display = 'block';
       out.dataset.plan  = JSON.stringify(data);
-      document.getElementById('plan-title').textContent = data.titre || 'Séquence';
-      document.getElementById('plan-seances').innerHTML = (data.seances||[]).map(s =>
-        `<div class="card" style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <strong style="color:var(--ac)">Séance ${s.num} — ${esc(s.titre)}</strong>
-            <span class="chip">${esc(s.duree)}</span>
-          </div>
-          <p style="font-size:12px;color:var(--mu);margin-bottom:6px">🎯 ${esc(s.objectif)}</p>
-          <ul style="font-size:13px;padding-left:16px;margin:0">${(s.activites||[]).map(a=>`<li>${esc(a)}</li>`).join('')}</ul>
-          ${s.materiel?`<p style="font-size:12px;color:var(--mu);margin-top:6px">📦 ${esc(s.materiel)}</p>`:''}
-        </div>`
-      ).join('');
+      const list = document.getElementById('plan-list');
+      if (list) list.innerHTML =
+        `<p style="font-size:15px;font-weight:600;color:var(--ac);margin-bottom:12px">${esc(data.titre||'Séquence')}</p>` +
+        (data.seances||[]).map(s =>
+          `<div class="plan-item">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="color:var(--ac)">Séance ${s.num} — ${esc(s.titre)}</strong>
+              <span class="chip">${esc(s.duree)}</span>
+            </div>
+            <p style="font-size:12px;color:var(--mu);margin-bottom:6px">🎯 ${esc(s.objectif)}</p>
+            <ul style="font-size:13px;padding-left:16px;margin:0">${(s.activites||[]).map(a=>`<li>${esc(a)}</li>`).join('')}</ul>
+            ${s.materiel?`<p style="font-size:12px;color:var(--mu);margin-top:6px">📦 ${esc(s.materiel)}</p>`:''}
+          </div>`
+        ).join('');
     }
-  } catch(e) { alert('Erreur planning : '+e.message); }
+  } catch(e) {
+    if (err) { err.textContent = e.message; err.style.display = 'block'; }
+    else alert('Erreur planning : '+e.message);
+  }
   finally { if (ldg) ldg.style.display = 'none'; }
 }
 
 async function exportPlan() {
-  const out = document.getElementById('plan-out');
-  if (!out) return;
+  const out = document.getElementById('plan-result');
+  if (!out || !out.dataset.plan) { alert('Générez d\'abord un planning.'); return; }
   const data = JSON.parse(out.dataset.plan || '{}');
   const {Document,Paragraph,TextRun,HeadingLevel,Packer} = docx;
   const ch = [new Paragraph({text:data.titre||'Séquence', heading:HeadingLevel.HEADING_1})];
@@ -1860,7 +2236,7 @@ async function exportPlan() {
   });
   const doc = new Document({sections:[{children:ch}]});
   const blob = await Packer.toBlob(doc);
-  appendDlLink(blob, MIME_DOCX, 'planning-maths.docx', document.getElementById('plan-export-row'));
+  await uploadOrDownload(blob, MIME_DOCX, 'planning-maths.docx', document.getElementById('plan-result'));
 }
 
 /* ══════════════════════════════════════════════
@@ -2104,7 +2480,7 @@ async function exportTableWord() {
   }
   const doc = new Document({sections:[{children:ch}]});
   const blob = await Packer.toBlob(doc);
-  appendDlLink(blob, MIME_DOCX, `table-de-${n}.docx`, document.getElementById('table-export-row'));
+  await uploadOrDownload(blob, MIME_DOCX, `table-de-${n}.docx`, document.getElementById('table-export-row'));
 }
 
 /* ══════════════════════════════════════════════
@@ -2261,6 +2637,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const ghToken = localStorage.getItem(GHSTORE);
   if (ghToken) { const el = document.getElementById('gh-token'); if(el) el.value = ghToken; }
+
+  // Restore Google Drive status
+  updateGDriveStatus(!!getGDriveToken());
+  const gcid = localStorage.getItem(GID_STORE);
+  if (gcid) { const el = document.getElementById('gdrive-client-id'); if(el) el.value = gcid; }
+
+  // Show Anthropic model selector only when Anthropic is the provider
+  const showAnth = () => {
+    const p = localStorage.getItem(PROVSTORE) || 'openrouter';
+    const row = document.getElementById('anth-model-row');
+    if (row) row.style.display = p === 'anthropic' ? 'block' : 'none';
+    const sel = document.getElementById('anth-model-sel');
+    if (sel) sel.value = getAnthModel();
+  };
+  showAnth();
+  // Re-check when user changes provider
+  document.querySelectorAll('.mode-card').forEach(c => c.addEventListener('click', showAnth));
 });
 
 
