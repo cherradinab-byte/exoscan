@@ -2456,13 +2456,13 @@ function renderGeoPreview() {
 
   if (type === 'ligne') {
     const lw = w * S;
-    vbW = lw + PX*2; vbH = 52;
-    const y = 18;
+    vbW = lw + PX*2; vbH = 80;
+    const y = 32;
     shape = `
-      <line x1="${PX}" y1="${y}" x2="${PX+lw}" y2="${y}" stroke="${fw}" stroke-width="2"/>
-      <line x1="${PX}"    y1="${y-9}" x2="${PX}"    y2="${y+9}" stroke="${fw}" stroke-width="2"/>
-      <line x1="${PX+lw}" y1="${y-9}" x2="${PX+lw}" y2="${y+9}" stroke="${fw}" stroke-width="2"/>
-      ${dims ? `<text x="${PX+lw/2}" y="${y+26}" text-anchor="middle" font-size="13" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
+      <line x1="${PX}" y1="${y}" x2="${PX+lw}" y2="${y}" stroke="${fw}" stroke-width="2.5"/>
+      <line x1="${PX}"    y1="${y-12}" x2="${PX}"    y2="${y+12}" stroke="${fw}" stroke-width="2.5"/>
+      <line x1="${PX+lw}" y1="${y-12}" x2="${PX+lw}" y2="${y+12}" stroke="${fw}" stroke-width="2.5"/>
+      ${dims ? `<text x="${PX+lw/2}" y="${y+32}" text-anchor="middle" font-size="14" ${ff} fill="${fw}">${val(w)}</text>` : ''}`;
 
   } else if (type === 'rectangle') {
     const rw = w*S, rh = h*S;
